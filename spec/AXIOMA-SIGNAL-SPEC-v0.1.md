@@ -402,34 +402,46 @@ sometimes through third-party messaging servers. An operator watching his own te
 that nothing let the two ends prove that what the human saw is what the agent staged and what the
 human answered. A conforming card carries a fingerprint for that.
 
-- **The code.** Every card and every missing-card notice MUST carry a short card code, such as
-  `card code 7Q4K-2MPD`: 40 bits written as 8 Crockford base32 characters (no I, L, O or U) with
-  one dash, so it can be read aloud and typed back. Letters, digits and a dash survive Telegram,
-  Discord, Slack and plain text unchanged; no `#`, `*`, `_`, `~` or backtick is used. The code
-  sits on its own line directly under the question (directly above it when the question is long),
-  so it lands in the part of the card a host does not truncate.
-- **What it covers.** The code is a truncated keyed hash (HMAC-SHA-256 under a random key held
-  in the local log and never written to an event) over a canonical encoding of: the exact card
-  text the host receives, without the code line itself; the tool name; the canonical JSON of the
-  exact arguments (sorted keys, no spaces); and the card ID. Change any one of them and the code
-  changes.
+- **The code.** Every card, every missing-card notice and every advisory-unavailable fallback
+  MUST carry a short card code, such as `card code 7Q4K-2MPD`: 40 bits written as 8 Crockford
+  base32 characters (no I, L, O or U) with one dash, so it can be read aloud and typed back.
+  Letters, digits and a dash survive Telegram, Discord, Slack and plain text unchanged; no `#`,
+  `*`, `_`, `~` or backtick is used. Computing the code MUST NOT be able to fail (the fallback
+  notice included), so the encoding takes any input. The code goes where the host truncates
+  last: on messaging surfaces, which keep the start of a description, on its own line directly
+  under the question (directly above a long question); in a terminal panel, which keeps the
+  first rows, at the end of the first line, directly above the question. A panel too short to
+  show any line of the card shows no code either; the reference plugin tests that the code is
+  visible whenever any card line is.
+- **What it covers.** The code is a truncated keyed hash (HMAC-SHA-256 under a random key kept in
+  its own owner-only file, outside the log, and never written to an event) over a canonical
+  encoding of: the exact card text the host receives, without the code itself; the tool name; the
+  canonical JSON of the exact arguments (sorted keys, no spaces, ASCII-escaped, non-string keys
+  tagged with their type); and the card ID. Change any one of them and the code changes.
 - **What is logged.** The same code MUST be logged when the card is handed to the host
   (`presented_to_host`) and again with the host-reported answer (`post_approval_response`). The
-  log keeps keyed digests of the covered parts and of each card line, never the bodies, and each
-  card record carries a keyed seal over its own fields.
+  log keeps keyed digests of the covered parts and of each card line, never the bodies. Each card
+  record carries a keyed seal over all of its fields, its timestamp included. If the key cannot
+  be read, the code still shows but is made with a throwaway key; that record MUST be marked as
+  such and MUST NOT be sealed, and the check reports it as not checkable rather than OK.
 - **What the human can check.** `/signals verify <code>` MUST show, in plain words, staged then
   shown then answered, and name any mismatch: no card with that code, a record changed after it
   was written, an answer recorded under a different code, or (when the human pastes the card they
-  saw) a line added, changed, missing or out of order. `/signals cards` lists recent codes.
+  saw) a line added, changed, missing, repeated or out of order. A pasted line counts only if it
+  equals a staged line exactly (whitespace aside), or does after removing one known host label
+  at its start; look-alike characters are a different line. A paste the surface cut short is
+  reported as cut, not as changed. When no answer is recorded, the check says so and does not
+  claim the answer agrees. `/signals cards` lists recent codes.
 - **What it detects.** Comparing the code catches a card swapped or replayed in transit (it shows
   another card's code, or a code this log never issued). Pasting the words the human saw catches a
-  card whose words were edited while its code was kept. The seals catch a log record edited after
-  it was written.
-- **What it does NOT prove.** A compromised host, or anyone holding the local key, can forge both
-  ends: a matching code on the screen and a matching record in the log. A deleted record is not
-  detected unless its partner record remains. Lines added outside the card (before its first line
-  or after its last) are not distinguished from host framing. The code confirms the log; the human
-  still has to look at the card.
+  card whose words were edited while its code was kept. The seals catch a log record edited
+  afterwards by someone who cannot read the key file.
+- **What it does NOT prove.** A compromised host, or anyone who can read the key file, can forge
+  both ends: a matching code on the screen and a matching record in the log, with valid seals.
+  Keyed digests are not encryption: with the key, a guess at a card line or an argument can be
+  tested. A deleted record is not detected unless its partner record remains. Lines added outside
+  the card (before its first line or after its last) are not distinguished from host framing. The
+  code confirms the log; the human still has to look at the card.
 
 ---
 

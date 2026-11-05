@@ -16,9 +16,10 @@ import uuid
 from .card import NOTICE_QUESTION, render_card, render_notice, validate_card
 from .policy import Policy
 from .checks import Checks
-from .fingerprint import CODE_LINE, Fingerprint, normalize_line, parse_code, stamp
+from . import seal as card_seal
+from .seal import CODE_ARG, Fingerprint, compare_lines, load_key, parse_code, stamp
 
-CODE_ARG = re.compile(r'\s*(?:card\s+)?(?:code\s+)?#?([0-9A-Za-z]{4}[\s\-]?[0-9A-Za-z]{4})(?![0-9A-Za-z])')
+LIFECYCLE = ('card', 'presented_to_host', 'answer')
 LOCAL_SURFACES = ('cli', 'tui', 'desktop', 'acp', '')
 PARSE_NOTE = 'could not parse (best-effort parser)'
 CONFIG_SIGNAL = 'Part of the Axioma configuration is invalid and was skipped, so some standing rules may be missing; fix the plugin settings first.'
@@ -27,8 +28,7 @@ CAPACITY = 1024
 
 
 def digest(value):
-    return hashlib.sha256(json.dumps(value, sort_keys=True, separators=(',', ':'),
-                                     default=str).encode()).hexdigest()
+    return hashlib.sha256(card_seal.canonical(value).encode('ascii')).hexdigest()
 
 
 # Hermes canonicalizes legacy tool names before hooks; a card staged under the old name still matches.
@@ -50,16 +50,25 @@ class Advisor:
         self.config_error = policy_error or checks_error
         self._fp = None
 
+    def key_path(self):
+        return self.audit.path.with_name('card-code.key')
+
+    def keyed(self):
+        """(Fingerprint, durable) for spec 5.6. The key lives in its own owner-only file next to
+        the log. Only a key read from that file is cached; when it cannot be read, this call gets a
+        throwaway key (the code still shows, cannot be verified later, and is logged unsealed and
+        marked as such) and the next call tries the file again."""
+        if self._fp is not None:
+            return self._fp, True
+        try:
+            self._fp = Fingerprint(load_key(self.key_path()))
+            return self._fp, True
+        except Exception:
+            return Fingerprint.ephemeral(), False
+
     @property
     def fp(self):
-        """Keyed fingerprint (spec 5.6). If the log is unavailable the code still shows, under a
-        throwaway key, and simply cannot be verified later."""
-        if self._fp is None:
-            try:
-                self._fp, self.fp_durable = Fingerprint(self.audit.secret('fingerprint_key')), True
-            except Exception:
-                self._fp, self.fp_durable = Fingerprint.ephemeral(), False
-        return self._fp
+        return self.keyed()[0]
 
     # -- bookkeeping -------------------------------------------------------------------------
     def prune(self):
@@ -71,11 +80,17 @@ class Advisor:
         while len(self.shown) >= CAPACITY:
             self.shown.pop(min(self.shown, key=lambda k: self.shown[k]['at']))
 
-    def record(self, **metadata):
+    def record(self, keyed=None, **metadata):
         try:
-            if metadata.get('event') in ('card', 'presented_to_host', 'answer'):
-                metadata['seal'] = self.fp.seal(metadata)
-            self.audit.record(**metadata)
+            at = time.time()
+            if metadata.get('event') in LIFECYCLE:
+                fp, durable = keyed or self.keyed()
+                if durable:
+                    # The seal covers every field and the timestamp (spec 5.6).
+                    metadata['seal'] = fp.seal(dict(metadata, at=at))
+                else:
+                    metadata['key'] = 'throwaway'  # never a sealed row under a throwaway key
+            self.audit.record(at=at, **metadata)
         except Exception:
             pass  # logging failure never changes what the human sees
 
@@ -147,13 +162,15 @@ class Advisor:
                     card_id, light, reason = uuid.uuid4().hex, ('red' if red else None), 'missing_card'
                 # Shown equals staged (spec 5.6): fingerprint the exact text handed to the host plus
                 # tool, exact args and card id; show the code under the question; log it sealed.
-                parts = self.fp.digests(card_id, tool_name, args, message)
-                code = self.fp.code_from(parts['card_id'], parts['text_digest'], parts['tool_digest'],
-                                         parts['args_digest'])
+                keyed = self.keyed()
+                parts = keyed[0].digests(card_id, tool_name, args, message)
+                code = keyed[0].code_from(parts['card_id'], parts['text_digest'], parts['tool_digest'],
+                                          parts['args_digest'])
                 message = stamp(message, code, messaging=messaging)
                 self.shown[(str(session_id or ''), str(tool_call_id))] = dict(
-                    card_id=card_id, light=light, categories=categories, fingerprint=code, at=self.clock())
-                self.record(event='presented_to_host', card_id=card_id, light=light,
+                    card_id=card_id, light=light, categories=categories, fingerprint=code,
+                    keyed=keyed, at=self.clock())
+                self.record(keyed=keyed, event='presented_to_host', card_id=card_id, light=light,
                             categories=categories, reason=reason, surface=surface or 'unknown',
                             checks=[{'check': r['check'], 'pass': r['pass']} for r in results],
                             fingerprint=code, **{k: v for k, v in parts.items() if k != 'card_id'})
@@ -168,20 +185,27 @@ class Advisor:
                 notice = 'AXIOMA: advisory unavailable for this call. Hermes approval decides.'
                 messaging = self.safe_surface() not in LOCAL_SURFACES
                 text = (NOTICE_QUESTION + '\n' + notice) if messaging else (notice + '\n' + NOTICE_QUESTION)
-                try:
-                    card_id = uuid.uuid4().hex
-                    parts = self.fp.digests(card_id, tool_name, args, text)
-                    code = self.fp.code_from(parts['card_id'], parts['text_digest'], parts['tool_digest'],
-                                             parts['args_digest'])
-                    text = stamp(text, code, messaging=messaging)
+                card_id = uuid.uuid4().hex
+                for keyed in (None, (Fingerprint.ephemeral(), False)):
+                    # The fallback carries a code too (spec 5.6 MUST). The canonical encoding cannot
+                    # fail; a second, throwaway key covers a failure on the first try.
+                    try:
+                        keyed = keyed or self.keyed()
+                        parts = keyed[0].digests(card_id, tool_name, args, text)
+                        code = keyed[0].code_from(parts['card_id'], parts['text_digest'],
+                                                  parts['tool_digest'], parts['args_digest'])
+                        stamped = stamp(text, code, messaging=messaging)
+                    except Exception:
+                        continue
                     self.shown[(str(session_id or ''), str(tool_call_id))] = dict(
-                        card_id=card_id, light=None, categories=('unknown',), fingerprint=code, at=self.clock())
-                    self.record(event='presented_to_host', card_id=card_id, light=None,
+                        card_id=card_id, light=None, categories=('unknown',), fingerprint=code,
+                        keyed=keyed, at=self.clock())
+                    self.record(keyed=keyed, event='presented_to_host', card_id=card_id, light=None,
                                 categories=['unknown'], reason='advisory_unavailable',
                                 surface=self.safe_surface() or 'unknown', fingerprint=code,
                                 **{k: v for k, v in parts.items() if k != 'card_id'})
-                except Exception:
-                    pass  # the notice itself must still reach the human
+                    text = stamped
+                    break
                 return {'action': 'approve', 'rule_key': 'axioma:' + uuid.uuid4().hex, 'message': text}
 
     def safe_surface(self):
@@ -205,7 +229,7 @@ class Advisor:
             answer = ('yes' if known in ('once', 'session', 'always') else
                       'no' if known == 'deny' else
                       'auto' if known.startswith('smart_') else 'unanswered')
-            self.record(event='answer', card_id=item['card_id'], light=item['light'],
+            self.record(keyed=item.get('keyed'), event='answer', card_id=item['card_id'], light=item['light'],
                         categories=list(item['categories']), choice=known, answer=answer,
                         surface=str(surface or '') or 'unknown', fingerprint=item.get('fingerprint'))
 
@@ -255,25 +279,31 @@ class Advisor:
             return 'advisory unavailable'
         return {'red': 'STOP', 'yellow': 'CAUTION', 'green': 'GO'}.get(row.get('light'), 'unknown')
 
-    def sealed(self, row):
-        return self.fp.sealed({k: v for k, v in row.items() if k not in ('id', 'at')})
+    def sealed(self, fp, row):
+        """The seal covers every stored field and the timestamp; only the row id is outside it."""
+        return fp.sealed({k: v for k, v in row.items() if k != 'id'})
 
     def verify(self, code, pasted=''):
         """Returns plain-words lines. Every check that fails says so; the last line is the verdict."""
-        fp = self.fp
+        fp, durable = self.keyed()
         stamp_ = lambda t: time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(t))
         out, problems = ['card code ' + code], []
-        if not getattr(self, 'fp_durable', False):
-            return out + ['MISMATCH: the card log is unavailable, so this code cannot be checked.']
-        shown = [r for r in self.audit.card_rows(fingerprint=code) if r['event'] == 'presented_to_host']
+        if not durable:
+            return out + ['NOT CHECKED: the card code key file cannot be read right now, so no code can '
+                          'be checked. Nothing was changed.']
+        rows = self.audit.card_rows(fingerprint=code)
+        shown = [r for r in rows if r['event'] == 'presented_to_host']
         if not shown:
-            answered = [r for r in self.audit.card_rows(fingerprint=code) if r['event'] == 'answer']
-            if answered:
+            if any(r['event'] == 'answer' for r in rows):
                 return out + ['MISMATCH: an answer is recorded under this code but no card with this code '
                               'was ever shown. The log was changed, or the answer belongs to another card.']
-            return out + ['MISMATCH: no card with this code was shown from this log. If you saw this code '
-                          'on a card, that card did not come from this Axioma install, the log was cleared, '
+            return out + ['MISMATCH: no card with this code is in this log. If you saw this code on a '
+                          'card, that card did not come from this Axioma install, the log was cleared, '
                           'or the code was misread.']
+        if any(r.get('key') == 'throwaway' for r in shown):
+            return out + ['NOT CHECKED: this card is marked as shown while the key file could not be read '
+                          '(its code was made with a throwaway key), or that mark was added to the log '
+                          'afterwards. Either way this code cannot be confirmed.']
         if len(shown) > 1:
             problems.append('more than one shown record carries this code; the log was changed.')
         row = shown[-1]
@@ -286,7 +316,7 @@ class Advisor:
         elif staged:
             s = staged[-1]
             out.append('staged: card from the agent, light %s, at %s.' % (s.get('light'), stamp_(s['at'])))
-            if not self.sealed(s):
+            if not self.sealed(fp, s):
                 problems.append('the staged record was changed after it was written.')
             if s.get('light') != row.get('light'):
                 out.append('note: the checks changed the light from %s to %s before it was shown.'
@@ -295,7 +325,7 @@ class Advisor:
             problems.append('the card was shown as staged by the agent, but no staged record exists.')
         out.append('shown: %s, handed to Hermes on %s at %s.' % (
             self.light_word(row), row.get('surface') or 'unknown surface', stamp_(row['at'])))
-        if not self.sealed(row):
+        if not self.sealed(fp, row):
             problems.append('the shown record was changed after it was written.')
         recomputed = fp.code_from(row['card_id'], row.get('text_digest'), row.get('tool_digest'),
                                   row.get('args_digest'))
@@ -310,63 +340,46 @@ class Advisor:
             if a.get('fingerprint') != code:
                 problems.append('the answer was recorded against code %s, not the code that was shown.'
                                 % (a.get('fingerprint') or 'none'))
-            if not self.sealed(a):
+            if not self.sealed(fp, a):
                 problems.append('the answer record was changed after it was written.')
         if len(answers) > 1:
             problems.append('more than one answer is recorded for this card.')
         if pasted.strip():
-            out += self.compare_text(row, pasted, problems)
+            out += self.compare_text(fp, row, pasted, problems)
         else:
             out.append('words: not checked. Paste the card text after the code to check them too.')
         if problems:
             return out + ['MISMATCH: ' + p for p in problems]
-        return out + ['OK: staged, shown and answered records agree, and none were changed after writing. '
-                      'This confirms the log, not the screen: compare this code with the one on the card you saw.']
+        tail = ('This confirms the log, not the screen: compare this code with the one on the card you saw.')
+        if not answers:
+            return out + ['OK so far: the staged and shown records agree and were not changed after writing. '
+                          'No answer is recorded yet, so there is no answer to check. ' + tail]
+        return out + ['OK: staged, shown and answered records agree, and none were changed after writing. ' + tail]
 
-    def compare_text(self, row, pasted, problems):
+    @staticmethod
+    def host_labels():
+        """Labels the host may put in front of the description (exact prefixes only)."""
+        labels: list = list(card_seal.LABELS)
+        try:
+            from gateway.platforms.base_exec_approval import ea_reason_label_text
+            labels.append(ea_reason_label_text())
+        except Exception:
+            pass
+        return labels
+
+    def compare_text(self, fp, row, pasted, problems):
         """Line-by-line check of a pasted card against the keyed line digests (no bodies stored).
-        Lines before the first and after the last card line (the Hermes header, the command, the
-        deadline, buttons) are ignored; a label the surface put in front of a line (such as
-        'Reason: ') is tolerated. Inside the card, an added, changed, missing or reordered line is
-        reported."""
-        fp, expected = self.fp, list(row.get('line_digests') or [])
+        Exact lines only (after whitespace cleanup); one host label at a line start is allowed.
+        Lines before the first and after the last card line are host framing. A line the surface
+        cut ('...') ends the check, and the staged lines after it are reported as cut."""
+        expected = list(row.get('line_digests') or [])
         if not expected:
             return ['words: this record has no line digests to compare.']
-        where = {}
-        for i, d in enumerate(expected):
-            where.setdefault(d, i)
-        hits = []  # (pasted line number, expected index or None) for each non-empty pasted line
-        for n, line in enumerate(pasted.split('\n'), 1):
-            norm = normalize_line(line)
-            if not norm or CODE_LINE.match(norm):
-                continue
-            words = norm.split(' ')
-            found = next((where[d] for d in (fp.line_digest(' '.join(words[i:])) for i in range(len(words)))
-                          if d in where), None)
-            hits.append((n, found))
-        matched = [k for k, (_, i) in enumerate(hits) if i is not None]
-        lines = []
-        if matched:
-            inside = hits[matched[0]:matched[-1] + 1]
-            added = [n for n, i in inside if i is None]
-            got = [i for _, i in inside if i is not None]
-            if added:
-                lines.append('pasted line%s %s %s not on the staged card (added or changed).' % (
-                    's' if len(added) > 1 else '', ', '.join(map(str, added)), 'are' if len(added) > 1 else 'is'))
-            if got != sorted(got):
-                lines.append('the card lines are in a different order than staged.')
-            found = set(got)
-        else:
-            found = set()
-        missing = [i + 1 for i in range(len(expected)) if i not in found]
-        if missing:
-            lines.append('staged line%s %s of %d %s missing or changed (or cut by the surface).' % (
-                's' if len(missing) > 1 else '', ', '.join(map(str, missing)), len(expected),
-                'are' if len(missing) > 1 else 'is'))
-        if lines:
-            problems.extend('the pasted card differs from what was staged: ' + x for x in lines)
-            return []
-        return ['words: all %d lines of the pasted card match what was staged, in order.' % len(expected)]
+        found, notes, summary = compare_lines(fp, expected, pasted, self.host_labels())
+        if found:
+            problems.extend('the pasted card differs from what was staged: ' + x for x in found)
+            return ['words: ' + x for x in notes]
+        return ['words: ' + summary] + ['words: ' + x for x in notes]
 
 NO_CARD = {'intent': 'not supplied', 'light': 'yellow', 'signal': 'No card.', 'question': 'None?',
            'affects': ['self'], 'told': True}

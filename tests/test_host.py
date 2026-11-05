@@ -284,13 +284,14 @@ class HostTests(unittest.TestCase):
                     self.assertIn(question, flat)
 
     def test_card_code_survives_the_real_approval_renderers(self):
-        """Spec 5.6: the card code reaches the human intact on the CLI panel and through the real
-        Telegram and Discord approval formatters (escaping and length budgets included)."""
-        import html
+        """Spec 5.6: the card code reaches the human intact on the real CLI panel at 16-40 rows
+        (whenever any card line is visible, the code is too) and through the real Telegram and
+        Discord approval formatters (escaping and length budgets included)."""
         import re
         import hermes_cli.cli_tui_mixin as mixin
         from axioma.advisor import Advisor
         from axioma.audit import Audit
+        from gateway.config import PlatformConfig
         from plugins.platforms.telegram.adapter import TelegramAdapter, _escape_mdv2, _strip_mdv2
         from plugins.platforms.discord.adapter import DiscordAdapter
         cls = next(getattr(mixin, n) for n in dir(mixin)
@@ -304,36 +305,37 @@ class HostTests(unittest.TestCase):
             if card is not None:
                 a.submit({'tool': 'send_message', 'arguments': {'text': 'SYNTHETIC'}, 'card': card}, session_id='s')
             msg = a.before('send_message', {'text': 'SYNTHETIC'}, session_id='s', tool_call_id='c')['message']
-            return msg, re.search(r'^card code \S+$', msg, re.M).group(0)
+            return msg, re.search(r'card code [0-9A-Z]{4}-[0-9A-Z]{4}$', msg, re.M).group(0)
 
         class Panel:
             pass
         for card in (CARD, dict(CARD, light='red', question=long_q), None):
             msg, line = message('cli', card)
-            for rows in (24, 40):
+            first_words = msg.splitlines()[0].split(' \u00b7 ')[0]
+            for rows in (16, 18, 20, 24, 40):
                 with self.subTest(surface='cli', rows=rows, card=card and card['question'][:20]):
                     p = Panel()
                     p._approval_state = {'command': '<send_message> (plugin approval rule)', 'description': msg,
                                          'choices': ['once', 'session', 'always', 'deny'], 'selected': 0}
                     with patch.object(mixin, '_term_rows', return_value=rows):
                         text = ''.join(x[1] for x in cls._get_approval_display_fragments(p))
-                    self.assertIn(line, ' '.join(x.strip('│ ') for x in text.splitlines()))
+                    flat = ' '.join(x.strip('│ ') for x in text.splitlines())
+                    card_visible = any(x in flat for x in (first_words, 'intent:', 'signal:', '?'))
+                    if rows >= 18:
+                        self.assertIn(line, flat)
+                    elif card_visible:
+                        self.assertIn(line, flat, 'a card line is visible without its code')
             for adapter, surface in ((TelegramAdapter, 'telegram'), (DiscordAdapter, 'discord')):
                 msg, line = message(surface, card)
                 with self.subTest(surface=surface, card=card and card['question'][:20]):
-                    a = object.__new__(adapter)
-                    try:
-                        wire = a._format_exec_approval('send_message', msg)
-                    except Exception as exc:  # adapter needs live config: fall back to its budget + escape
-                        budget = getattr(adapter, '_EA_REASON_BUDGET', 300)
-                        wire = (html.escape if adapter is TelegramAdapter else str)(msg[:budget])
-                        self.assertTrue(budget, exc)
-                    shown = html.unescape(wire) if adapter is TelegramAdapter else wire
-                    self.assertIn(line, shown)
+                    # The real adapter object and its real formatter; no budget emulation.
+                    a = adapter(PlatformConfig(enabled=True, token='synthetic-not-a-token'))
+                    wire = a._format_exec_approval('send_message', msg)
+                    self.assertIn(line, wire, 'the code survives escaping and the reason budget')
                     if adapter is TelegramAdapter:  # MarkdownV2 text fallback
                         self.assertIn(line, _strip_mdv2(_escape_mdv2(msg)))
                     else:
-                        self.assertIn(line, a.format_message(msg))
+                        self.assertIn(line, a.format_message(wire))
 
     # -- inline signal color through the real host seams (A229) --------------------------------
     def transform(self, text, platform, turn='turn-1'):

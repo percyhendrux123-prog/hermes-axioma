@@ -268,16 +268,21 @@ unlogged, while a whisper or go stays plain) with a random span ID, level, reaso
 was shown, and a salted hash of the phrase. No message bodies, tool arguments, card text, sender
 addresses or paths. `/signals` (and `/whispers`) lists them in plain words.
 
-Every card and missing-card notice also carries a **card code** (`card code 7Q4K-2MPD`) on its own
-line next to the question (spec 5.6, "Shown equals staged"). It is a keyed fingerprint of the exact
-card text Hermes received, the tool, the exact arguments and the card ID, logged when the card is
-handed to Hermes and again with your answer. `/signals cards` lists recent codes. `/signals verify
-<code>` says, in plain words, what was staged, what was shown and what was answered, and names any
-mismatch; paste the card you saw on the lines after the code to check the words too. Comparing the
-code catches a card swapped or replayed in transit; pasting the words catches edited words under a
-kept code; the seals catch a log record edited afterwards. It cannot catch a compromised host or
-anyone holding the local key file, who can forge both ends, and a deleted record is not detected
-unless its partner remains.
+Every card, missing-card notice and fallback notice also carries a **card code**
+(`card code 7Q4K-2MPD`) next to the question (spec 5.6, "Shown equals staged"): at the end of the
+first line in the terminal, on its own line under the question on messaging. It is a keyed
+fingerprint of the exact card text Hermes received, the tool, the exact arguments and the card ID,
+logged when the card is handed to Hermes and again with your answer. The log keeps keyed digests
+of those parts, not the text; they are not encryption, so anyone with the key file can test a
+guess against them. The key sits in its own owner-only file (`card-code.key`, mode 0600) next to
+the log, which is also owner-only. `/signals cards` lists recent codes. `/signals verify <code>`
+says, in plain words, what was staged, what was shown and what was answered, and names any
+mismatch; paste the card you saw on the lines after the code to check the words too (exact lines
+only; a paste the surface cut short is reported as cut). Comparing the code catches a card swapped
+or replayed in transit; pasting the words catches edited words under a kept code; the seals catch
+a log record edited afterwards by someone who cannot read the key file. It cannot catch a
+compromised host or anyone who can read the key file, who can forge both ends, and a deleted
+record is not detected unless its partner remains.
 
 ## A218 evaluation (cards, before this plugin existed)
 
