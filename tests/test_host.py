@@ -283,6 +283,58 @@ class HostTests(unittest.TestCase):
                     self.assertIn(proceed, flat)
                     self.assertIn(question, flat)
 
+    def test_card_code_survives_the_real_approval_renderers(self):
+        """Spec 5.6: the card code reaches the human intact on the CLI panel and through the real
+        Telegram and Discord approval formatters (escaping and length budgets included)."""
+        import html
+        import re
+        import hermes_cli.cli_tui_mixin as mixin
+        from axioma.advisor import Advisor
+        from axioma.audit import Audit
+        from plugins.platforms.telegram.adapter import TelegramAdapter, _escape_mdv2, _strip_mdv2
+        from plugins.platforms.discord.adapter import DiscordAdapter
+        cls = next(getattr(mixin, n) for n in dir(mixin)
+                   if hasattr(getattr(mixin, n), '_get_approval_display_fragments'))
+        long_q = ('Is ' + 'this really the audience you intended for the synthetic draft and ' * 6)[:398] + '?'
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+
+        def message(surface, card):
+            a = Advisor({}, Audit(Path(tmp.name) / 'audit.sqlite3'), surface=lambda: surface)
+            if card is not None:
+                a.submit({'tool': 'send_message', 'arguments': {'text': 'SYNTHETIC'}, 'card': card}, session_id='s')
+            msg = a.before('send_message', {'text': 'SYNTHETIC'}, session_id='s', tool_call_id='c')['message']
+            return msg, re.search(r'^card code \S+$', msg, re.M).group(0)
+
+        class Panel:
+            pass
+        for card in (CARD, dict(CARD, light='red', question=long_q), None):
+            msg, line = message('cli', card)
+            for rows in (24, 40):
+                with self.subTest(surface='cli', rows=rows, card=card and card['question'][:20]):
+                    p = Panel()
+                    p._approval_state = {'command': '<send_message> (plugin approval rule)', 'description': msg,
+                                         'choices': ['once', 'session', 'always', 'deny'], 'selected': 0}
+                    with patch.object(mixin, '_term_rows', return_value=rows):
+                        text = ''.join(x[1] for x in cls._get_approval_display_fragments(p))
+                    self.assertIn(line, ' '.join(x.strip('│ ') for x in text.splitlines()))
+            for adapter, surface in ((TelegramAdapter, 'telegram'), (DiscordAdapter, 'discord')):
+                msg, line = message(surface, card)
+                with self.subTest(surface=surface, card=card and card['question'][:20]):
+                    a = object.__new__(adapter)
+                    try:
+                        wire = a._format_exec_approval('send_message', msg)
+                    except Exception as exc:  # adapter needs live config: fall back to its budget + escape
+                        budget = getattr(adapter, '_EA_REASON_BUDGET', 300)
+                        wire = (html.escape if adapter is TelegramAdapter else str)(msg[:budget])
+                        self.assertTrue(budget, exc)
+                    shown = html.unescape(wire) if adapter is TelegramAdapter else wire
+                    self.assertIn(line, shown)
+                    if adapter is TelegramAdapter:  # MarkdownV2 text fallback
+                        self.assertIn(line, _strip_mdv2(_escape_mdv2(msg)))
+                    else:
+                        self.assertIn(line, a.format_message(msg))
+
     # -- inline signal color through the real host seams (A229) --------------------------------
     def transform(self, text, platform, turn='turn-1'):
         from types import SimpleNamespace

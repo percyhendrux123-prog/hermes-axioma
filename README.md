@@ -268,6 +268,15 @@ unlogged, while a whisper or go stays plain) with a random span ID, level, reaso
 was shown, and a salted hash of the phrase. No message bodies, tool arguments, card text, sender
 addresses or paths. `/signals` (and `/whispers`) lists them in plain words.
 
+Every card and missing-card notice also carries a **card code** (`card code 7Q4K-2MPD`) on its own
+line next to the question (spec 5.6, "Shown equals staged"). It is a keyed fingerprint of the exact
+card text Hermes received, the tool, the exact arguments and the card ID, logged when the card is
+handed to Hermes and again with your answer. `/signals cards` lists recent codes. `/signals verify
+<code>` says, in plain words, what was staged, what was shown and what was answered, and names any
+mismatch; paste the card you saw on the lines after the code to check the words too. It detects a
+card changed in transit and a log record edited afterwards. It cannot catch a compromised host or
+anyone holding the local key file, who can forge both ends.
+
 ## A218 evaluation (cards, before this plugin existed)
 
 Anonymized one-run blind replay of 50 real requests: 18 known problem cases, 28 routine.

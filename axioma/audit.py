@@ -8,7 +8,9 @@ import uuid
 
 FIELDS = {'event', 'card_id', 'categories', 'light', 'valid', 'answer', 'choice',
           'answered_with_question', 'reason', 'span_hash', 'scope_hash', 'checks',
-          'span_id', 'level', 'surface', 'shown', 'check_ok'}
+          'span_id', 'level', 'surface', 'shown', 'check_ok',
+          # Card fingerprint (spec 5.6): the code, keyed digests of what it covers, and a seal.
+          'fingerprint', 'text_digest', 'tool_digest', 'args_digest', 'line_digests', 'seal'}
 
 
 class Audit:
@@ -31,10 +33,14 @@ class Audit:
     def salt(self):
         """Random per-database salt for whisper span hashes (created once, never logged)."""
         if getattr(self, '_salt', None) is None:
-            with self.connect() as db:
-                db.execute('INSERT OR IGNORE INTO meta VALUES (?, ?)', ('salt', os.urandom(32)))
-                self._salt = bytes(db.execute("SELECT value FROM meta WHERE key = 'salt'").fetchone()[0])
+            self._salt = self.secret('salt')
         return self._salt
+
+    def secret(self, name):
+        """A random 32-byte per-database value, created once and never written to an event."""
+        with self.connect() as db:
+            db.execute('INSERT OR IGNORE INTO meta VALUES (?, ?)', (name, os.urandom(32)))
+            return bytes(db.execute('SELECT value FROM meta WHERE key = ?', (name,)).fetchone()[0])
 
     def record(self, **metadata):
         if set(metadata) - FIELDS:
@@ -58,3 +64,14 @@ class Audit:
         with self.connect() as db:
             rows = db.execute('SELECT id, at, metadata FROM events ORDER BY at DESC LIMIT ?', (limit,)).fetchall()
         return [dict({'id': i, 'at': t, 'answered_with_question': None}, **json.loads(m)) for i, t, m in rows]
+
+    def card_rows(self, card_id=None, fingerprint=None, limit=5000):
+        """Card lifecycle rows (staged, shown, answered), newest first, filtered in Python."""
+        with self.connect() as db:
+            rows = db.execute("SELECT id, at, metadata FROM events WHERE metadata LIKE '%\"event\": \"card\"%' "
+                              "OR metadata LIKE '%\"event\": \"presented_to_host\"%' "
+                              "OR metadata LIKE '%\"event\": \"answer\"%' ORDER BY at DESC LIMIT ?",
+                              (limit,)).fetchall()
+        out = [dict({'id': i, 'at': t}, **json.loads(m)) for i, t, m in rows]
+        return [r for r in out if (card_id is None or r.get('card_id') == card_id)
+                and (fingerprint is None or r.get('fingerprint') == fingerprint)]

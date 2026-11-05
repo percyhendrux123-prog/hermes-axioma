@@ -70,6 +70,14 @@ def register(ctx):
     ctx.register_hook('pre_llm_call', lambda **kw: {'context': GUIDANCE})
     ctx.register_hook('on_session_finalize', finalize)
     ctx.register_hook('transform_llm_output', signal.transform)
-    ctx.register_command('signals', signal.listing,
-                         description='List recent signals and whispers: level, shown, reason, surface. No text bodies.')
+
+    def signals(raw=''):
+        verb = str(raw or '').strip().split(None, 1)
+        if verb and verb[0].lower() in ('verify', 'cards'):
+            return advisor.command(raw)
+        return signal.listing(raw)
+    ctx.register_command('signals', signals, args_hint='[verify <card code> | cards]',
+                         description='List recent signals and whispers (no text bodies). '
+                                     '/signals cards lists card codes; /signals verify <code> checks '
+                                     'staged -> shown -> answered.')
     ctx.register_command('whispers', signal.listing, description='Same list as /signals (kept for older notes).')

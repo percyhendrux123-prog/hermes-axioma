@@ -395,6 +395,39 @@ forwarded as clean text to someone who never saw the color.
 A renderer or plugin claiming conformance MUST NOT present the signal as a gate, block, approval
 or guarantee. "Advice only; you decide" is the stance on every surface.
 
+### 5.6 Shown equals staged
+
+A card is written by the agent, handed to the host, and reaches the human's screen a moment later,
+sometimes through third-party messaging servers. An operator watching his own terminal noticed
+that nothing let the two ends prove that what the human saw is what the agent staged and what the
+human answered. A conforming card carries a fingerprint for that.
+
+- **The code.** Every card and every missing-card notice MUST carry a short card code, such as
+  `card code 7Q4K-2MPD`: 40 bits written as 8 Crockford base32 characters (no I, L, O or U) with
+  one dash, so it can be read aloud and typed back. Letters, digits and a dash survive Telegram,
+  Discord, Slack and plain text unchanged; no `#`, `*`, `_`, `~` or backtick is used. The code
+  sits on its own line directly under the question (directly above it when the question is long),
+  so it lands in the part of the card a host does not truncate.
+- **What it covers.** The code is a truncated keyed hash (HMAC-SHA-256 under a random key held
+  in the local log and never written to an event) over a canonical encoding of: the exact card
+  text the host receives, without the code line itself; the tool name; the canonical JSON of the
+  exact arguments (sorted keys, no spaces); and the card ID. Change any one of them and the code
+  changes.
+- **What is logged.** The same code MUST be logged when the card is handed to the host
+  (`presented_to_host`) and again with the host-reported answer (`post_approval_response`). The
+  log keeps keyed digests of the covered parts and of each card line, never the bodies, and each
+  card record carries a keyed seal over its own fields.
+- **What the human can check.** `/signals verify <code>` MUST show, in plain words, staged then
+  shown then answered, and name any mismatch: no card with that code, a record changed after it
+  was written, an answer recorded under a different code, or (when the human pastes the card they
+  saw) a line added, changed, missing or out of order. `/signals cards` lists recent codes.
+- **What it detects.** A card changed in transit, when the human compares the code or pastes the
+  words, and a log record edited after it was written.
+- **What it does NOT prove.** A compromised host, or anyone holding the local key, can forge both
+  ends: a matching code on the screen and a matching record in the log. Lines added outside the
+  card (before its first line or after its last) are not distinguished from host framing. The code
+  confirms the log; the human still has to look at the card.
+
 ---
 
 ## 6. Conformance checklist
@@ -441,6 +474,8 @@ Integrity:
 - [ ] Stores no message bodies by default; uses a salted hash.
 - [ ] Lists flags to the human on request, in plain words.
 - [ ] Keeps logs local unless the operator discloses otherwise.
+- [ ] Cards: shows a card code under the question on every card and missing-card notice, logs it
+      at hand-off and with the answer, and checks it on request in plain words (5.6).
 
 A project MAY say "Axiōma Signal v0.1 Render-conformant" or "Integrity-conformant" when every box
 for its role and level is checked. The reference plugin is expected to reach Render conformance

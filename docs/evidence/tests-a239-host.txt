@@ -1,0 +1,721 @@
+test_answers_are_logged_as_metadata_and_never_authorize (test_advisor.AdvisorTests.test_answers_are_logged_as_metadata_and_never_authorize) ... ok
+test_card_binds_to_exact_arguments_and_session (test_advisor.AdvisorTests.test_card_binds_to_exact_arguments_and_session) ... ok
+test_card_never_claims_authority (test_advisor.AdvisorTests.test_card_never_claims_authority) ... ok
+test_card_shows_question_on_every_light_and_question_first_on_messaging (test_advisor.AdvisorTests.test_card_shows_question_on_every_light_and_question_first_on_messaging) ... ok
+test_green_yellow_also_get_fresh_rule_keys (test_advisor.AdvisorTests.test_green_yellow_also_get_fresh_rule_keys) ... ok
+test_hard_red_rule_turns_card_and_no_card_notice_red (test_advisor.AdvisorTests.test_hard_red_rule_turns_card_and_no_card_notice_red) ... ok
+test_internal_errors_still_show_a_notice_never_drop_silently (test_advisor.AdvisorTests.test_internal_errors_still_show_a_notice_never_drop_silently) ... ok
+test_invalid_config_falls_back_to_defaults_and_says_so (test_advisor.AdvisorTests.test_invalid_config_falls_back_to_defaults_and_says_so) ... ok
+test_malformed_card_is_reported_to_agent_and_logged (test_advisor.AdvisorTests.test_malformed_card_is_reported_to_agent_and_logged) ... ok
+test_never_blocks_only_documented_approve_directive (test_advisor.AdvisorTests.test_never_blocks_only_documented_approve_directive) ... ok
+test_red_never_offers_yes_and_gets_a_fresh_rule_key (test_advisor.AdvisorTests.test_red_never_offers_yes_and_gets_a_fresh_rule_key) ... ok
+test_ttl_capacity_and_finalize (test_advisor.AdvisorTests.test_ttl_capacity_and_finalize) ... ok
+test_unclassified_calls_pass_untouched (test_advisor.AdvisorTests.test_unclassified_calls_pass_untouched) ... ok
+test_card_ends_on_question_red_never_yes (test_card.CardTests.test_card_ends_on_question_red_never_yes) ... ok
+test_validates_and_rejects_malformed_cards (test_card.CardTests.test_validates_and_rejects_malformed_cards) ... ok
+test_card_accepts_affects_and_question_first_on_messaging (test_eval_changes.EvalChangesTests.test_card_accepts_affects_and_question_first_on_messaging) ... ok
+test_hard_red_and_downstream_floor (test_eval_changes.EvalChangesTests.test_hard_red_and_downstream_floor) ... ok
+test_preflight_skill_secret_presence_and_lock (test_eval_changes.EvalChangesTests.test_preflight_skill_secret_presence_and_lock) ... ok
+test_scrub_classifies_recursive_and_outside_moves (test_eval_changes.EvalChangesTests.test_scrub_classifies_recursive_and_outside_moves) ... ok
+test_unproved_sender_is_red_and_green_requires_downstream_answer (test_eval_changes.EvalChangesTests.test_unproved_sender_is_red_and_green_requires_downstream_answer) ... ok
+test_canonical_cronjob_manage_is_spin (test_findings.Finding3CronjobManageAlias.test_canonical_cronjob_manage_is_spin) ... ok
+test_relative_operand_without_workdir_is_not_proven_contained (test_findings.Finding4UnknownCwd.test_relative_operand_without_workdir_is_not_proven_contained) ... ok
+test_unreadable_lock_is_not_available (test_findings.Finding5LockFailsClosed.test_unreadable_lock_is_not_available) ... ok
+test_assignee_and_provider_are_normalized (test_findings.Finding6Normalization.test_assignee_and_provider_are_normalized) ... ok
+test_advisor_passes_policy_category_to_checks (test_findings.Finding7SenderByCategory.test_advisor_passes_policy_category_to_checks) ... ok
+test_custom_send_tool_gets_sender_check (test_findings.Finding7SenderByCategory.test_custom_send_tool_gets_sender_check) ... ok
+test_attached_and_separate_target_forms (test_findings.Finding8MvTargetDirectory.test_attached_and_separate_target_forms) ... ok
+test_tag_only_output_never_yields_empty_replacement (test_findings.Finding9TagOnlyWhisper.test_tag_only_output_never_yields_empty_replacement) ... ok
+test_heredoc_bodies_that_reach_a_shell_or_run_expansions_are_read (test_findings.Pass12Findings.test_heredoc_bodies_that_reach_a_shell_or_run_expansions_are_read) ... ok
+test_plain_data_heredocs_stay_quiet (test_findings.Pass12Findings.test_plain_data_heredocs_stay_quiet) ... ok
+test_heredocs_that_do_not_exist_or_reach_a_shell_are_read (test_findings.Pass13Findings.test_heredocs_that_do_not_exist_or_reach_a_shell_are_read) ... ok
+test_bodies_reached_by_later_lines_or_groups_are_read (test_findings.Pass14Findings.test_bodies_reached_by_later_lines_or_groups_are_read) ... ok
+test_single_data_heredoc_stays_quiet (test_findings.Pass14Findings.test_single_data_heredoc_stays_quiet) ... ok
+test_backslash_newline_in_a_heredoc_body_is_never_skipped (test_findings.Pass15Findings.test_backslash_newline_in_a_heredoc_body_is_never_skipped) ... ok
+test_rsync_delete_aliases_are_scrub (test_findings.Pass17Findings.test_rsync_delete_aliases_are_scrub) ... ok
+test_heredoc_skip_needs_the_bare_data_sink_word (test_findings.Pass18Findings.test_heredoc_skip_needs_the_bare_data_sink_word) ... ok
+test_brace_or_glob_in_the_command_word_is_flagged_and_could_not_parse (test_findings.Pass19Findings.test_brace_or_glob_in_the_command_word_is_flagged_and_could_not_parse) ... ok
+test_ordinary_brackets_braces_and_globs_stay_quiet (test_findings.Pass19Findings.test_ordinary_brackets_braces_and_globs_stay_quiet) ... ok
+test_globs_that_cannot_name_a_remover_stay_quiet (test_findings.Pass20Findings.test_globs_that_cannot_name_a_remover_stay_quiet) ... ok
+test_p2_1_any_cd_pushd_popd_makes_cwd_unknown (test_findings.Pass2Findings.test_p2_1_any_cd_pushd_popd_makes_cwd_unknown) ... ok
+test_p2_2_brace_and_bracket_expansion_is_unknown (test_findings.Pass2Findings.test_p2_2_brace_and_bracket_expansion_is_unknown) ... ok
+test_p2_3_non_ascii_deny_patterns_match (test_findings.Pass2Findings.test_p2_3_non_ascii_deny_patterns_match) ... ok
+test_p3_10_card_staged_under_legacy_cron_name_matches_canonical (test_findings.Pass2Findings.test_p3_10_card_staged_under_legacy_cron_name_matches_canonical) ... ok
+test_p3_12_whisper_span_hash_is_salted (test_findings.Pass2Findings.test_p3_12_whisper_span_hash_is_salted) ... ok
+test_p3_4_abbreviated_long_options (test_findings.Pass2Findings.test_p3_4_abbreviated_long_options) ... ok
+test_p3_6_whitespace_only_and_untagged_transform (test_findings.Pass2Findings.test_p3_6_whitespace_only_and_untagged_transform) ... ok
+test_p3_7_invalid_config_turns_card_red_with_fresh_key (test_findings.Pass2Findings.test_p3_7_invalid_config_turns_card_red_with_fresh_key) ... ok
+test_p2_1_rule_key_and_card_name_every_category (test_findings.Pass3Findings.test_p2_1_rule_key_and_card_name_every_category) ... ok
+test_p2_2_subshell_and_command_substitution_cd (test_findings.Pass3Findings.test_p2_2_subshell_and_command_substitution_cd) ... ok
+test_p3_3_standing_rule_named_alongside_preflight (test_findings.Pass3Findings.test_p3_3_standing_rule_named_alongside_preflight) ... ok
+test_p3_5_error_fallback_question_first_on_messaging (test_findings.Pass3Findings.test_p3_5_error_fallback_question_first_on_messaging) ... ok
+test_p3_6_quoted_command_names (test_findings.Pass3Findings.test_p3_6_quoted_command_names) ... ok
+test_p3_7_cron_run_is_spin (test_findings.Pass3Findings.test_p3_7_cron_run_is_spin) ... ok
+test_p3_8_underscore_audiences_count_as_downstream (test_findings.Pass3Findings.test_p3_8_underscore_audiences_count_as_downstream) ... ok
+test_p3_9_whisper_lookalike_text_is_untouched (test_findings.Pass3Findings.test_p3_9_whisper_lookalike_text_is_untouched) ... ok
+test_p2_1_action_values_normalized_like_hermes (test_findings.Pass4Findings.test_p2_1_action_values_normalized_like_hermes) ... ok
+test_p2_2_backslash_newline_continuation (test_findings.Pass4Findings.test_p2_2_backslash_newline_continuation) ... ok
+test_p3_3_none_session_matches_empty (test_findings.Pass4Findings.test_p3_3_none_session_matches_empty) ... ok
+test_p3_4_bad_whisper_settings_do_not_break_registration (test_findings.Pass4Findings.test_p3_4_bad_whisper_settings_do_not_break_registration) ... ok
+test_p3_5_whisper_shading_resets_to_default_color (test_findings.Pass4Findings.test_p3_5_whisper_shading_resets_to_default_color) ... ok
+test_p3_6_rm_without_operands_is_not_proven_contained (test_findings.Pass4Findings.test_p3_6_rm_without_operands_is_not_proven_contained) ... ok
+test_p2_1_cron_run_aliases (test_findings.Pass5Findings.test_p2_1_cron_run_aliases) ... ok
+test_p2_2_config_error_keeps_the_valid_rules (test_findings.Pass5Findings.test_p2_2_config_error_keeps_the_valid_rules) ... ok
+test_p2_3_every_card_gets_a_fresh_rule_key (test_findings.Pass5Findings.test_p2_3_every_card_gets_a_fresh_rule_key) ... ok
+test_p3_4_case_insensitive_command_names (test_findings.Pass5Findings.test_p3_4_case_insensitive_command_names) ... ok
+test_p3_5_indirect_command_names_are_unknown (test_findings.Pass5Findings.test_p3_5_indirect_command_names_are_unknown) ... ok
+test_p3_6_other_destructive_forms (test_findings.Pass5Findings.test_p3_6_other_destructive_forms) ... ok
+test_p3_7_whitespace_span_on_cli_is_not_blank (test_findings.Pass5Findings.test_p3_7_whitespace_span_on_cli_is_not_blank) ... ok
+test_p3_5_more_audience_words (test_findings.Pass6Findings.test_p3_5_more_audience_words) ... ok
+test_p3_6_every_sender_field_is_checked (test_findings.Pass6Findings.test_p3_6_every_sender_field_is_checked) ... ok
+test_p2_1_mid_word_hash_is_not_a_comment (test_findings.Pass7Findings.test_p2_1_mid_word_hash_is_not_a_comment) ... ok
+test_p2_2_command_named_by_expansion_is_flagged (test_findings.Pass7Findings.test_p2_2_command_named_by_expansion_is_flagged) ... ok
+test_p3_4_terminal_push_without_sender_field_is_not_sender_checked (test_findings.Pass7Findings.test_p3_4_terminal_push_without_sender_field_is_not_sender_checked) ... ok
+test_p3_5_only_real_whisper_markers_are_stripped (test_findings.Pass7Findings.test_p3_5_only_real_whisper_markers_are_stripped) ... ok
+test_could_not_parse_caps_the_card_at_caution_never_go (test_findings.Pass8Limits.test_could_not_parse_caps_the_card_at_caution_never_go) ... ok
+test_heredoc_into_a_shell_is_still_read (test_findings.Pass8Limits.test_heredoc_into_a_shell_is_still_read) ... ok
+test_literal_remover_behind_an_expanded_directory_is_still_read (test_findings.Pass8Limits.test_literal_remover_behind_an_expanded_directory_is_still_read) ... ok
+test_not_noisier_plain_commands_are_unchanged (test_findings.Pass8Limits.test_not_noisier_plain_commands_are_unchanged) ... ok
+test_p2_1_quoted_or_escaped_separators_are_could_not_parse (test_findings.Pass8Limits.test_p2_1_quoted_or_escaped_separators_are_could_not_parse) ... ok
+test_p2_2_expansion_named_commands_behind_prefixes_are_could_not_parse (test_findings.Pass8Limits.test_p2_2_expansion_named_commands_behind_prefixes_are_could_not_parse) ... ok
+test_p3_xargs_remove_and_rmdir_parents (test_findings.Pass8Limits.test_p3_xargs_remove_and_rmdir_parents) ... ok
+test_any_change_to_text_tool_args_or_card_id_changes_it (test_fingerprint.FingerprintCore.test_any_change_to_text_tool_args_or_card_id_changes_it) ... ok
+test_deterministic_and_readable (test_fingerprint.FingerprintCore.test_deterministic_and_readable) ... ok
+test_parse_code_accepts_what_a_human_types_back (test_fingerprint.FingerprintCore.test_parse_code_accepts_what_a_human_types_back) ... ok
+test_seal_detects_edited_fields (test_fingerprint.FingerprintCore.test_seal_detects_edited_fields) ... ok
+test_code_is_the_fingerprint_of_what_the_host_receives (test_fingerprint.FingerprintFlow.test_code_is_the_fingerprint_of_what_the_host_receives) ... ok
+test_code_survives_each_surface_renderer (test_fingerprint.FingerprintFlow.test_code_survives_each_surface_renderer) ... ok
+test_every_card_and_notice_carries_the_code_under_the_question_on_every_surface (test_fingerprint.FingerprintFlow.test_every_card_and_notice_carries_the_code_under_the_question_on_every_surface) ... ok
+test_log_round_trip_staged_shown_answered (test_fingerprint.FingerprintFlow.test_log_round_trip_staged_shown_answered) ... ok
+test_mismatches_are_reported_in_plain_words (test_fingerprint.FingerprintFlow.test_mismatches_are_reported_in_plain_words) ... ok
+test_signals_command_routes_verify_and_cards (test_fingerprint.FingerprintFlow.test_signals_command_routes_verify_and_cards) ... ok
+test_card_code_survives_the_real_approval_renderers (test_host.HostTests.test_card_code_survives_the_real_approval_renderers)
+Spec 5.6: the card code reaches the human intact on the CLI panel and through the real ... /Users/percykeith/.hermes/hermes-agent/hermes_cli/plugins_manifest.py:475: DeprecationWarning: 'maxsplit' is passed as positional argument
+  parts = re.split(r"[-+]", str(v).strip().lstrip("v"), 1)[0].split(".")
+ok
+test_card_reaches_hermes_prompt_and_the_human_decides_on_both_paths (test_host.HostTests.test_card_reaches_hermes_prompt_and_the_human_decides_on_both_paths) ... --- Logging error ---
+Traceback (most recent call last):
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/handlers.py", line 79, in emit
+    if self.shouldRollover(record):
+       ~~~~~~~~~~~~~~~~~~~^^^^^^^^
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/handlers.py", line 197, in shouldRollover
+    self.stream = self._open()
+                  ~~~~~~~~~~^^
+  File "/Users/percykeith/.hermes/hermes-agent/hermes_logging.py", line 588, in _open
+    stream = super()._open()
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/__init__.py", line 1248, in _open
+    return open_func(self.baseFilename, self.mode,
+                     encoding=self.encoding, errors=self.errors)
+FileNotFoundError: [Errno 2] No such file or directory: '/var/folders/07/b9gphpxx7x1dvfrwt2gvzxd80000gn/T/tmpo40xd7jr/logs/agent.log'
+Call stack:
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/threading.py", line 1044, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/threading.py", line 1082, in _bootstrap_inner
+    self._context.run(self.run)
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/threading.py", line 1024, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/handlers.py", line 1627, in _monitor
+    self.handle(record)
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/handlers.py", line 1608, in handle
+    handler.handle(record)
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/__init__.py", line 1027, in handle
+    self.emit(record)
+  File "/Users/percykeith/.hermes/hermes-agent/hermes_logging.py", line 553, in emit
+    super().emit(record)
+Message: 'capability_check plugin=%s capability=%s decision=%s checked_by=plugin_capability_granted evidence=%s'
+Arguments: ('hermes-axioma', 'tools.override', 'deny', 'not granted')
+--- Logging error ---
+Traceback (most recent call last):
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/handlers.py", line 79, in emit
+    if self.shouldRollover(record):
+       ~~~~~~~~~~~~~~~~~~~^^^^^^^^
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/handlers.py", line 197, in shouldRollover
+    self.stream = self._open()
+                  ~~~~~~~~~~^^
+  File "/Users/percykeith/.hermes/hermes-agent/hermes_logging.py", line 588, in _open
+    stream = super()._open()
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/__init__.py", line 1248, in _open
+    return open_func(self.baseFilename, self.mode,
+                     encoding=self.encoding, errors=self.errors)
+FileNotFoundError: [Errno 2] No such file or directory: '/var/folders/07/b9gphpxx7x1dvfrwt2gvzxd80000gn/T/tmpo40xd7jr/logs/agent.log'
+Call stack:
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/threading.py", line 1044, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/threading.py", line 1082, in _bootstrap_inner
+    self._context.run(self.run)
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/threading.py", line 1024, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/handlers.py", line 1627, in _monitor
+    self.handle(record)
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/handlers.py", line 1608, in handle
+    handler.handle(record)
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/__init__.py", line 1027, in handle
+    self.emit(record)
+  File "/Users/percykeith/.hermes/hermes-agent/hermes_logging.py", line 553, in emit
+    super().emit(record)
+Message: 'Plugin discovery complete: %d found, %d enabled'
+Arguments: (1, 0)
+--- Logging error ---
+Traceback (most recent call last):
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/handlers.py", line 79, in emit
+    if self.shouldRollover(record):
+       ~~~~~~~~~~~~~~~~~~~^^^^^^^^
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/handlers.py", line 197, in shouldRollover
+    self.stream = self._open()
+                  ~~~~~~~~~~^^
+  File "/Users/percykeith/.hermes/hermes-agent/hermes_logging.py", line 588, in _open
+    stream = super()._open()
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/__init__.py", line 1248, in _open
+    return open_func(self.baseFilename, self.mode,
+                     encoding=self.encoding, errors=self.errors)
+FileNotFoundError: [Errno 2] No such file or directory: '/var/folders/07/b9gphpxx7x1dvfrwt2gvzxd80000gn/T/tmpo40xd7jr/logs/agent.log'
+Call stack:
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/threading.py", line 1044, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/threading.py", line 1082, in _bootstrap_inner
+    self._context.run(self.run)
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/threading.py", line 1024, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/handlers.py", line 1627, in _monitor
+    self.handle(record)
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/handlers.py", line 1608, in handle
+    handler.handle(record)
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/__init__.py", line 1027, in handle
+    self.emit(record)
+  File "/Users/percykeith/.hermes/hermes-agent/hermes_logging.py", line 553, in emit
+    super().emit(record)
+Message: 'No .env file found. Using system environment variables.'
+Arguments: ()
+ok
+test_cli_final_renderer_keeps_color_in_raw_mode_and_words_in_every_mode (test_host.HostTests.test_cli_final_renderer_keeps_color_in_raw_mode_and_words_in_every_mode)
+Hermes's own CLI final-response renderer: `raw` keeps the truecolor styling; the default ... /Users/percykeith/.hermes/hermes-agent/hermes_cli/plugins_manifest.py:475: DeprecationWarning: 'maxsplit' is passed as positional argument
+  parts = re.split(r"[-+]", str(v).strip().lstrip("v"), 1)[0].split(".")
+--- Logging error ---
+Traceback (most recent call last):
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/handlers.py", line 79, in emit
+    if self.shouldRollover(record):
+       ~~~~~~~~~~~~~~~~~~~^^^^^^^^
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/handlers.py", line 197, in shouldRollover
+    self.stream = self._open()
+                  ~~~~~~~~~~^^
+  File "/Users/percykeith/.hermes/hermes-agent/hermes_logging.py", line 588, in _open
+    stream = super()._open()
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/__init__.py", line 1248, in _open
+    return open_func(self.baseFilename, self.mode,
+                     encoding=self.encoding, errors=self.errors)
+FileNotFoundError: [Errno 2] No such file or directory: '/var/folders/07/b9gphpxx7x1dvfrwt2gvzxd80000gn/T/tmpo40xd7jr/logs/agent.log'
+Call stack:
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/threading.py", line 1044, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/threading.py", line 1082, in _bootstrap_inner
+    self._context.run(self.run)
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/threading.py", line 1024, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/handlers.py", line 1627, in _monitor
+    self.handle(record)
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/handlers.py", line 1608, in handle
+    handler.handle(record)
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/__init__.py", line 1027, in handle
+    self.emit(record)
+  File "/Users/percykeith/.hermes/hermes-agent/hermes_logging.py", line 553, in emit
+    super().emit(record)
+Message: 'capability_check plugin=%s capability=%s decision=%s checked_by=plugin_capability_granted evidence=%s'
+Arguments: ('hermes-axioma', 'tools.override', 'deny', 'not granted')
+ok
+test_cronjob_alias_is_classified_after_canonicalization_on_both_paths (test_host.HostTests.test_cronjob_alias_is_classified_after_canonicalization_on_both_paths) ... --- Logging error ---
+Traceback (most recent call last):
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/handlers.py", line 79, in emit
+    if self.shouldRollover(record):
+       ~~~~~~~~~~~~~~~~~~~^^^^^^^^
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/handlers.py", line 197, in shouldRollover
+    self.stream = self._open()
+                  ~~~~~~~~~~^^
+  File "/Users/percykeith/.hermes/hermes-agent/hermes_logging.py", line 588, in _open
+    stream = super()._open()
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/__init__.py", line 1248, in _open
+    return open_func(self.baseFilename, self.mode,
+                     encoding=self.encoding, errors=self.errors)
+FileNotFoundError: [Errno 2] No such file or directory: '/var/folders/07/b9gphpxx7x1dvfrwt2gvzxd80000gn/T/tmpo40xd7jr/logs/agent.log'
+Call stack:
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/threading.py", line 1044, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/threading.py", line 1082, in _bootstrap_inner
+    self._context.run(self.run)
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/threading.py", line 1024, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/handlers.py", line 1627, in _monitor
+    self.handle(record)
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/handlers.py", line 1608, in handle
+    handler.handle(record)
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/__init__.py", line 1027, in handle
+    self.emit(record)
+  File "/Users/percykeith/.hermes/hermes-agent/hermes_logging.py", line 553, in emit
+    super().emit(record)
+Message: 'capability_check plugin=%s capability=%s decision=%s checked_by=plugin_capability_granted evidence=%s'
+Arguments: ('hermes-axioma', 'tools.override', 'deny', 'not granted')
+ok
+test_green_only_from_a_tool_call_the_host_reported_as_passing (test_host.HostTests.test_green_only_from_a_tool_call_the_host_reported_as_passing) ... --- Logging error ---
+Traceback (most recent call last):
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/handlers.py", line 79, in emit
+    if self.shouldRollover(record):
+       ~~~~~~~~~~~~~~~~~~~^^^^^^^^
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/handlers.py", line 197, in shouldRollover
+    self.stream = self._open()
+                  ~~~~~~~~~~^^
+  File "/Users/percykeith/.hermes/hermes-agent/hermes_logging.py", line 588, in _open
+    stream = super()._open()
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/__init__.py", line 1248, in _open
+    return open_func(self.baseFilename, self.mode,
+                     encoding=self.encoding, errors=self.errors)
+FileNotFoundError: [Errno 2] No such file or directory: '/var/folders/07/b9gphpxx7x1dvfrwt2gvzxd80000gn/T/tmpo40xd7jr/logs/agent.log'
+Call stack:
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/threading.py", line 1044, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/threading.py", line 1082, in _bootstrap_inner
+    self._context.run(self.run)
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/threading.py", line 1024, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/handlers.py", line 1627, in _monitor
+    self.handle(record)
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/handlers.py", line 1608, in handle
+    handler.handle(record)
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/__init__.py", line 1027, in handle
+    self.emit(record)
+  File "/Users/percykeith/.hermes/hermes-agent/hermes_logging.py", line 553, in emit
+    super().emit(record)
+Message: 'capability_check plugin=%s capability=%s decision=%s checked_by=plugin_capability_granted evidence=%s'
+Arguments: ('hermes-axioma', 'tools.override', 'deny', 'not granted')
+ok
+test_host_policy_decides_unattended_and_yolo (test_host.HostTests.test_host_policy_decides_unattended_and_yolo) ... --- Logging error ---
+Traceback (most recent call last):
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/handlers.py", line 79, in emit
+    if self.shouldRollover(record):
+       ~~~~~~~~~~~~~~~~~~~^^^^^^^^
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/handlers.py", line 197, in shouldRollover
+    self.stream = self._open()
+                  ~~~~~~~~~~^^
+  File "/Users/percykeith/.hermes/hermes-agent/hermes_logging.py", line 588, in _open
+    stream = super()._open()
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/__init__.py", line 1248, in _open
+    return open_func(self.baseFilename, self.mode,
+                     encoding=self.encoding, errors=self.errors)
+FileNotFoundError: [Errno 2] No such file or directory: '/var/folders/07/b9gphpxx7x1dvfrwt2gvzxd80000gn/T/tmpo40xd7jr/logs/agent.log'
+Call stack:
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/threading.py", line 1044, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/threading.py", line 1082, in _bootstrap_inner
+    self._context.run(self.run)
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/threading.py", line 1024, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/handlers.py", line 1627, in _monitor
+    self.handle(record)
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/handlers.py", line 1608, in handle
+    handler.handle(record)
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/__init__.py", line 1027, in handle
+    self.emit(record)
+  File "/Users/percykeith/.hermes/hermes-agent/hermes_logging.py", line 553, in emit
+    super().emit(record)
+Message: 'capability_check plugin=%s capability=%s decision=%s checked_by=plugin_capability_granted evidence=%s'
+Arguments: ('hermes-axioma', 'tools.override', 'deny', 'not granted')
+--- Logging error ---
+Traceback (most recent call last):
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/handlers.py", line 79, in emit
+    if self.shouldRollover(record):
+       ~~~~~~~~~~~~~~~~~~~^^^^^^^^
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/handlers.py", line 197, in shouldRollover
+    self.stream = self._open()
+                  ~~~~~~~~~~^^
+  File "/Users/percykeith/.hermes/hermes-agent/hermes_logging.py", line 588, in _open
+    stream = super()._open()
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/__init__.py", line 1248, in _open
+    return open_func(self.baseFilename, self.mode,
+                     encoding=self.encoding, errors=self.errors)
+FileNotFoundError: [Errno 2] No such file or directory: '/var/folders/07/b9gphpxx7x1dvfrwt2gvzxd80000gn/T/tmpo40xd7jr/logs/agent.log'
+Call stack:
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/threading.py", line 1044, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/threading.py", line 1082, in _bootstrap_inner
+    self._context.run(self.run)
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/threading.py", line 1024, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/handlers.py", line 1627, in _monitor
+    self.handle(record)
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/handlers.py", line 1608, in handle
+    handler.handle(record)
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/__init__.py", line 1027, in handle
+    self.emit(record)
+  File "/Users/percykeith/.hermes/hermes-agent/hermes_logging.py", line 553, in emit
+    super().emit(record)
+Message: '%s (pattern: %s): %s — no interactive user/gateway present; BLOCKED (fail-closed). Set HERMES_INTERACTIVE or HERMES_GATEWAY_SESSION to answer the prompt.'
+Arguments: ("plugin-escalated tool call 'axioma_synthetic_send_email' in non-interactive non-gateway context", 'plugin_rule:axioma:send:axioma_synthetic_send_email:green:16774cec343449448e6b47247c1e4245', 'GO · proceed: yes / no\nIs this the audience you intended?\ncard code 3ZNS-G2MT\nintent: Share the synthetic draft\nsignal: The public post cannot be recalled.\nkind: send\n(advice only; you decide in the Hermes prompt)')
+--- Logging error ---
+Traceback (most recent call last):
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/handlers.py", line 79, in emit
+    if self.shouldRollover(record):
+       ~~~~~~~~~~~~~~~~~~~^^^^^^^^
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/handlers.py", line 197, in shouldRollover
+    self.stream = self._open()
+                  ~~~~~~~~~~^^
+  File "/Users/percykeith/.hermes/hermes-agent/hermes_logging.py", line 588, in _open
+    stream = super()._open()
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/__init__.py", line 1248, in _open
+    return open_func(self.baseFilename, self.mode,
+                     encoding=self.encoding, errors=self.errors)
+FileNotFoundError: [Errno 2] No such file or directory: '/var/folders/07/b9gphpxx7x1dvfrwt2gvzxd80000gn/T/tmpo40xd7jr/logs/errors.log'
+Call stack:
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/threading.py", line 1044, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/threading.py", line 1082, in _bootstrap_inner
+    self._context.run(self.run)
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/threading.py", line 1024, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/handlers.py", line 1627, in _monitor
+    self.handle(record)
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/handlers.py", line 1608, in handle
+    handler.handle(record)
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/__init__.py", line 1027, in handle
+    self.emit(record)
+  File "/Users/percykeith/.hermes/hermes-agent/hermes_logging.py", line 553, in emit
+    super().emit(record)
+Message: '%s (pattern: %s): %s — no interactive user/gateway present; BLOCKED (fail-closed). Set HERMES_INTERACTIVE or HERMES_GATEWAY_SESSION to answer the prompt.'
+Arguments: ("plugin-escalated tool call 'axioma_synthetic_send_email' in non-interactive non-gateway context", 'plugin_rule:axioma:send:axioma_synthetic_send_email:green:16774cec343449448e6b47247c1e4245', 'GO · proceed: yes / no\nIs this the audience you intended?\ncard code 3ZNS-G2MT\nintent: Share the synthetic draft\nsignal: The public post cannot be recalled.\nkind: send\n(advice only; you decide in the Hermes prompt)')
+ok
+test_inline_signal_renders_through_the_real_output_transform (test_host.HostTests.test_inline_signal_renders_through_the_real_output_transform) ... --- Logging error ---
+Traceback (most recent call last):
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/handlers.py", line 79, in emit
+    if self.shouldRollover(record):
+       ~~~~~~~~~~~~~~~~~~~^^^^^^^^
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/handlers.py", line 197, in shouldRollover
+    self.stream = self._open()
+                  ~~~~~~~~~~^^
+  File "/Users/percykeith/.hermes/hermes-agent/hermes_logging.py", line 588, in _open
+    stream = super()._open()
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/__init__.py", line 1248, in _open
+    return open_func(self.baseFilename, self.mode,
+                     encoding=self.encoding, errors=self.errors)
+FileNotFoundError: [Errno 2] No such file or directory: '/var/folders/07/b9gphpxx7x1dvfrwt2gvzxd80000gn/T/tmpo40xd7jr/logs/agent.log'
+Call stack:
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/threading.py", line 1044, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/threading.py", line 1082, in _bootstrap_inner
+    self._context.run(self.run)
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/threading.py", line 1024, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/handlers.py", line 1627, in _monitor
+    self.handle(record)
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/handlers.py", line 1608, in handle
+    handler.handle(record)
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/__init__.py", line 1027, in handle
+    self.emit(record)
+  File "/Users/percykeith/.hermes/hermes-agent/hermes_logging.py", line 553, in emit
+    super().emit(record)
+Message: 'capability_check plugin=%s capability=%s decision=%s checked_by=plugin_capability_granted evidence=%s'
+Arguments: ('hermes-axioma', 'tools.override', 'deny', 'not granted')
+ok
+test_native_card_is_matched_against_final_arguments_after_middleware (test_host.HostTests.test_native_card_is_matched_against_final_arguments_after_middleware) ... --- Logging error ---
+Traceback (most recent call last):
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/handlers.py", line 79, in emit
+    if self.shouldRollover(record):
+       ~~~~~~~~~~~~~~~~~~~^^^^^^^^
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/handlers.py", line 197, in shouldRollover
+    self.stream = self._open()
+                  ~~~~~~~~~~^^
+  File "/Users/percykeith/.hermes/hermes-agent/hermes_logging.py", line 588, in _open
+    stream = super()._open()
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/__init__.py", line 1248, in _open
+    return open_func(self.baseFilename, self.mode,
+                     encoding=self.encoding, errors=self.errors)
+FileNotFoundError: [Errno 2] No such file or directory: '/var/folders/07/b9gphpxx7x1dvfrwt2gvzxd80000gn/T/tmpo40xd7jr/logs/agent.log'
+Call stack:
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/threading.py", line 1044, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/threading.py", line 1082, in _bootstrap_inner
+    self._context.run(self.run)
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/threading.py", line 1024, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/handlers.py", line 1627, in _monitor
+    self.handle(record)
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/handlers.py", line 1608, in handle
+    handler.handle(record)
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/__init__.py", line 1027, in handle
+    self.emit(record)
+  File "/Users/percykeith/.hermes/hermes-agent/hermes_logging.py", line 553, in emit
+    super().emit(record)
+Message: 'capability_check plugin=%s capability=%s decision=%s checked_by=plugin_capability_granted evidence=%s'
+Arguments: ('hermes-axioma', 'tools.override', 'deny', 'not granted')
+ok
+test_no_card_still_reaches_the_human_with_a_notice_on_both_paths (test_host.HostTests.test_no_card_still_reaches_the_human_with_a_notice_on_both_paths) ... --- Logging error ---
+Traceback (most recent call last):
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/handlers.py", line 79, in emit
+    if self.shouldRollover(record):
+       ~~~~~~~~~~~~~~~~~~~^^^^^^^^
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/handlers.py", line 197, in shouldRollover
+    self.stream = self._open()
+                  ~~~~~~~~~~^^
+  File "/Users/percykeith/.hermes/hermes-agent/hermes_logging.py", line 588, in _open
+    stream = super()._open()
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/__init__.py", line 1248, in _open
+    return open_func(self.baseFilename, self.mode,
+                     encoding=self.encoding, errors=self.errors)
+FileNotFoundError: [Errno 2] No such file or directory: '/var/folders/07/b9gphpxx7x1dvfrwt2gvzxd80000gn/T/tmpo40xd7jr/logs/agent.log'
+Call stack:
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/threading.py", line 1044, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/threading.py", line 1082, in _bootstrap_inner
+    self._context.run(self.run)
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/threading.py", line 1024, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/handlers.py", line 1627, in _monitor
+    self.handle(record)
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/handlers.py", line 1608, in handle
+    handler.handle(record)
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/__init__.py", line 1027, in handle
+    self.emit(record)
+  File "/Users/percykeith/.hermes/hermes-agent/hermes_logging.py", line 553, in emit
+    super().emit(record)
+Message: 'capability_check plugin=%s capability=%s decision=%s checked_by=plugin_capability_granted evidence=%s'
+Arguments: ('hermes-axioma', 'tools.override', 'deny', 'not granted')
+ok
+test_question_and_proceed_survive_the_cli_approval_panel (test_host.HostTests.test_question_and_proceed_survive_the_cli_approval_panel)
+Hermes's CLI panel puts the description last and truncates it; ours leads with them. ... --- Logging error ---
+Traceback (most recent call last):
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/handlers.py", line 79, in emit
+    if self.shouldRollover(record):
+       ~~~~~~~~~~~~~~~~~~~^^^^^^^^
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/handlers.py", line 197, in shouldRollover
+    self.stream = self._open()
+                  ~~~~~~~~~~^^
+  File "/Users/percykeith/.hermes/hermes-agent/hermes_logging.py", line 588, in _open
+    stream = super()._open()
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/__init__.py", line 1248, in _open
+    return open_func(self.baseFilename, self.mode,
+                     encoding=self.encoding, errors=self.errors)
+FileNotFoundError: [Errno 2] No such file or directory: '/var/folders/07/b9gphpxx7x1dvfrwt2gvzxd80000gn/T/tmpo40xd7jr/logs/agent.log'
+Call stack:
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/threading.py", line 1044, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/threading.py", line 1082, in _bootstrap_inner
+    self._context.run(self.run)
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/threading.py", line 1024, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/handlers.py", line 1627, in _monitor
+    self.handle(record)
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/handlers.py", line 1608, in handle
+    handler.handle(record)
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/__init__.py", line 1027, in handle
+    self.emit(record)
+  File "/Users/percykeith/.hermes/hermes-agent/hermes_logging.py", line 553, in emit
+    super().emit(record)
+Message: 'capability_check plugin=%s capability=%s decision=%s checked_by=plugin_capability_granted evidence=%s'
+Arguments: ('hermes-axioma', 'tools.override', 'deny', 'not granted')
+ok
+test_red_card_never_offers_yes_and_answers_are_logged_without_bodies (test_host.HostTests.test_red_card_never_offers_yes_and_answers_are_logged_without_bodies) ... --- Logging error ---
+Traceback (most recent call last):
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/handlers.py", line 79, in emit
+    if self.shouldRollover(record):
+       ~~~~~~~~~~~~~~~~~~~^^^^^^^^
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/handlers.py", line 197, in shouldRollover
+    self.stream = self._open()
+                  ~~~~~~~~~~^^
+  File "/Users/percykeith/.hermes/hermes-agent/hermes_logging.py", line 588, in _open
+    stream = super()._open()
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/__init__.py", line 1248, in _open
+    return open_func(self.baseFilename, self.mode,
+                     encoding=self.encoding, errors=self.errors)
+FileNotFoundError: [Errno 2] No such file or directory: '/var/folders/07/b9gphpxx7x1dvfrwt2gvzxd80000gn/T/tmpo40xd7jr/logs/agent.log'
+Call stack:
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/threading.py", line 1044, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/threading.py", line 1082, in _bootstrap_inner
+    self._context.run(self.run)
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/threading.py", line 1024, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/handlers.py", line 1627, in _monitor
+    self.handle(record)
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/handlers.py", line 1608, in handle
+    handler.handle(record)
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/__init__.py", line 1027, in handle
+    self.emit(record)
+  File "/Users/percykeith/.hermes/hermes-agent/hermes_logging.py", line 553, in emit
+    super().emit(record)
+Message: 'capability_check plugin=%s capability=%s decision=%s checked_by=plugin_capability_granted evidence=%s'
+Arguments: ('hermes-axioma', 'tools.override', 'deny', 'not granted')
+ok
+test_remembered_session_approval_never_covers_a_later_call (test_host.HostTests.test_remembered_session_approval_never_covers_a_later_call)
+Real Hermes allowlist: 'session' on one GREEN card does not skip the next card. ... --- Logging error ---
+Traceback (most recent call last):
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/handlers.py", line 79, in emit
+    if self.shouldRollover(record):
+       ~~~~~~~~~~~~~~~~~~~^^^^^^^^
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/handlers.py", line 197, in shouldRollover
+    self.stream = self._open()
+                  ~~~~~~~~~~^^
+  File "/Users/percykeith/.hermes/hermes-agent/hermes_logging.py", line 588, in _open
+    stream = super()._open()
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/__init__.py", line 1248, in _open
+    return open_func(self.baseFilename, self.mode,
+                     encoding=self.encoding, errors=self.errors)
+FileNotFoundError: [Errno 2] No such file or directory: '/var/folders/07/b9gphpxx7x1dvfrwt2gvzxd80000gn/T/tmpo40xd7jr/logs/agent.log'
+Call stack:
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/threading.py", line 1044, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/threading.py", line 1082, in _bootstrap_inner
+    self._context.run(self.run)
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/threading.py", line 1024, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/handlers.py", line 1627, in _monitor
+    self.handle(record)
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/handlers.py", line 1608, in handle
+    handler.handle(record)
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/__init__.py", line 1027, in handle
+    self.emit(record)
+  File "/Users/percykeith/.hermes/hermes-agent/hermes_logging.py", line 553, in emit
+    super().emit(record)
+Message: 'capability_check plugin=%s capability=%s decision=%s checked_by=plugin_capability_granted evidence=%s'
+Arguments: ('hermes-axioma', 'tools.override', 'deny', 'not granted')
+ok
+test_unclassified_tools_are_untouched_on_both_paths (test_host.HostTests.test_unclassified_tools_are_untouched_on_both_paths) ... --- Logging error ---
+Traceback (most recent call last):
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/handlers.py", line 79, in emit
+    if self.shouldRollover(record):
+       ~~~~~~~~~~~~~~~~~~~^^^^^^^^
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/handlers.py", line 197, in shouldRollover
+    self.stream = self._open()
+                  ~~~~~~~~~~^^
+  File "/Users/percykeith/.hermes/hermes-agent/hermes_logging.py", line 588, in _open
+    stream = super()._open()
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/__init__.py", line 1248, in _open
+    return open_func(self.baseFilename, self.mode,
+                     encoding=self.encoding, errors=self.errors)
+FileNotFoundError: [Errno 2] No such file or directory: '/var/folders/07/b9gphpxx7x1dvfrwt2gvzxd80000gn/T/tmpo40xd7jr/logs/agent.log'
+Call stack:
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/threading.py", line 1044, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/threading.py", line 1082, in _bootstrap_inner
+    self._context.run(self.run)
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/threading.py", line 1024, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/handlers.py", line 1627, in _monitor
+    self.handle(record)
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/handlers.py", line 1608, in handle
+    handler.handle(record)
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/__init__.py", line 1027, in handle
+    self.emit(record)
+  File "/Users/percykeith/.hermes/hermes-agent/hermes_logging.py", line 553, in emit
+    super().emit(record)
+Message: 'capability_check plugin=%s capability=%s decision=%s checked_by=plugin_capability_granted evidence=%s'
+Arguments: ('hermes-axioma', 'tools.override', 'deny', 'not granted')
+ok
+test_classifies_sends_spends_spins_but_not_reads (test_policy.PolicyTests.test_classifies_sends_spends_spins_but_not_reads) ... ok
+test_config_add_remove_and_invalid_fail_closed (test_policy.PolicyTests.test_config_add_remove_and_invalid_fail_closed) ... ok
+test_payment_reads_pass_and_common_posts_are_gated (test_policy.PolicyTests.test_payment_reads_pass_and_common_posts_are_gated) ... ok
+test_tool_and_card_text_say_what_scrub_does_not_see (test_registration.Pass16Wording.test_tool_and_card_text_say_what_scrub_does_not_see) ... ok
+test_registers_only_declared_surfaces (test_registration.RegistrationTests.test_registers_only_declared_surfaces) ... ok
+test_budget_is_configurable_and_bad_values_fall_back (test_signal.BudgetTests.test_budget_is_configurable_and_bad_values_fall_back) ... ok
+test_cap_keeps_the_most_severe_and_logs_the_rest (test_signal.BudgetTests.test_cap_keeps_the_most_severe_and_logs_the_rest) ... ok
+test_whisper_cap_and_span_length (test_signal.BudgetTests.test_whisper_cap_and_span_length) ... ok
+test_katex_color_with_word_outside_math (test_signal.DesktopTests.test_katex_color_with_word_outside_math) ... ok
+test_katex_escaping (test_signal.DesktopTests.test_katex_escaping) ... ok
+test_light_theme_on_desktop (test_signal.DesktopTests.test_light_theme_on_desktop) ... ok
+test_markdown_inside_span_falls_back_to_bold_and_word (test_signal.DesktopTests.test_markdown_inside_span_falls_back_to_bold_and_word) ... ok
+test_guidance_teaches_markup_and_rules_briefly (test_signal.GuidanceTests.test_guidance_teaches_markup_and_rules_briefly) ... ok
+test_every_flag_logged_without_bodies (test_signal.IntegrityTests.test_every_flag_logged_without_bodies) ... ok
+test_go_only_from_a_check_observed_in_this_session (test_signal.IntegrityTests.test_go_only_from_a_check_observed_in_this_session) ... ok
+test_go_without_a_check_renders_plain_and_is_logged (test_signal.IntegrityTests.test_go_without_a_check_renders_plain_and_is_logged) ... ok
+test_logging_failure_hides_no_stop (test_signal.IntegrityTests.test_logging_failure_hides_no_stop) ... ok
+test_whisper_once_per_session (test_signal.IntegrityTests.test_whisper_once_per_session) ... ok
+test_lookalikes_without_a_value_are_not_tags (test_signal.NeverLeakTests.test_lookalikes_without_a_value_are_not_tags) ... ok
+test_malformed_tags_strip_cleanly_on_every_surface (test_signal.NeverLeakTests.test_malformed_tags_strip_cleanly_on_every_surface) ... ok
+test_tag_only_reply_is_a_short_placeholder (test_signal.NeverLeakTests.test_tag_only_reply_is_a_short_placeholder) ... ok
+test_tags_inside_code_keep_the_word_and_never_markup (test_signal.NeverLeakTests.test_tags_inside_code_keep_the_word_and_never_markup) ... ok
+test_p2_1_list_quote_and_indented_code_never_hide_a_stop (test_signal.Pass10Findings.test_p2_1_list_quote_and_indented_code_never_hide_a_stop) ... ok
+test_p2_2_any_value_length_is_a_tag (test_signal.Pass10Findings.test_p2_2_any_value_length_is_a_tag) ... ok
+test_p2_3_agent_math_in_the_reply_disables_the_math_path (test_signal.Pass10Findings.test_p2_3_agent_math_in_the_reply_disables_the_math_path) ... ok
+test_p2_4_control_and_separator_characters_never_reach_desktop_math (test_signal.Pass10Findings.test_p2_4_control_and_separator_characters_never_reach_desktop_math) ... ok
+test_p3_bidi_controls_cannot_reorder_the_word_in_a_terminal (test_signal.Pass10Findings.test_p3_bidi_controls_cannot_reorder_the_word_in_a_terminal) ... ok
+test_p3_markdown_adjacency_never_makes_four_asterisks (test_signal.Pass10Findings.test_p3_markdown_adjacency_never_makes_four_asterisks) ... ok
+test_p3_repeated_whisper_is_logged_not_shown (test_signal.Pass10Findings.test_p3_repeated_whisper_is_logged_not_shown) ... ok
+test_p3_zero_width_characters_inside_a_tag_do_not_hide_it (test_signal.Pass10Findings.test_p3_zero_width_characters_inside_a_tag_do_not_hide_it) ... ok
+test_p2_1_a_dollar_inside_any_span_disables_the_math_path (test_signal.Pass11Findings.test_p2_1_a_dollar_inside_any_span_disables_the_math_path) ... ok
+test_p2_2_only_characters_katex_renders_take_the_math_path (test_signal.Pass11Findings.test_p2_2_only_characters_katex_renders_take_the_math_path) ... ok
+test_p3_1_invisible_characters_inside_a_tag_keyword (test_signal.Pass11Findings.test_p3_1_invisible_characters_inside_a_tag_keyword) ... ok
+test_p3_2_a_keyword_cut_off_at_the_end_of_the_reply (test_signal.Pass11Findings.test_p3_2_a_keyword_cut_off_at_the_end_of_the_reply) ... ok
+test_p2_1_a_tag_cut_off_mid_reply_is_removed_even_when_it_is_the_only_tag (test_signal.Pass12Findings.test_p2_1_a_tag_cut_off_mid_reply_is_removed_even_when_it_is_the_only_tag) ... ok
+test_p2_2_a_pipe_in_a_span_never_takes_the_math_path (test_signal.Pass12Findings.test_p2_2_a_pipe_in_a_span_never_takes_the_math_path) ... ok
+test_p2_3_an_escaped_backslash_before_a_dollar_is_agent_math (test_signal.Pass12Findings.test_p2_3_an_escaped_backslash_before_a_dollar_is_agent_math) ... ok
+test_p3_lookalike_with_a_value_inside_code_is_left_alone (test_signal.Pass12Findings.test_p3_lookalike_with_a_value_inside_code_is_left_alone) ... ok
+test_p3_more_invisible_characters_inside_a_tag (test_signal.Pass12Findings.test_p3_more_invisible_characters_inside_a_tag) ... ok
+test_p3_terminal_resets_only_what_it_set (test_signal.Pass12Findings.test_p3_terminal_resets_only_what_it_set) ... ok
+test_p2_1_every_math_form_desktop_normalizes_disables_the_math_path (test_signal.Pass13Findings.test_p2_1_every_math_form_desktop_normalizes_disables_the_math_path) ... ok
+test_p3_loose_and_cut_off_tags_never_leak (test_signal.Pass13Findings.test_p3_loose_and_cut_off_tags_never_leak) ... ok
+test_p2_1_any_dollar_with_cjk_anywhere_disables_the_math_path (test_signal.Pass14Findings.test_p2_1_any_dollar_with_cjk_anywhere_disables_the_math_path) ... ok
+test_p3_every_loose_keyword_form_strips_cleanly (test_signal.Pass14Findings.test_p3_every_loose_keyword_form_strips_cleanly) ... ok
+test_p2_1_brackets_or_bang_in_a_span_never_take_the_math_path (test_signal.Pass15Findings.test_p2_1_brackets_or_bang_in_a_span_never_take_the_math_path) ... ok
+test_p2_2_an_opener_missing_its_bracket_never_swallows_later_tags (test_signal.Pass15Findings.test_p2_2_an_opener_missing_its_bracket_never_swallows_later_tags) ... ok
+test_p2_2_fuzz_no_tag_survives (test_signal.Pass15Findings.test_p2_2_fuzz_no_tag_survives) ... ok
+test_p3_cut_off_closer_keeps_the_rest_of_the_line (test_signal.Pass15Findings.test_p3_cut_off_closer_keeps_the_rest_of_the_line) ... ok
+test_p3_span_length_budget_counts_characters_too (test_signal.Pass15Findings.test_p3_span_length_budget_counts_characters_too) ... ok
+test_p2_1_a_stray_backtick_turns_the_math_path_off (test_signal.Pass16Findings.test_p2_1_a_stray_backtick_turns_the_math_path_off) ... ok
+test_p2_2_a_link_touching_the_span_turns_the_math_path_off (test_signal.Pass16Findings.test_p2_2_a_link_touching_the_span_turns_the_math_path_off) ... ok
+test_p3_1_invisible_tag_after_an_unclosed_bracket (test_signal.Pass16Findings.test_p3_1_invisible_tag_after_an_unclosed_bracket) ... ok
+test_p3_2_parsing_is_linear (test_signal.Pass16Findings.test_p3_2_parsing_is_linear) ... ok
+test_p2_1_a_raw_html_block_turns_the_math_path_off (test_signal.Pass17Findings.test_p2_1_a_raw_html_block_turns_the_math_path_off) ... ok
+test_p3_1_removing_an_inner_tag_never_splices_a_visible_tag (test_signal.Pass17Findings.test_p3_1_removing_an_inner_tag_never_splices_a_visible_tag) ... ok
+test_p3_3_katex_ligatures_take_the_bold_path (test_signal.Pass17Findings.test_p3_3_katex_ligatures_take_the_bold_path) ... ok
+test_p2_1_a_dollar_before_a_non_ascii_digit_turns_the_math_path_off (test_signal.Pass18Findings.test_p2_1_a_dollar_before_a_non_ascii_digit_turns_the_math_path_off) ... ok
+test_p3_1_an_empty_check_never_matches_an_empty_call_id (test_signal.Pass18Findings.test_p3_1_an_empty_check_never_matches_an_empty_call_id) ... ok
+test_p3_2_no_bold_markers_inside_a_link (test_signal.Pass18Findings.test_p3_2_no_bold_markers_inside_a_link) ... ok
+test_p3_3_a_closer_with_several_backslashes_never_leaks (test_signal.Pass18Findings.test_p3_3_a_closer_with_several_backslashes_never_leaks) ... ok
+test_p2_1_a_spliced_copy_of_a_used_tag_never_leaks (test_signal.Pass19Findings.test_p2_1_a_spliced_copy_of_a_used_tag_never_leaks) ... ok
+test_p2_1_a_spliced_tag_with_invisible_chars_or_backslashes_never_leaks (test_signal.Pass19Findings.test_p2_1_a_spliced_tag_with_invisible_chars_or_backslashes_never_leaks) ... ok
+test_p2_1_lookalikes_the_reply_wrote_as_text_survive (test_signal.Pass19Findings.test_p2_1_lookalikes_the_reply_wrote_as_text_survive) ... ok
+test_p2_1_splice_fuzz_never_leaks (test_signal.Pass19Findings.test_p2_1_splice_fuzz_never_leaks) ... ok
+test_p3_intent_bold_only_where_markdown_reads_it_as_bold (test_signal.Pass19Findings.test_p3_intent_bold_only_where_markdown_reads_it_as_bold) ... ok
+test_p2_1_a_tag_spliced_across_the_plugins_own_styling_never_leaks (test_signal.Pass20Findings.test_p2_1_a_tag_spliced_across_the_plugins_own_styling_never_leaks) ... ok
+test_p2_1_styled_splice_fuzz_never_leaks (test_signal.Pass20Findings.test_p2_1_styled_splice_fuzz_never_leaks) ... ok
+test_p2_2_an_html_block_inside_a_quote_or_list_turns_the_math_path_off (test_signal.Pass20Findings.test_p2_2_an_html_block_inside_a_quote_or_list_turns_the_math_path_off) ... ok
+test_p2_3_plain_only_shows_the_word_when_no_color_is_applied (test_signal.Pass20Findings.test_p2_3_plain_only_shows_the_word_when_no_color_is_applied) ... ok
+test_p2_1_a_lookalike_earlier_on_the_line_never_swallows_a_real_span (test_signal.Pass21Findings.test_p2_1_a_lookalike_earlier_on_the_line_never_swallows_a_real_span) ... ok
+test_p2_2_idempotence_fuzz_with_code (test_signal.Pass21Findings.test_p2_2_idempotence_fuzz_with_code) ... ok
+test_p2_2_output_is_idempotent_when_removal_changes_code_or_reuses_a_lookalike (test_signal.Pass21Findings.test_p2_2_output_is_idempotent_when_removal_changes_code_or_reuses_a_lookalike) ... ok
+test_code_in_a_tagged_reply_is_never_stripped (test_signal.Pass22Findings.test_code_in_a_tagged_reply_is_never_stripped) ... ok
+test_fuzz_code_in_fences_survives_a_tagged_reply (test_signal.Pass22Findings.test_fuzz_code_in_fences_survives_a_tagged_reply) ... ok
+test_fuzz_untagged_code_never_changes (test_signal.Pass22Findings.test_fuzz_untagged_code_never_changes) ... ok
+test_pass23_shapes_in_code_are_never_cut_by_the_second_parse (test_signal.Pass22Findings.test_pass23_shapes_in_code_are_never_cut_by_the_second_parse) ... ok
+test_pass24_joined_tags_in_code_never_survive_and_output_is_stable (test_signal.Pass22Findings.test_pass24_joined_tags_in_code_never_survive_and_output_is_stable) ... ok
+test_pass24_many_lookalikes_stay_fast (test_signal.Pass22Findings.test_pass24_many_lookalikes_stay_fast) ... ok
+test_pass24_unknown_level_pair_in_code_stays (test_signal.Pass22Findings.test_pass24_unknown_level_pair_in_code_stays) ... ok
+test_pass25_prose_on_both_sides_of_code_never_joins_into_a_tag (test_signal.Pass22Findings.test_pass25_prose_on_both_sides_of_code_never_joins_into_a_tag) ... ok
+test_pass26_empty_or_mismatched_pair_in_code_stays (test_signal.Pass22Findings.test_pass26_empty_or_mismatched_pair_in_code_stays) ... ok
+test_pass27_nested_opener_and_other_kind_closer_in_code_stay (test_signal.Pass22Findings.test_pass27_nested_opener_and_other_kind_closer_in_code_stay) ... ok
+test_pass29_nested_span_in_code_keeps_the_outer_stop (test_signal.Pass22Findings.test_pass29_nested_span_in_code_keeps_the_outer_stop) ... ok
+test_untagged_repros_are_returned_unchanged_on_every_surface (test_signal.Pass22Findings.test_untagged_repros_are_returned_unchanged_on_every_surface) ... ok
+test_p2_1_backtick_runs_must_match_in_length (test_signal.Pass9Findings.test_p2_1_backtick_runs_must_match_in_length) ... ok
+test_p2_1_fence_detection_follows_commonmark (test_signal.Pass9Findings.test_p2_1_fence_detection_follows_commonmark) ... ok
+test_p2_2_long_params_and_cut_off_closers_never_leak (test_signal.Pass9Findings.test_p2_2_long_params_and_cut_off_closers_never_leak) ... ok
+test_p2_3_desktop_falls_back_when_the_context_would_break_math (test_signal.Pass9Findings.test_p2_3_desktop_falls_back_when_the_context_would_break_math) ... ok
+test_p3_2_valueless_opener_with_a_closer_is_stripped (test_signal.Pass9Findings.test_p3_2_valueless_opener_with_a_closer_is_stripped) ... ok
+test_p3_3_code_only_tags_are_removed_without_markup (test_signal.Pass9Findings.test_p3_3_code_only_tags_are_removed_without_markup) ... ok
+test_p3_5_whisper_budget_counts_only_new_whispers (test_signal.Pass9Findings.test_p3_5_whisper_budget_counts_only_new_whispers) ... ok
+test_sms_words_only (test_signal.PlainSurfaceTests.test_sms_words_only) ... ok
+test_telegram_bold_plus_word_no_emoji (test_signal.PlainSurfaceTests.test_telegram_bold_plus_word_no_emoji) ... ok
+test_trailing_backslash_never_breaks_bold (test_signal.PlainSurfaceTests.test_trailing_backslash_never_breaks_bold) ... ok
+test_whisper_word_on_messaging_and_off_switch (test_signal.PlainSurfaceTests.test_whisper_word_on_messaging_and_off_switch) ... ok
+test_aliases_and_intent (test_signal.TerminalTests.test_aliases_and_intent) ... ok
+test_colorblind_safe_palettes (test_signal.TerminalTests.test_colorblind_safe_palettes) ... ok
+test_day_palette (test_signal.TerminalTests.test_day_palette) ... ok
+test_no_color_keeps_style_and_words (test_signal.TerminalTests.test_no_color_keeps_style_and_words) ... ok
+test_percy_example_night_truecolor_plus_style_plus_word (test_signal.TerminalTests.test_percy_example_night_truecolor_plus_style_plus_word) ... ok
+test_span_cannot_carry_its_own_escape_codes (test_signal.TerminalTests.test_span_cannot_carry_its_own_escape_codes) ... ok
+test_untagged_reply_is_left_to_the_host (test_signal.TerminalTests.test_untagged_reply_is_left_to_the_host) ... ok
+test_words_plain_only_drops_words_on_rich_surfaces (test_signal.WordsSettingTests.test_words_plain_only_drops_words_on_rich_surfaces) ... ok
+test_dark_light_color_and_optional_messaging_marker (test_whisper.WhisperTests.test_dark_light_color_and_optional_messaging_marker) ... ok
+test_failure_never_blocks_and_tags_do_not_leak (test_whisper.WhisperTests.test_failure_never_blocks_and_tags_do_not_leak) ... ok
+test_strip_log_once_and_no_text_bodies (test_whisper.WhisperTests.test_strip_log_once_and_no_text_bodies) ... ok
+test_untagged_text_is_byte_for_byte_unchanged (test_whisper.WhisperTests.test_untagged_text_is_byte_for_byte_unchanged) ... ok
+
+----------------------------------------------------------------------
+Ran 211 tests in 7.794s
+
+OK
+exit 0
