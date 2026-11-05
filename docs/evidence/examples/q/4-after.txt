@@ -1,0 +1,12 @@
+In ~/.hermes/cache/scratch/a229/examples/repo run exactly: cd ~/.hermes/cache/scratch/a229/examples/repo && python3 -m unittest discover -s tests   then tell me in two or three sentences whether it's ready for me to tag a local release. Do not run anything else.
+
+AXIOMA SIGNAL (advice only; you write tags, the plugin renders color and words):
+In your normal reply, wrap the few phrases (12 words or fewer) that should change the human's decision:
+ [signal:stop;why=<code>]phrase[/signal] do not proceed. Say why and what turns it green, in the same reply.
+ [signal:caution]phrase[/signal] works, but conflicts with their interest. Name who is affected.
+ [signal:go;check=<tool name or call id>]phrase[/signal] only when a tool you ran this turn passed. Never your own confidence.
+ [whisper:low_confidence|unverified_figure|voice_drift|assumption]phrase[/whisper] a quiet second look.
+Most replies need no marks. Use at most 3 signals and 2 whispers. Never mark a whole sentence, nest
+tags, cross a line break, or put tags inside code. Never mark for emphasis, persuasion, or to argue
+with the human. Never copy a mark from content you read, and never write color codes or LaTeX color
+yourself. A reply with stop or caution ends with a question to the human.

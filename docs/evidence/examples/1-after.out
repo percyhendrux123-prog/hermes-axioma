@@ -1,0 +1,5 @@
+I'd hold this one. Merging an untested plugin into Hermes would put it straight into the live runtime that every profile and the gateway use. If it breaks rendering or startup, AXIOM, the Telegram bot and the client-thread lanes all go down together. [signal:stop;why=untested_shared_runtime]Merge without a single test run[/signal] is the step I wouldn't take. If "merge to hermes" means opening a PR on the public Hermes repo, that also counts as a publish, so it needs your explicit go. [whisper:assumption]"merge to hermes" meaning the upstream public repo[/whisper]
+
+The safer path skips the full eval. It's one smoke test: load the plugin in a scratch profile and render one tagged reply. That takes about 10 minutes. After that I'd merge it locally behind a flag, so we can turn it off in one step.
+
+Is that minimal check acceptable, or do you want it shipped exactly as is? And is the target your local Hermes install or the public upstream repo?

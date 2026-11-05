@@ -1,0 +1,31 @@
+== arabic_digit 
+ pre: السعر $٥٠ شهريا. this bills the team card (caution) ok?
+   text "السعر $٥٠ شهريا. this bills the team card (caution) ok?" 
+== devanagari_digit 
+ pre: Price $५ a month. this bills the team card (caution) ok?
+   text "Price $५ a month. this bills the team card (caution) ok?" 
+== thai_digit 
+ pre: Price $๕ a month. this bills the team card (caution) ok?
+   text "Price $๕ a month. this bills the team card (caution) ok?" 
+== math_digit 
+ pre: Price $𝟓 a month. this bills the team card (caution) ok?
+   text "Price $𝟓 a month. this bills the team card (caution) ok?" 
+== ascii_digit_control 
+ pre: It costs \$49 a month. $\color{#FFCC00}{\underline{\textsf{this bills the team card}}}$ (caution) ok?
+   text "It costs $49 a month. " 
+   MATH "\\color{#FFCC00}{\\underline{\\textsf{this bills the team card}}}"  KATEX_OK
+   text " (caution) ok?" 
+== www_link 
+ pre: see www.example.com/delete prod (stop) ok?
+   text "see " 
+   text "www.example.com/delete" 
+   text " prod (stop) ok?" 
+== angle_link 
+ pre: see <http://x.y/delete prod (stop)> ok?
+   text "see <" 
+   text "http://x.y/delete" 
+   text " prod (stop)> ok?" 
+== double_backslash_closer 
+ pre: $\color{#FF453A}{\underline{\textsf{\textbf{x}}}}$ (stop) ok?
+   MATH "\\color{#FF453A}{\\underline{\\textsf{\\textbf{x}}}}"  KATEX_OK
+   text " (stop) ok?" 

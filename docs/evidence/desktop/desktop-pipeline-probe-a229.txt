@@ -1,0 +1,954 @@
+== percy 
+ pre: I can, but shipping $\color{#FF453A}{\underline{\textsf{\textbf{without an eval or a test}}}}$ (stop) means the $\color{#FFCC00}{\underline{\textsf{merge into Hermes}}}$ (caution) lands under your name?
+   text "I can, but shipping " 
+   MATH "\\color{#FF453A}{\\underline{\\textsf{\\textbf{without an eval or a test}}}}"  KATEX_OK
+   text " (stop) means the " 
+   MATH "\\color{#FFCC00}{\\underline{\\textsf{merge into Hermes}}}"  KATEX_OK
+   text " (caution) lands under your name?" 
+== dollar_before 
+ pre: It costs \$4,200 (second look) a month.
+   text "It costs $4,200 (second look) a month." 
+== cjk_span 
+ pre: 请 **不要删除** (stop) 好吗?
+   text "请 " 
+   text "不要删除" 
+   text " (stop) 好吗?" 
+== cjk_prose_around 
+ pre: 价格 \$5 和 rises (caution) 然后 halt (stop) ok
+   text "价格 $5 和 rises (caution) 然后 halt (stop) ok" 
+== backslash_before 
+ pre: Path C:\Windows (stop) gone?
+   text "Path C:\\Windows (stop) gone?" 
+== fullwidth 
+ pre: Note **a，b** (caution) here?
+   text "Note " 
+   text "a，b" 
+   text " (caution) here?" 
+== currency_after 
+ pre: x $\color{#FFCC00}{\underline{\textsf{rises}}}$ (caution) then \$5 and \$10 later
+   text "x " 
+   MATH "\\color{#FFCC00}{\\underline{\\textsf{rises}}}"  KATEX_OK
+   text " (caution) then $5 and $10 later" 
+== currency_before 
+ pre: costs \$5 and $\color{#FFCC00}{\underline{\textsf{x}}}$ (caution) then \$10?
+   text "costs $5 and " 
+   MATH "\\color{#FFCC00}{\\underline{\\textsf{x}}}"  KATEX_OK
+   text " (caution) then $10?" 
+== lone_dollar_earlier 
+ pre: It costs 5$ and x (caution) now?
+   text "It costs 5$ and x (caution) now?" 
+== special 
+ pre: $\color{#FFCC00}{\underline{\textsf{a \textdollar{}5 \{b\} \textbackslash{}c \%d \#e \&f \_g \textasciicircum{}h \textasciitilde{}i}}}$ (caution) ok
+   MATH "\\color{#FFCC00}{\\underline{\\textsf{a \\textdollar{}5 \\{b\\} \\textbackslash{}c \\%d \\#e \\&f \\_g \\textasciicircum{}h \\textasciitilde{}i}}}"  KATEX_OK
+   text " (caution) ok" 
+== two_on_line 
+ pre: $\color{#FF453A}{\underline{\textsf{\textbf{alpha}}}}$ (stop) and $\color{#FFCC00}{\underline{\textsf{beta}}}$ (caution) and $\color{#EADFB8}{\textsf{gamma}}$ (second look).
+   MATH "\\color{#FF453A}{\\underline{\\textsf{\\textbf{alpha}}}}"  KATEX_OK
+   text " (stop) and " 
+   MATH "\\color{#FFCC00}{\\underline{\\textsf{beta}}}"  KATEX_OK
+   text " (caution) and " 
+   MATH "\\color{#EADFB8}{\\textsf{gamma}}"  KATEX_OK
+   text " (second look)." 
+== go_digit_after 
+ pre: The suite $\color{#30D158}{\textsf{\textit{passed 114 of 114}}}$ (go). Fine.
+   text "The suite " 
+   MATH "\\color{#30D158}{\\textsf{\\textit{passed 114 of 114}}}"  KATEX_OK
+   text " (go). Fine." 
+== plain_adjacent 
+ pre: a **x** (stop)$\color{#FFCC00}{\underline{\textsf{b}}}$ c?
+   text "a " 
+   text "x" 
+   text " (stop)" 
+   MATH "\\color{#FFCC00}{\\underline{\\textsf{b}}}"  KATEX_OK
+   text " c?" 
+== plain_digit_after 
+ pre: **x** (caution)5 units?
+   text "x" 
+   text " (caution)5 units?" 
+== plain_ok 
+ pre: a $\color{#FFCC00}{\underline{\textsf{x}}}$, fine?
+   text "a " 
+   MATH "\\color{#FFCC00}{\\underline{\\textsf{x}}}"  KATEX_OK
+   text ", fine?" 
+== test_L13_1 
+ pre: I can do that, but shipping $\color{#FF453A}{\underline{\textsf{\textbf{without an eval or a test}}}}$ (stop) means the $\color{#FFCC00}{\underline{\textsf{merge into Hermes}}}$ (caution) lands under your name. Do you want me to run the eval first?
+   text "I can do that, but shipping " 
+   MATH "\\color{#FF453A}{\\underline{\\textsf{\\textbf{without an eval or a test}}}}"  KATEX_OK
+   text " (stop) means the " 
+   MATH "\\color{#FFCC00}{\\underline{\\textsf{merge into Hermes}}}"  KATEX_OK
+   text " (caution) lands under your name. Do you want me to run the eval first?" 
+== test_L131_2 
+ pre: About $\color{#EADFB8}{\textsf{4,200 users}}$ (second look).
+   text "About " 
+   MATH "\\color{#EADFB8}{\\textsf{4,200 users}}"  KATEX_OK
+   text " (second look)." 
+== test_L174_3 
+ pre: Use `x (stop)` like this:
+```
+y
+```
+$\color{#FFCC00}{\underline{\textsf{real}}}$ (caution)?
+   text "Use " 
+   inlineCode "x (stop)" 
+   text " like this:" 
+   MATH "\\color{#FFCC00}{\\underline{\\textsf{real}}}"  KATEX_OK
+   text " (caution)?" 
+== test_L237_4 
+ pre: $\color{#EADFB8}{\textsf{maybe}}$ (second look)
+   MATH "\\color{#EADFB8}{\\textsf{maybe}}"  KATEX_OK
+   text " (second look)" 
+== test_L252_5 
+ pre: $\color{#FFCC00}{\underline{\textsf{c1}}}$ (caution) $\color{#FFCC00}{\underline{\textsf{c2}}}$ (caution) c3 $\color{#FF453A}{\underline{\textsf{\textbf{s1}}}}$ (stop) c4?
+   MATH "\\color{#FFCC00}{\\underline{\\textsf{c1}}}"  KATEX_OK
+   text " (caution) " 
+   MATH "\\color{#FFCC00}{\\underline{\\textsf{c2}}}"  KATEX_OK
+   text " (caution) c3 " 
+   MATH "\\color{#FF453A}{\\underline{\\textsf{\\textbf{s1}}}}"  KATEX_OK
+   text " (stop) c4?" 
+== test_L356_6 
+ pre: $\color{#EADFB8}{\textsf{alpha}}$ (second look)
+   MATH "\\color{#EADFB8}{\\textsf{alpha}}"  KATEX_OK
+   text " (second look)" 
+== test_L514_7 
+ pre: ```python
+chunk = samples[signal:end]
+```
+Then $\color{#FF453A}{\underline{\textsf{\textbf{wipe prod}}}}$ (stop)?
+   text "Then " 
+   MATH "\\color{#FF453A}{\\underline{\\textsf{\\textbf{wipe prod}}}}"  KATEX_OK
+   text " (stop)?" 
+== test_L828_8 
+ pre: Run $\color{#FF453A}{\underline{\textsf{\textbf{the migration}}}}$ (stop), $\color{#FFCC00}{\underline{\textsf{email list}}}$ (caution), $\color{#EADFB8}{\textsf{about 4,200 users}}$ (second look)?
+   text "Run " 
+   MATH "\\color{#FF453A}{\\underline{\\textsf{\\textbf{the migration}}}}"  KATEX_OK
+   text " (stop), " 
+   MATH "\\color{#FFCC00}{\\underline{\\textsf{email list}}}"  KATEX_OK
+   text " (caution), " 
+   MATH "\\color{#EADFB8}{\\textsf{about 4,200 users}}"  KATEX_OK
+   text " (second look)?" 
+== test_L76_9 
+ pre: $\color{#FF453A}{\underline{\textsf{\textbf{abc}}}}$ (stop)?
+   MATH "\\color{#FF453A}{\\underline{\\textsf{\\textbf{abc}}}}"  KATEX_OK
+   text " (stop)?" 
+== test_L81_10 
+ pre: **Ship the demo**; $\color{#FF453A}{\underline{\textsf{\textbf{skip tests}}}}$ (stop)?
+   text "Ship the demo" 
+   text "; " 
+   MATH "\\color{#FF453A}{\\underline{\\textsf{\\textbf{skip tests}}}}"  KATEX_OK
+   text " (stop)?" 
+== test_L103_11 
+ pre: Run **`rm -rf build`** (caution) now?
+   text "Run " 
+   inlineCode "rm -rf build" 
+   text " (caution) now?" 
+== test_L121_12 
+ pre: Path $\color{#FFCC00}{\underline{\textsf{C:\textbackslash{}temp\textbackslash{}}}}$ (caution) here?
+   text "Path " 
+   MATH "\\color{#FFCC00}{\\underline{\\textsf{C:\\textbackslash{}temp\\textbackslash{}}}}"  KATEX_OK
+   text " (caution) here?" 
+== test_L140_13 
+ pre: A B
+   text "A B" 
+== test_L141_14 
+ pre: A B
+   text "A B" 
+== test_L142_15 
+ pre: A  B
+   text "A  B" 
+== test_L143_16 
+ pre: X
+   text "X" 
+== test_L144_17 
+ pre: X
+   text "X" 
+== test_L145_18 
+ pre: $\color{#FF453A}{\underline{\textsf{\textbf{X Y}}}}$ (stop) Z
+   MATH "\\color{#FF453A}{\\underline{\\textsf{\\textbf{X Y}}}}"  KATEX_OK
+   text " (stop) Z" 
+== test_L146_19 
+ pre: X
+Y
+   text "X\nY" 
+== test_L147_20 
+ pre: $\color{#FF453A}{\underline{\textsf{\textbf{X}}}}$ (stop)
+   MATH "\\color{#FF453A}{\\underline{\\textsf{\\textbf{X}}}}"  KATEX_OK
+   text " (stop)" 
+== test_L148_21 
+ pre: $\color{#FF453A}{\underline{\textsf{\textbf{X}}}}$ (stop)
+   MATH "\\color{#FF453A}{\\underline{\\textsf{\\textbf{X}}}}"  KATEX_OK
+   text " (stop)" 
+== test_L149_22 
+ pre: done
+   text "done" 
+== test_L150_23 
+ pre: X
+   text "X" 
+== test_L164_24 
+ pre: array[signal] = 1
+   text "array[signal] = 1" 
+== test_L164_25 
+ pre: see [signal:]
+   text "see [signal:]" 
+== test_L164_26 
+ pre: x = y[whisper]
+   text "x = y[whisper]" 
+== test_L168_27 
+ pre: (empty reply)
+   text "(empty reply)" 
+== test_L168_28 
+ pre: (empty reply)
+   text "(empty reply)" 
+== test_L168_29 
+ pre: (empty reply)
+   text "(empty reply)" 
+== test_L179_30 
+ pre: ```
+rm -rf build (stop)
+```
+== test_L187_31 
+ pre: Suite passed 41 of 41.
+   text "Suite passed 41 of 41." 
+== test_L271_32 
+ pre: $\color{#FFCC00}{\underline{\textsf{a}}}$ (caution) $\color{#FFCC00}{\underline{\textsf{b}}}$ (caution)?
+   MATH "\\color{#FFCC00}{\\underline{\\textsf{a}}}"  KATEX_OK
+   text " (caution) " 
+   MATH "\\color{#FFCC00}{\\underline{\\textsf{b}}}"  KATEX_OK
+   text " (caution)?" 
+== test_L291_33 
+ pre: npm test passed.
+Then $\color{#FF453A}{\underline{\textsf{\textbf{do not deploy}}}}$ (stop) today?
+   text "npm test passed.\nThen " 
+   MATH "\\color{#FF453A}{\\underline{\\textsf{\\textbf{do not deploy}}}}"  KATEX_OK
+   text " (stop) today?" 
+== test_L292_34 
+ pre: ~~~
+```
+~~~
+Prose $\color{#FFCC00}{\underline{\textsf{merge}}}$ (caution) now?
+   text "Prose " 
+   MATH "\\color{#FFCC00}{\\underline{\\textsf{merge}}}"  KATEX_OK
+   text " (caution) now?" 
+== test_L293_35 
+ pre: ````
+```
+````
+After $\color{#FFCC00}{\underline{\textsf{merge}}}$ (caution) now?
+   text "After " 
+   MATH "\\color{#FFCC00}{\\underline{\\textsf{merge}}}"  KATEX_OK
+   text " (caution) now?" 
+== test_L297_36 
+ pre: ```
+y
+```
+ok $\color{#FFCC00}{\underline{\textsf{z}}}$ (caution)?
+   text "ok " 
+   MATH "\\color{#FFCC00}{\\underline{\\textsf{z}}}"  KATEX_OK
+   text " (caution)?" 
+== test_L307_37 
+ pre: Use ``a ` b (stop) here`
+   text "Use ``a " 
+   inlineCode " b (stop) here" 
+== test_L311_38 
+ pre: ]phrase?
+   text "]phrase?" 
+== test_L322_39 
+ pre: It costs \$4,200 (second look) a month.
+   text "It costs $4,200 (second look) a month." 
+== test_L323_40 
+ pre: 请 **不要删除** (stop) 好吗?
+   text "请 " 
+   text "不要删除" 
+   text " (stop) 好吗?" 
+== test_L324_41 
+ pre: Note **a，b** (caution) here?
+   text "Note " 
+   text "a，b" 
+   text " (caution) here?" 
+== test_L325_42 
+ pre: C:\Windows (stop) gone?
+   text "C:\\Windows (stop) gone?" 
+== test_L326_43 
+ pre: It costs 5$ and x (caution) now?
+   text "It costs 5$ and x (caution) now?" 
+== test_L336_44 
+ pre: a $\color{#FF453A}{\underline{\textsf{\textbf{x}}}}$ (stop)$\color{#FFCC00}{\underline{\textsf{b}}}$ (caution) c?
+   text "a " 
+   MATH "\\color{#FF453A}{\\underline{\\textsf{\\textbf{x}}}}"  KATEX_OK
+   text " (stop)" 
+   MATH "\\color{#FFCC00}{\\underline{\\textsf{b}}}"  KATEX_OK
+   text " (caution) c?" 
+== test_L338_45 
+ pre: $\color{#FFCC00}{\underline{\textsf{x}}}$ (caution)5 units?
+   MATH "\\color{#FFCC00}{\\underline{\\textsf{x}}}"  KATEX_OK
+   text " (caution)5 units?" 
+== test_L340_46 
+ pre: costs \$5 and $\color{#FFCC00}{\underline{\textsf{x}}}$ (caution) then \$10?
+   text "costs $5 and " 
+   MATH "\\color{#FFCC00}{\\underline{\\textsf{x}}}"  KATEX_OK
+   text " (caution) then $10?" 
+== test_L350_47 
+ pre: Docs: `x (stop)` is the syntax.
+   text "Docs: " 
+   inlineCode "x (stop)" 
+   text " is the syntax." 
+== test_L367_48 
+ pre: Two options:
+
+- bash
+  npm test
+  
+
+But merging $\color{#FF453A}{\underline{\textsf{\textbf{without a test}}}}$ (stop) is risky. Proceed?
+   text "Two options:" 
+   text "bash\nnpm test" 
+   text "But merging " 
+   MATH "\\color{#FF453A}{\\underline{\\textsf{\\textbf{without a test}}}}"  KATEX_OK
+   text " (stop) is risky. Proceed?" 
+== test_L368_49 
+ pre: > 
+> code
+> 
+
+Then $\color{#FF453A}{\underline{\textsf{\textbf{do not deploy}}}}$ (stop)?
+   text "code" 
+   text "Then " 
+   MATH "\\color{#FF453A}{\\underline{\\textsf{\\textbf{do not deploy}}}}"  KATEX_OK
+   text " (stop)?" 
+== test_L369_50 
+ pre: 1. 
+   x
+   
+2. $\color{#FFCC00}{\underline{\textsf{merge now}}}$ (caution)?
+   text "x" 
+   MATH "\\color{#FFCC00}{\\underline{\\textsf{merge now}}}"  KATEX_OK
+   text " (caution)?" 
+== test_L376_51 
+ pre: Example:
+
+    rm -rf x (stop)
+
+   text "Example:" 
+== test_L390_52 
+ pre: see $y (caution)$?
+   text "see " 
+   MATH "y (caution)"  KATEX_OK
+   text "?" 
+== test_L390_53 
+ pre: where $x = y (caution)$ holds?
+   text "where " 
+   MATH "x = y (caution)"  KATEX_OK
+   text " holds?" 
+== test_L391_54 
+ pre: $$
+x (caution)
+$$
+   MATH "x (caution)"  KATEX_OK
+== test_L391_55 
+ pre: $$
+x (caution)
+$$
+   MATH "x (caution)"  KATEX_OK
+== test_L392_56 
+ pre: Let $x$ be y (caution)?
+   text "Let " 
+   MATH "x"  KATEX_OK
+   text " be y (caution)?" 
+== test_L408_57 
+ pre: $\color{#FF453A}{\underline{\textsf{\textbf{abc}}}}$ (stop)?
+   MATH "\\color{#FF453A}{\\underline{\\textsf{\\textbf{abc}}}}"  KATEX_OK
+   text " (stop)?" 
+== test_L413_58 
+ pre: **bold**$\color{#FFCC00}{\underline{\textsf{x}}}$ (caution)?
+   text "bold" 
+   MATH "\\color{#FFCC00}{\\underline{\\textsf{x}}}"  KATEX_OK
+   text " (caution)?" 
+== test_L413_59 
+ pre: **i**$\color{#FFCC00}{\underline{\textsf{x}}}$ (caution)?
+   text "i" 
+   MATH "\\color{#FFCC00}{\\underline{\\textsf{x}}}"  KATEX_OK
+   text " (caution)?" 
+== test_L414_60 
+ pre: $\color{#FFCC00}{\underline{\textsf{x}}}$ (caution)**bold**?
+   MATH "\\color{#FFCC00}{\\underline{\\textsf{x}}}"  KATEX_OK
+   text " (caution)" 
+   text "bold" 
+   text "?" 
+== test_L427_61 
+ pre: $\color{#FF453A}{\underline{\textsf{\textbf{a}}}}$ (stop)?
+   MATH "\\color{#FF453A}{\\underline{\\textsf{\\textbf{a}}}}"  KATEX_OK
+   text " (stop)?" 
+== test_L435_62 
+ pre: Export $TOKEN to `env` (caution), then deploy to prod (stop) now?
+   text "Export $TOKEN to " 
+   inlineCode "env" 
+   text " (caution), then deploy to prod (stop) now?" 
+== test_L436_63 
+ pre: Then set $PATH then wipe prod (stop)?
+   text "Then set $PATH then wipe prod (stop)?" 
+== test_L437_64 
+ pre: a (caution) b (caution) c costs $X then halt (stop)?
+   text "a (caution) b (caution) c costs $X then halt (stop)?" 
+== test_L443_65 
+ pre: It $\color{#FF453A}{\underline{\textsf{\textbf{charges \textdollar{}49 on renewal}}}}$ (stop)?
+   text "It " 
+   MATH "\\color{#FF453A}{\\underline{\\textsf{\\textbf{charges \\textdollar{}49 on renewal}}}}"  KATEX_OK
+   text " (stop)?" 
+== test_L462_66 
+ pre: (empty reply)
+   text "(empty reply)" 
+== test_L479_67 
+ pre: Plan:
+- migrate now 
+- then deploy
+   text "Plan:" 
+   text "migrate now" 
+   text "then deploy" 
+== test_L479_68 
+ pre: Plan 
+next line
+   text "Plan\nnext line" 
+== test_L480_69 
+ pre: a 
+b
+   text "a\nb" 
+== test_L480_70 
+ pre: x 
+ more
+   text "x\nmore" 
+== test_L493_71 
+ pre: | a |
+|---|
+| x|y (stop) |
+   text "a" 
+   text "x" 
+   text "y (stop)" 
+== test_L497_72 
+ pre: Empty C:\\$Recycle.Bin first, then drop the table (stop) ok?
+   text "Empty C:\\$Recycle.Bin first, then drop the table (stop) ok?" 
+== test_L498_73 
+ pre: Use \\$ then x (caution)
+   text "Use \\$ then x (caution)" 
+== test_L502_74 
+ pre: Price \$5 then $\color{#FF453A}{\underline{\textsf{\textbf{drop the table}}}}$ (stop)?
+   text "Price $5 then " 
+   MATH "\\color{#FF453A}{\\underline{\\textsf{\\textbf{drop the table}}}}"  KATEX_OK
+   text " (stop)?" 
+== test_L516_75 
+ pre: chunk = samples
+   text "chunk = samples" 
+== test_L519_76 
+ pre: a $\color{#FFCC00}{\underline{\textsf{b}}}$ (caution) c d?
+   text "a " 
+   MATH "\\color{#FFCC00}{\\underline{\\textsf{b}}}"  KATEX_OK
+   text " (caution) c d?" 
+== test_L530_77 
+ pre: $see halt now (stop) then$ ok?
+   MATH "see halt now (stop) then"  KATEX_OK
+   text " ok?" 
+== test_L531_78 
+ pre: Use $a halt now (stop) b$ ok?
+   text "Use " 
+   MATH "a halt now (stop) b"  KATEX_OK
+   text " ok?" 
+== test_L532_79 
+ pre: $$
+x halt now (stop) y
+$$
+   MATH "x halt now (stop) y"  KATEX_OK
+== test_L533_80 
+ pre: $$a halt now (stop) b$$
+   MATH "a halt now (stop) b"  KATEX_OK
+== test_L540_81 
+ pre: x y?
+   text "x y?" 
+== test_L540_82 
+ pre: x y?
+   text "x y?" 
+== test_L540_83 
+ pre: x y?
+   text "x y?" 
+== test_L541_84 
+ pre: $\color{#FF453A}{\underline{\textsf{\textbf{x}}}}$ (stop) y?
+   MATH "\\color{#FF453A}{\\underline{\\textsf{\\textbf{x}}}}"  KATEX_OK
+   text " (stop) y?" 
+== test_L541_85 
+ pre: x $\color{#FF453A}{\underline{\textsf{\textbf{a}}}}$ (stop) y?
+   text "x " 
+   MATH "\\color{#FF453A}{\\underline{\\textsf{\\textbf{a}}}}"  KATEX_OK
+   text " (stop) y?" 
+== test_L553_86 
+ pre: It was \$5 and is rising fast (caution) 约 \$10 now?
+   text "It was $5 and is rising fast (caution) 约 $10 now?" 
+== test_L554_87 
+ pre: Budget \$5 then do not deploy (stop)，费用 \$8?
+   text "Budget $5 then do not deploy (stop)，费用 $8?" 
+== test_L559_88 
+ pre: It costs \$49 and $\color{#FF453A}{\underline{\textsf{\textbf{renews yearly}}}}$ (stop)?
+   text "It costs $49 and " 
+   MATH "\\color{#FF453A}{\\underline{\\textsf{\\textbf{renews yearly}}}}"  KATEX_OK
+   text " (stop)?" 
+== test_L564_89 
+ pre: x y?
+   text "x y?" 
+== test_L564_90 
+ pre: x y?
+   text "x y?" 
+== test_L564_91 
+ pre: x y?
+   text "x y?" 
+== test_L565_92 
+ pre: x y?
+   text "x y?" 
+== test_L565_93 
+ pre: x y?
+   text "x y?" 
+== test_L565_94 
+ pre: x y?
+   text "x y?" 
+== test_L566_95 
+ pre: x y?
+   text "x y?" 
+== test_L566_96 
+ pre: x y?
+   text "x y?" 
+== test_L566_97 
+ pre: $\color{#FF453A}{\underline{\textsf{\textbf{x}}}}$ (stop) y?
+   MATH "\\color{#FF453A}{\\underline{\\textsf{\\textbf{x}}}}"  KATEX_OK
+   text " (stop) y?" 
+== test_L571_98 
+ pre: use array[signal_1] here
+   text "use array[signal_1] here" 
+== test_L571_99 
+ pre: see cfg[whisper.level] now
+   text "see cfg[whisper.level] now" 
+== test_L580_100 
+ pre: Careful: **see **
+   text "Careful: **see **" 
+== test_L580_101 
+ pre: Run **step [2 of 3** (caution)?](streamdown:incomplete-link)
+   text "Run **step " 
+   text "2 of 3** (caution)?" 
+== test_L581_102 
+ pre: Use **see [x** (stop) then [y] ok](streamdown:incomplete-link)
+   text "Use **see " 
+   text "x** (stop) then [y] ok" 
+== test_L581_103 
+ pre: A **x] y** (stop) z?
+   text "A " 
+   text "x] y" 
+   text " (stop) z?" 
+== test_L588_104 
+ pre: Do not  stop ship it yet.
+   text "Do not  stop ship it yet." 
+== test_L588_105 
+ pre:  x y
+   text "x y" 
+== test_L593_106 
+ pre: The  merge into Hermes lands, but $\color{#FF453A}{\underline{\textsf{\textbf{there is no eval}}}}$ (stop). Run it first?
+   text "The  merge into Hermes lands, but " 
+   MATH "\\color{#FF453A}{\\underline{\\textsf{\\textbf{there is no eval}}}}"  KATEX_OK
+   text " (stop). Run it first?" 
+== test_L598_107 
+ pre: (see  and $\color{#FF453A}{\underline{\textsf{\textbf{never ship}}}}$ (stop)
+   text "(see  and " 
+   MATH "\\color{#FF453A}{\\underline{\\textsf{\\textbf{never ship}}}}"  KATEX_OK
+   text " (stop)" 
+== test_L605_108 
+ pre: (empty reply)
+   text "(empty reply)" 
+== test_L605_109 
+ pre: (empty reply)
+   text "(empty reply)" 
+== test_L605_110 
+ pre: (empty reply)
+   text "(empty reply)" 
+== test_L605_111 
+ pre: (empty reply)
+   text "(empty reply)" 
+== test_L605_112 
+ pre: (empty reply)
+   text "(empty reply)" 
+== test_L606_113 
+ pre: (empty reply)
+   text "(empty reply)" 
+== test_L606_114 
+ pre: (empty reply)
+   text "(empty reply)" 
+== test_L606_115 
+ pre: (empty reply)
+   text "(empty reply)" 
+== test_L607_116 
+ pre:  stop
+   text "stop" 
+== test_L607_117 
+ pre: (empty reply)
+   text "(empty reply)" 
+== test_L621_118 
+ pre: $\color{#FF453A}{\underline{\textsf{\textbf{never deploy}}}}$ (stop) on friday, ask first
+   MATH "\\color{#FF453A}{\\underline{\\textsf{\\textbf{never deploy}}}}"  KATEX_OK
+   text " (stop) on friday, ask first" 
+== test_L635_119 
+ pre: Type the ` key, then delete the prod bucket (stop) only after a backup?`
+   text "Type the " 
+   inlineCode " key, then delete the prod bucket (stop) only after a backup?" 
+== test_L636_120 
+ pre: Use ``x` and the old page (caution) now?`
+   text "Use ``x" 
+   inlineCode " and the old page (caution) now?" 
+== test_L641_121 
+ pre: Run `ls` then $\color{#FF453A}{\underline{\textsf{\textbf{delete the bucket}}}}$ (stop)?
+   text "Run " 
+   inlineCode "ls" 
+   text " then " 
+   MATH "\\color{#FF453A}{\\underline{\\textsf{\\textbf{delete the bucket}}}}"  KATEX_OK
+   text " (stop)?" 
+== test_L642_122 
+ pre: ```
+code
+```
+Then $\color{#FF453A}{\underline{\textsf{\textbf{delete the bucket}}}}$ (stop)?
+   text "Then " 
+   MATH "\\color{#FF453A}{\\underline{\\textsf{\\textbf{delete the bucket}}}}"  KATEX_OK
+   text " (stop)?" 
+== test_L647_123 
+ pre: See www.example.com/docs—the old page (caution) is stale?
+   text "See " 
+   text "www.example.com/docs—the" 
+   text " old page (caution) is stale?" 
+== test_L648_124 
+ pre: Docs: (www.example.com)not reviewed (stop) yet?
+   text "Docs: (" 
+   text "www.example.com)not" 
+   text " reviewed (stop) yet?" 
+== test_L649_125 
+ pre: At <https://x.io/a—not> reviewed (stop) yet?
+   text "At " 
+   text "https://x.io/a—not" 
+   text " reviewed (stop) yet?" 
+== test_L650_126 
+ pre: Mail ops@example.com—not reviewed (stop) yet?
+   text "Mail " 
+   text "ops@example.com" 
+   text "—not reviewed (stop) yet?" 
+== test_L657_127 
+ pre: Note [draft $\color{#FF453A}{\underline{\textsf{\textbf{not reviewed}}}}$ (stop) ok?](streamdown:incomplete-link)
+   text "Note " 
+   text "draft " 
+   MATH "\\color{#FF453A}{\\underline{\\textsf{\\textbf{not reviewed}}}}"  KATEX_OK
+   text " (stop) ok?" 
+== test_L674_128 
+ pre: <details>
+<summary>Plan</summary>
+this touches billing (caution)
+</details>
+== test_L675_129 
+ pre: <div>
+delete prod (stop)
+</div>
+== test_L676_130 
+ pre: <table><tr><td>
+delete prod (stop)
+</td></tr></table>
+== test_L677_131 
+ pre: <!-- note -->
+delete prod (stop)?
+   text "delete prod (stop)?" 
+== test_L682_132 
+ pre: Use a <b>bold</b> word and $\color{#FF453A}{\underline{\textsf{\textbf{delete prod}}}}$ (stop)?
+   text "Use a " 
+   text "bold" 
+   text " word and " 
+   MATH "\\color{#FF453A}{\\underline{\\textsf{\\textbf{delete prod}}}}"  KATEX_OK
+   text " (stop)?" 
+== test_L687_133 
+ pre: a nal:go;check=terminal]tests pass
+   text "a nal:go;check=terminal]tests pass" 
+== test_L687_134 
+ pre: see  ok
+   text "see  ok" 
+== test_L688_135 
+ pre: x $\color{#EADFB8}{\textsf{y}}$ (second look) z
+   text "x " 
+   MATH "\\color{#EADFB8}{\\textsf{y}}"  KATEX_OK
+   text " (second look) z" 
+== test_L714_136 
+ pre: It costs \$49 a month. $\color{#FFCC00}{\underline{\textsf{this bills the team card}}}$ (caution) ok?
+   text "It costs $49 a month. " 
+   MATH "\\color{#FFCC00}{\\underline{\\textsf{this bills the team card}}}"  KATEX_OK
+   text " (caution) ok?" 
+== test_L724_137 
+ pre: tests passed
+   text "tests passed" 
+== test_L728_138 
+ pre: see www.example.com/delete prod (stop) ok?
+   text "see " 
+   text "www.example.com/delete" 
+   text " prod (stop) ok?" 
+== test_L729_139 
+ pre: see <http://x.y/delete prod (stop)> ok?
+   text "see <" 
+   text "http://x.y/delete" 
+   text " prod (stop)> ok?" 
+== test_L750_140 
+ pre: ok  done
+   text "ok  done" 
+== test_L751_141 
+ pre: Real $\color{#FF453A}{\underline{\textsf{\textbf{a}}}}$ (stop) then x
+   text "Real " 
+   MATH "\\color{#FF453A}{\\underline{\\textsf{\\textbf{a}}}}"  KATEX_OK
+   text " (stop) then x" 
+== test_L752_142 
+ pre: x a passed
+   text "x a passed" 
+== test_L759_143 
+ pre: ok rm -rf build
+   text "ok rm -rf build" 
+== test_L760_144 
+ pre: ok  done
+   text "ok  done" 
+== test_L761_145 
+ pre: ok $ more
+   text "ok $ more" 
+== test_L793_146 
+ pre: xship it.Next
+   text "xship it.Next" 
+== test_L793_147 
+ pre: word(ship) it now
+   text "word(ship) it now" 
+== test_L797_148 
+ pre: Plan: **ship it** next.
+   text "Plan: " 
+   text "ship it" 
+   text " next." 
+== test_L806_149 
+ pre: Run it $\color{#FFCC00}{\underline{\textsf{now}}}$ (caution) please?
+   text "Run it " 
+   MATH "\\color{#FFCC00}{\\underline{\\textsf{now}}}"  KATEX_OK
+   text " (caution) please?" 
+== test_L807_150 
+ pre: Run it $\color{#FFCC00}{\underline{\textsf{now}}}$ (caution) please?
+   text "Run it " 
+   MATH "\\color{#FFCC00}{\\underline{\\textsf{now}}}"  KATEX_OK
+   text " (caution) please?" 
+== test_L808_151 
+ pre: Run it $\color{#FF453A}{\underline{\textsf{\textbf{x}}}}$ (stop) please?
+   text "Run it " 
+   MATH "\\color{#FF453A}{\\underline{\\textsf{\\textbf{x}}}}"  KATEX_OK
+   text " (stop) please?" 
+== test_L818_152 
+ pre: > <div> Do not run the unsafe step (stop) yet.
+== test_L819_153 
+ pre: - <div>Do not run the unsafe step (stop) yet.</div>
+== test_L820_154 
+ pre: 1. <div>
+   Do not run the unsafe step (stop) yet.
+== test_L821_155 
+ pre: > - <table>
+>   Do not run the unsafe step (stop) yet.
+== test_L870_156 
+ pre: x $\color{#FF453A}{\underline{\textsf{\textbf{y}}}}$ (stop) and `samples[signal:end]`
+   text "x " 
+   MATH "\\color{#FF453A}{\\underline{\\textsf{\\textbf{y}}}}"  KATEX_OK
+   text " (stop) and " 
+   inlineCode "samples[signal:end]" 
+== test_L871_157 
+ pre: x $\color{#FF453A}{\underline{\textsf{\textbf{y}}}}$ (stop) and
+
+    samples[signal:end]
+   text "x " 
+   MATH "\\color{#FF453A}{\\underline{\\textsf{\\textbf{y}}}}"  KATEX_OK
+   text " (stop) and" 
+== test_L872_158 
+ pre: 
+
+samples
+   text "samples" 
+== test_L873_159 
+ pre: samples`
+   text "samples`" 
+== test_L886_160 
+ pre: (empty reply)
+   text "(empty reply)" 
+== test_L886_161 
+ pre: [signal]
+   text "[signal]" 
+== test_L886_162 
+ pre: [signal_1]
+   text "[signal_1]" 
+== test_L898_163 
+ pre: (empty reply)
+   text "(empty reply)" 
+== test_L898_164 
+ pre: (empty reply)
+   text "(empty reply)" 
+== test_L898_165 
+ pre: (empty reply)
+   text "(empty reply)" 
+== test_L97_166 
+ pre: ?
+   text "?" 
+== test_L218_167 
+ pre:  $\color{#EADFB8}{\textsf{secret figure 99}}$ (second look)
+   MATH "\\color{#EADFB8}{\\textsf{secret figure 99}}"  KATEX_OK
+   text " (second look)" 
+== test_L265_168 
+ pre: $\color{#FF453A}{\underline{\textsf{\textbf{\%s}}}}$ (stop)?
+   MATH "\\color{#FF453A}{\\underline{\\textsf{\\textbf{\\%s}}}}"  KATEX_OK
+   text " (stop)?" 
+== test_L274_169 
+ pre: $\color{#FFCC00}{\underline{\textsf{a}}}$ (caution)?
+   MATH "\\color{#FFCC00}{\\underline{\\textsf{a}}}"  KATEX_OK
+   text " (caution)?" 
+== test_L345_170 
+ pre: x
+   text "x" 
+== test_L346_171 
+ pre: x
+   text "x" 
+== test_L352_172 
+ pre: Docs: `array[signal]` here.
+   text "Docs: " 
+   inlineCode "array[signal]" 
+   text " here." 
+== test_L358_173 
+ pre: $\color{#EADFB8}{\textsf{beta}}$ (second look)
+   MATH "\\color{#EADFB8}{\\textsf{beta}}"  KATEX_OK
+   text " (second look)" 
+== test_L382_174 
+ pre: ]not tested ok
+   text "]not tested ok" 
+== test_L469_175 
+ pre: ok
+   text "ok" 
+== test_L469_176 
+ pre: done
+   text "done" 
+== test_L487_177 
+ pre:  |
+   text "|" 
+== test_L546_178 
+ pre: use array[signal-1] here
+   text "use array[signal-1] here" 
+== test_L665_179 
+ pre: [signal]
+   text "[signal]" 
+== test_L666_180 
+ pre: `[signal:zz]`
+   inlineCode "[signal:zz]" 
+== test_L769_181 
+ pre: $\color{#FF453A}{\underline{\textsf{\textbf{this}}}}$ (stop) then array[signal_1] ok
+   MATH "\\color{#FF453A}{\\underline{\\textsf{\\textbf{this}}}}"  KATEX_OK
+   text " (stop) then array[signal_1] ok" 
+== test_L769_182 
+ pre: array[signal_1]
+   text "array[signal_1]" 
+== test_L770_183 
+ pre: $\color{#FFCC00}{\underline{\textsf{c}}}$ (caution) b [whisper:] a
+   MATH "\\color{#FFCC00}{\\underline{\\textsf{c}}}"  KATEX_OK
+   text " (caution) b [whisper:] a" 
+== test_L770_184 
+ pre: [whisper:]
+   text "[whisper:]" 
+== test_L771_185 
+ pre: $\color{#FF453A}{\underline{\textsf{\textbf{x}}}}$ (stop) and [signal] y
+   MATH "\\color{#FF453A}{\\underline{\\textsf{\\textbf{x}}}}"  KATEX_OK
+   text " (stop) and [signal] y" 
+== test_L771_186 
+ pre: [signal] y
+   text "[signal] y" 
+== test_L856_187 
+ pre: Call `buf[signal:x]` then $\color{#FF453A}{\underline{\textsf{\textbf{do not deploy}}}}$ (stop).
+   text "Call " 
+   inlineCode "buf[signal:x]" 
+   text " then " 
+   MATH "\\color{#FF453A}{\\underline{\\textsf{\\textbf{do not deploy}}}}"  KATEX_OK
+   text " (stop)." 
+== test_L856_188 
+ pre: buf
+   text "buf" 
+== test_L857_189 
+ pre: Index with arr[signal] and $\color{#FF453A}{\underline{\textsf{\textbf{do not deploy}}}}$ (stop).
+   text "Index with arr[signal] and " 
+   MATH "\\color{#FF453A}{\\underline{\\textsf{\\textbf{do not deploy}}}}"  KATEX_OK
+   text " (stop)." 
+== test_L857_190 
+ pre: arr[signal]
+   text "arr[signal]" 
+== test_L858_191 
+ pre: Index with arr[signal_1] and $\color{#FFCC00}{\underline{\textsf{this touches prod}}}$ (caution).
+   text "Index with arr[signal_1] and " 
+   MATH "\\color{#FFCC00}{\\underline{\\textsf{this touches prod}}}"  KATEX_OK
+   text " (caution)." 
+== test_L858_192 
+ pre: arr[signal_1]
+   text "arr[signal_1]" 
+== test_L859_193 
+ pre: Use  then $\color{#FF453A}{\underline{\textsf{\textbf{do not deploy}}}}$ (stop).
+   text "Use  then " 
+   MATH "\\color{#FF453A}{\\underline{\\textsf{\\textbf{do not deploy}}}}"  KATEX_OK
+   text " (stop)." 
+== test_L199_194 
+ pre: passed
+   text "passed" 
+== test_L262_195 
+ pre: $\color{#EADFB8}{\textsf{w\%d}}$ (second look)
+   MATH "\\color{#EADFB8}{\\textsf{w\\%d}}"  KATEX_OK
+   text " (second look)" 
+== test_L304_196 
+ pre: Run `rm -rf (stop) more?`
+   text "Run " 
+   inlineCode "rm -rf (stop) more?" 
+== test_L315_197 
+ pre: Do not delete it
+   text "Do not delete it" 
+== test_L382_198 
+ pre: Ship it?
+   text "Ship it?" 
+== test_L487_199 
+ pre: | a | b |
+|---|---|
+| one |
+   text "a" 
+   text "b" 
+   text "one" 
+== test_L627_200 
+ pre: (empty reply)
+   text "(empty reply)" 
+== test_L318_201 
+ pre: end
+   text "end" 
+== test_L402_202 
+ pre: y ok?
+   text "y ok?" 
+== test_L451_203 
+ pre:  here?
+   text "here?" 
+== test_L509_204 
+ pre: :stop]a y?
+   text ":stop]a y?" 
+== test_L698_205 
+ pre:  now?
+   text "now?" 
+== test_L710_206 
+ pre:  a month. $\color{#FFCC00}{\underline{\textsf{this bills the team card}}}$ (caution) ok?
+   text "a month. " 
+   MATH "\\color{#FFCC00}{\\underline{\\textsf{this bills the team card}}}"  KATEX_OK
+   text " (caution) ok?" 
+== test_L402_207 
+ pre: a x
+   text "a x" 
+== test_L451_208 
+ pre: Note
+   text "Note" 
+== test_L509_209 
+ pre: x
+   text "x" 
+== test_L698_210 
+ pre: Run
+   text "Run" 
+== test_L311_211 
+ pre: (empty reply)
+   text "(empty reply)" 
+== test_L740_212 
+ pre: x
+   text "x" 

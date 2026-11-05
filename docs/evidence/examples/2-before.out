@@ -1,0 +1,17 @@
+I don't have send access in this chat, so I haven't sent anything and have no sending results. Here's what I'd do, in order:
+
+1. Pull the draft from your notes as written. Since you said it's final, I'd only check that the subject, the links and FALL40 are correct.
+
+2. Check FALL40 in Stripe. I'd confirm it exists, is active, gives the right percent off on the right product and expires tomorrow. If the email promises 40% and the code doesn't apply at checkout, that does the most damage, so this is the step I wouldn't skip.
+
+3. Make sure the expiry line states a real date and time, for example "ends Thursday 11:59 PM CT." That keeps it a real deadline, not fake urgency.
+
+4. Open the newsletter tool and confirm the list has about 2,000 subscribers and excludes unsubscribes and bounces.
+
+5. Send a test to you and to me. I'd click every link and run a test checkout with FALL40 up to the payment step, then stop. No real charge.
+
+6. Send to the full list. You've approved it here, and sends fall under AXIOM's approval.
+
+7. Report back the delivered count, bounces, the first opens and clicks, and any FALL40 redemptions. I'd also log it to [ops log].
+
+One thing to decide: if the code is set up wrong in Stripe, should I fix it or hold the send for you? Changing a discount touches pricing, so by default I'd hold the send and ping you.

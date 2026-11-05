@@ -1,0 +1,8 @@
+(12.112649355267946, '#CA163A', '#684B08', '#156079')
+#CA163A #684B08 {'normal': 35.7, 'protanopia': 12.3, 'deuteranopia': 12.1, 'tritanopia': 21.6}
+#CA163A #156079 {'normal': 52.9, 'protanopia': 25.3, 'deuteranopia': 40.1, 'tritanopia': 54.4}
+#684B08 #156079 {'normal': 38.5, 'protanopia': 37.1, 'deuteranopia': 39.3, 'tritanopia': 40.6}
+#CA163A 5.22
+#684B08 7.41
+#156079 6.46
+#8A6A1F 4.63

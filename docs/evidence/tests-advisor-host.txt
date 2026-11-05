@@ -1,0 +1,191 @@
+test_answers_are_logged_as_metadata_and_never_authorize (test_advisor.AdvisorTests.test_answers_are_logged_as_metadata_and_never_authorize) ... ok
+test_card_binds_to_exact_arguments_and_session (test_advisor.AdvisorTests.test_card_binds_to_exact_arguments_and_session) ... ok
+test_card_never_claims_authority (test_advisor.AdvisorTests.test_card_never_claims_authority) ... ok
+test_card_shows_question_on_every_light_and_question_first_on_messaging (test_advisor.AdvisorTests.test_card_shows_question_on_every_light_and_question_first_on_messaging) ... ok
+test_green_yellow_also_get_fresh_rule_keys (test_advisor.AdvisorTests.test_green_yellow_also_get_fresh_rule_keys) ... ok
+test_hard_red_rule_turns_card_and_no_card_notice_red (test_advisor.AdvisorTests.test_hard_red_rule_turns_card_and_no_card_notice_red) ... ok
+test_internal_errors_still_show_a_notice_never_drop_silently (test_advisor.AdvisorTests.test_internal_errors_still_show_a_notice_never_drop_silently) ... ok
+test_invalid_config_falls_back_to_defaults_and_says_so (test_advisor.AdvisorTests.test_invalid_config_falls_back_to_defaults_and_says_so) ... ok
+test_malformed_card_is_reported_to_agent_and_logged (test_advisor.AdvisorTests.test_malformed_card_is_reported_to_agent_and_logged) ... ok
+test_never_blocks_only_documented_approve_directive (test_advisor.AdvisorTests.test_never_blocks_only_documented_approve_directive) ... ok
+test_red_never_offers_yes_and_gets_a_fresh_rule_key (test_advisor.AdvisorTests.test_red_never_offers_yes_and_gets_a_fresh_rule_key) ... ok
+test_ttl_capacity_and_finalize (test_advisor.AdvisorTests.test_ttl_capacity_and_finalize) ... ok
+test_unclassified_calls_pass_untouched (test_advisor.AdvisorTests.test_unclassified_calls_pass_untouched) ... ok
+test_card_ends_on_question_red_never_yes (test_card.CardTests.test_card_ends_on_question_red_never_yes) ... ok
+test_validates_and_rejects_malformed_cards (test_card.CardTests.test_validates_and_rejects_malformed_cards) ... ok
+test_card_accepts_affects_and_question_first_on_messaging (test_eval_changes.EvalChangesTests.test_card_accepts_affects_and_question_first_on_messaging) ... ok
+test_hard_red_and_downstream_floor (test_eval_changes.EvalChangesTests.test_hard_red_and_downstream_floor) ... ok
+test_preflight_skill_secret_presence_and_lock (test_eval_changes.EvalChangesTests.test_preflight_skill_secret_presence_and_lock) ... ok
+test_scrub_classifies_recursive_and_outside_moves (test_eval_changes.EvalChangesTests.test_scrub_classifies_recursive_and_outside_moves) ... ok
+test_unproved_sender_is_red_and_green_requires_downstream_answer (test_eval_changes.EvalChangesTests.test_unproved_sender_is_red_and_green_requires_downstream_answer) ... ok
+test_canonical_cronjob_manage_is_spin (test_findings.Finding3CronjobManageAlias.test_canonical_cronjob_manage_is_spin) ... ok
+test_relative_operand_without_workdir_is_not_proven_contained (test_findings.Finding4UnknownCwd.test_relative_operand_without_workdir_is_not_proven_contained) ... ok
+test_unreadable_lock_is_not_available (test_findings.Finding5LockFailsClosed.test_unreadable_lock_is_not_available) ... ok
+test_assignee_and_provider_are_normalized (test_findings.Finding6Normalization.test_assignee_and_provider_are_normalized) ... ok
+test_advisor_passes_policy_category_to_checks (test_findings.Finding7SenderByCategory.test_advisor_passes_policy_category_to_checks) ... ok
+test_custom_send_tool_gets_sender_check (test_findings.Finding7SenderByCategory.test_custom_send_tool_gets_sender_check) ... ok
+test_attached_and_separate_target_forms (test_findings.Finding8MvTargetDirectory.test_attached_and_separate_target_forms) ... ok
+test_tag_only_output_never_yields_empty_replacement (test_findings.Finding9TagOnlyWhisper.test_tag_only_output_never_yields_empty_replacement) ... ok
+test_p2_1_any_cd_pushd_popd_makes_cwd_unknown (test_findings.Pass2Findings.test_p2_1_any_cd_pushd_popd_makes_cwd_unknown) ... ok
+test_p2_2_brace_and_bracket_expansion_is_unknown (test_findings.Pass2Findings.test_p2_2_brace_and_bracket_expansion_is_unknown) ... ok
+test_p2_3_non_ascii_deny_patterns_match (test_findings.Pass2Findings.test_p2_3_non_ascii_deny_patterns_match) ... ok
+test_p3_10_card_staged_under_legacy_cron_name_matches_canonical (test_findings.Pass2Findings.test_p3_10_card_staged_under_legacy_cron_name_matches_canonical) ... ok
+test_p3_12_whisper_span_hash_is_salted (test_findings.Pass2Findings.test_p3_12_whisper_span_hash_is_salted) ... ok
+test_p3_4_abbreviated_long_options (test_findings.Pass2Findings.test_p3_4_abbreviated_long_options) ... ok
+test_p3_6_whitespace_only_and_untagged_transform (test_findings.Pass2Findings.test_p3_6_whitespace_only_and_untagged_transform) ... ok
+test_p3_7_invalid_config_turns_card_red_with_fresh_key (test_findings.Pass2Findings.test_p3_7_invalid_config_turns_card_red_with_fresh_key) ... ok
+test_p2_1_rule_key_and_card_name_every_category (test_findings.Pass3Findings.test_p2_1_rule_key_and_card_name_every_category) ... ok
+test_p2_2_subshell_and_command_substitution_cd (test_findings.Pass3Findings.test_p2_2_subshell_and_command_substitution_cd) ... ok
+test_p3_3_standing_rule_named_alongside_preflight (test_findings.Pass3Findings.test_p3_3_standing_rule_named_alongside_preflight) ... ok
+test_p3_5_error_fallback_question_first_on_messaging (test_findings.Pass3Findings.test_p3_5_error_fallback_question_first_on_messaging) ... ok
+test_p3_6_quoted_command_names (test_findings.Pass3Findings.test_p3_6_quoted_command_names) ... ok
+test_p3_7_cron_run_is_spin (test_findings.Pass3Findings.test_p3_7_cron_run_is_spin) ... ok
+test_p3_8_underscore_audiences_count_as_downstream (test_findings.Pass3Findings.test_p3_8_underscore_audiences_count_as_downstream) ... ok
+test_p3_9_whisper_lookalike_text_is_untouched (test_findings.Pass3Findings.test_p3_9_whisper_lookalike_text_is_untouched) ... ok
+test_p2_1_action_values_normalized_like_hermes (test_findings.Pass4Findings.test_p2_1_action_values_normalized_like_hermes) ... ok
+test_p2_2_backslash_newline_continuation (test_findings.Pass4Findings.test_p2_2_backslash_newline_continuation) ... ok
+test_p3_3_none_session_matches_empty (test_findings.Pass4Findings.test_p3_3_none_session_matches_empty) ... ok
+test_p3_4_bad_whisper_settings_do_not_break_registration (test_findings.Pass4Findings.test_p3_4_bad_whisper_settings_do_not_break_registration) ... ok
+test_p3_5_whisper_shading_resets_to_default_color (test_findings.Pass4Findings.test_p3_5_whisper_shading_resets_to_default_color) ... ok
+test_p3_6_rm_without_operands_is_not_proven_contained (test_findings.Pass4Findings.test_p3_6_rm_without_operands_is_not_proven_contained) ... ok
+test_p2_1_cron_run_aliases (test_findings.Pass5Findings.test_p2_1_cron_run_aliases) ... ok
+test_p2_2_config_error_keeps_the_valid_rules (test_findings.Pass5Findings.test_p2_2_config_error_keeps_the_valid_rules) ... ok
+test_p2_3_every_card_gets_a_fresh_rule_key (test_findings.Pass5Findings.test_p2_3_every_card_gets_a_fresh_rule_key) ... ok
+test_p3_4_case_insensitive_command_names (test_findings.Pass5Findings.test_p3_4_case_insensitive_command_names) ... ok
+test_p3_5_indirect_command_names_are_unknown (test_findings.Pass5Findings.test_p3_5_indirect_command_names_are_unknown) ... ok
+test_p3_6_other_destructive_forms (test_findings.Pass5Findings.test_p3_6_other_destructive_forms) ... ok
+test_p3_7_whitespace_span_on_cli_is_not_blank (test_findings.Pass5Findings.test_p3_7_whitespace_span_on_cli_is_not_blank) ... ok
+test_p3_5_more_audience_words (test_findings.Pass6Findings.test_p3_5_more_audience_words) ... ok
+test_p3_6_every_sender_field_is_checked (test_findings.Pass6Findings.test_p3_6_every_sender_field_is_checked) ... ok
+test_p2_1_mid_word_hash_is_not_a_comment (test_findings.Pass7Findings.test_p2_1_mid_word_hash_is_not_a_comment) ... ok
+test_p2_2_command_named_by_expansion_is_flagged (test_findings.Pass7Findings.test_p2_2_command_named_by_expansion_is_flagged) ... ok
+test_p3_4_terminal_push_without_sender_field_is_not_sender_checked (test_findings.Pass7Findings.test_p3_4_terminal_push_without_sender_field_is_not_sender_checked) ... ok
+test_p3_5_only_real_whisper_markers_are_stripped (test_findings.Pass7Findings.test_p3_5_only_real_whisper_markers_are_stripped) ... ok
+test_card_reaches_hermes_prompt_and_the_human_decides_on_both_paths (test_host.HostTests.test_card_reaches_hermes_prompt_and_the_human_decides_on_both_paths) ... /Users/percykeith/.hermes/hermes-agent/hermes_cli/plugins_manifest.py:456: DeprecationWarning: 'maxsplit' is passed as positional argument
+  parts = re.split(r"[-+]", str(v).strip().lstrip("v"), 1)[0].split(".")
+ok
+test_cronjob_alias_is_classified_after_canonicalization_on_both_paths (test_host.HostTests.test_cronjob_alias_is_classified_after_canonicalization_on_both_paths) ... /Users/percykeith/.hermes/hermes-agent/hermes_cli/plugins_manifest.py:456: DeprecationWarning: 'maxsplit' is passed as positional argument
+  parts = re.split(r"[-+]", str(v).strip().lstrip("v"), 1)[0].split(".")
+ok
+test_host_policy_decides_unattended_and_yolo (test_host.HostTests.test_host_policy_decides_unattended_and_yolo) ... plugin-escalated tool call 'axioma_synthetic_send_email' in non-interactive non-gateway context (pattern: plugin_rule:axioma:send:axioma_synthetic_send_email:green:774e8db33f3a49209afef236db9d3618): GO · proceed: yes / no
+Is this the audience you intended?
+intent: Share the synthetic draft
+signal: The public post cannot be recalled.
+kind: send
+(advice only; you decide in the Hermes prompt) — no interactive user/gateway present; BLOCKED (fail-closed). Set HERMES_INTERACTIVE or HERMES_GATEWAY_SESSION to answer the prompt.
+ok
+test_native_card_is_matched_against_final_arguments_after_middleware (test_host.HostTests.test_native_card_is_matched_against_final_arguments_after_middleware) ... ok
+test_no_card_still_reaches_the_human_with_a_notice_on_both_paths (test_host.HostTests.test_no_card_still_reaches_the_human_with_a_notice_on_both_paths) ... ok
+test_question_and_proceed_survive_the_cli_approval_panel (test_host.HostTests.test_question_and_proceed_survive_the_cli_approval_panel)
+Hermes's CLI panel puts the description last and truncates it; ours leads with them. ... ok
+test_red_card_never_offers_yes_and_answers_are_logged_without_bodies (test_host.HostTests.test_red_card_never_offers_yes_and_answers_are_logged_without_bodies) ... --- Logging error ---
+Traceback (most recent call last):
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/handlers.py", line 79, in emit
+    if self.shouldRollover(record):
+       ~~~~~~~~~~~~~~~~~~~^^^^^^^^
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/handlers.py", line 197, in shouldRollover
+    self.stream = self._open()
+                  ~~~~~~~~~~^^
+  File "/Users/percykeith/.hermes/hermes-agent/hermes_logging.py", line 588, in _open
+    stream = super()._open()
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/__init__.py", line 1248, in _open
+    return open_func(self.baseFilename, self.mode,
+                     encoding=self.encoding, errors=self.errors)
+FileNotFoundError: [Errno 2] No such file or directory: '/var/folders/07/b9gphpxx7x1dvfrwt2gvzxd80000gn/T/tmp223z0rnf/logs/agent.log'
+Call stack:
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/threading.py", line 1044, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/threading.py", line 1082, in _bootstrap_inner
+    self._context.run(self.run)
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/threading.py", line 1024, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/handlers.py", line 1627, in _monitor
+    self.handle(record)
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/handlers.py", line 1608, in handle
+    handler.handle(record)
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/__init__.py", line 1027, in handle
+    self.emit(record)
+  File "/Users/percykeith/.hermes/hermes-agent/hermes_logging.py", line 553, in emit
+    super().emit(record)
+Message: 'capability_check plugin=%s capability=%s decision=%s checked_by=plugin_capability_granted evidence=%s'
+Arguments: ('hermes-axioma', 'tools.override', 'deny', 'not granted')
+ok
+test_remembered_session_approval_never_covers_a_later_call (test_host.HostTests.test_remembered_session_approval_never_covers_a_later_call)
+Real Hermes allowlist: 'session' on one GREEN card does not skip the next card. ... --- Logging error ---
+Traceback (most recent call last):
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/handlers.py", line 79, in emit
+    if self.shouldRollover(record):
+       ~~~~~~~~~~~~~~~~~~~^^^^^^^^
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/handlers.py", line 197, in shouldRollover
+    self.stream = self._open()
+                  ~~~~~~~~~~^^
+  File "/Users/percykeith/.hermes/hermes-agent/hermes_logging.py", line 588, in _open
+    stream = super()._open()
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/__init__.py", line 1248, in _open
+    return open_func(self.baseFilename, self.mode,
+                     encoding=self.encoding, errors=self.errors)
+FileNotFoundError: [Errno 2] No such file or directory: '/var/folders/07/b9gphpxx7x1dvfrwt2gvzxd80000gn/T/tmp223z0rnf/logs/agent.log'
+Call stack:
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/threading.py", line 1044, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/threading.py", line 1082, in _bootstrap_inner
+    self._context.run(self.run)
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/threading.py", line 1024, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/handlers.py", line 1627, in _monitor
+    self.handle(record)
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/handlers.py", line 1608, in handle
+    handler.handle(record)
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/__init__.py", line 1027, in handle
+    self.emit(record)
+  File "/Users/percykeith/.hermes/hermes-agent/hermes_logging.py", line 553, in emit
+    super().emit(record)
+Message: 'capability_check plugin=%s capability=%s decision=%s checked_by=plugin_capability_granted evidence=%s'
+Arguments: ('hermes-axioma', 'tools.override', 'deny', 'not granted')
+ok
+test_unclassified_tools_are_untouched_on_both_paths (test_host.HostTests.test_unclassified_tools_are_untouched_on_both_paths) ... --- Logging error ---
+Traceback (most recent call last):
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/handlers.py", line 79, in emit
+    if self.shouldRollover(record):
+       ~~~~~~~~~~~~~~~~~~~^^^^^^^^
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/handlers.py", line 197, in shouldRollover
+    self.stream = self._open()
+                  ~~~~~~~~~~^^
+  File "/Users/percykeith/.hermes/hermes-agent/hermes_logging.py", line 588, in _open
+    stream = super()._open()
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/__init__.py", line 1248, in _open
+    return open_func(self.baseFilename, self.mode,
+                     encoding=self.encoding, errors=self.errors)
+FileNotFoundError: [Errno 2] No such file or directory: '/var/folders/07/b9gphpxx7x1dvfrwt2gvzxd80000gn/T/tmp223z0rnf/logs/agent.log'
+Call stack:
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/threading.py", line 1044, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/threading.py", line 1082, in _bootstrap_inner
+    self._context.run(self.run)
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/threading.py", line 1024, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/handlers.py", line 1627, in _monitor
+    self.handle(record)
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/handlers.py", line 1608, in handle
+    handler.handle(record)
+  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/__init__.py", line 1027, in handle
+    self.emit(record)
+  File "/Users/percykeith/.hermes/hermes-agent/hermes_logging.py", line 553, in emit
+    super().emit(record)
+Message: 'capability_check plugin=%s capability=%s decision=%s checked_by=plugin_capability_granted evidence=%s'
+Arguments: ('hermes-axioma', 'tools.override', 'deny', 'not granted')
+ok
+test_classifies_sends_spends_spins_but_not_reads (test_policy.PolicyTests.test_classifies_sends_spends_spins_but_not_reads) ... ok
+test_config_add_remove_and_invalid_fail_closed (test_policy.PolicyTests.test_config_add_remove_and_invalid_fail_closed) ... ok
+test_payment_reads_pass_and_common_posts_are_gated (test_policy.PolicyTests.test_payment_reads_pass_and_common_posts_are_gated) ... ok
+test_registers_only_declared_surfaces (test_registration.RegistrationTests.test_registers_only_declared_surfaces) ... ok
+test_dark_light_color_and_optional_messaging_marker (test_whisper.WhisperTests.test_dark_light_color_and_optional_messaging_marker) ... ok
+test_failure_never_blocks_and_tags_do_not_leak (test_whisper.WhisperTests.test_failure_never_blocks_and_tags_do_not_leak) ... ok
+test_strip_log_once_and_no_text_bodies (test_whisper.WhisperTests.test_strip_log_once_and_no_text_bodies) ... ok
+test_untagged_text_is_byte_for_byte_unchanged (test_whisper.WhisperTests.test_untagged_text_is_byte_for_byte_unchanged) ... ok
+
+----------------------------------------------------------------------
+Ran 80 tests in 1.253s
+
+OK
+host exit=0 (Hermes v0.22.5 bf0203a794a07aac3ff764972ab9087baa4e4f4e; Wed Nov  4 17:03:31 CST 2026)

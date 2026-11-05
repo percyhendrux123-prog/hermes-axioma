@@ -1,0 +1,27 @@
+
+✓ manifest — plugin.yaml parses
+✓ manifest fields — name, version, description present
+✓ requires_hermes — spec '>=0.22.5' parses
+✓ config schema — shape valid
+✓ requires_env — all entries UPPER_SNAKE
+✓ oauth — not declared
+✓ loadable — entry: __init__.py
+✓ python dependencies — none declared
+✓ capability probe — register() ran in isolation
+✓ declared tools — matches registrations
+✓ declared hooks — matches registrations
+✓ declared middleware — matches registrations
+✓ built-in tool collisions — no collisions
+✓ security scan — caution
+✓ no core override — no runtime rebinds of Hermes core
+⚠ security scan caution: destructive_root_rm (pass-5.txt:42), 
+destructive_root_rm (pass-7.txt:16), destructive_root_rm (pass-7.txt:18), 
+destructive_root_rm (pass3-findings-red-before-fix.txt:53), destructive_root_rm 
+(pass5-findings-red-before-fix.txt:46), destructive_root_rm 
+(pass7-findings-red-before-fix.txt:5), destructive_root_rm 
+(test_eval_changes.py:62), destructive_root_rm (test_findings.py:257), 
+destructive_root_rm (test_findings.py:402)
+◆ Isolation — runs in the plugin host (plugins.isolation: host)
+
+Validation passed.
+validate exit=0

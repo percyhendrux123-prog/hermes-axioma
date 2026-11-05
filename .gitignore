@@ -1,0 +1,18 @@
+__pycache__/
+*.py[cod]
+.venv/
+.env
+*.sqlite3
+*.sqlite3-*
+.DS_Store
+# internal build history, kept local only
+docs/review/
+docs/archive/
+docs/evidence/pass*-red-before-fix.txt
+docs/evidence/pass6-panel-red-before-fix.txt
+docs/evidence/a229-red-before-build.txt
+docs/evidence/findings-red-before-fix.txt
+docs/evidence/desktop/desktop-night-try1-dollar-escape-bug.png
+docs/REVIEW-READY.md
+docs/CATALOG-SUBMISSION.md
+docs/ACTIVATE.md

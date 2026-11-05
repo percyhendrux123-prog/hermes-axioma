@@ -1,0 +1,10 @@
+{
+ "arabic_digit": "السعر $٥٠ شهريا. this bills the team card (caution) ok?",
+ "devanagari_digit": "Price $५ a month. this bills the team card (caution) ok?",
+ "thai_digit": "Price $๕ a month. this bills the team card (caution) ok?",
+ "math_digit": "Price $𝟓 a month. this bills the team card (caution) ok?",
+ "ascii_digit_control": "It costs $49 a month. $\\color{#FFCC00}{\\underline{\\textsf{this bills the team card}}}$ (caution) ok?",
+ "www_link": "see www.example.com/delete prod (stop) ok?",
+ "angle_link": "see <http://x.y/delete prod (stop)> ok?",
+ "double_backslash_closer": "$\\color{#FF453A}{\\underline{\\textsf{\\textbf{x}}}}$ (stop) ok?"
+}

@@ -1,0 +1,39 @@
+name: hermes-axioma
+version: "0.2.0"
+description: "Inline signal color in the agent's normal reply (color + style + word, never color alone), plus an advisory card before send/spend/spin/scrub. Advisor, not a gate."
+author: hermes-axioma contributors
+license: MIT
+requires_hermes: ">=0.22.5"
+api_version: 1
+provides_tools: [axioma_card]
+provides_hooks: [pre_tool_call, post_tool_call, post_approval_response, pre_llm_call, on_session_finalize, transform_llm_output]
+
+config_schema:
+  checks:
+    type: dict
+    default: {}
+    description: "Hard-red deny/non_reversible rules and read-only skills/provider_conflicts/locks preflight."
+  policy:
+    type: dict
+    default: {}
+    description: "Default rule IDs to remove and rules to add; see README. Invalid settings fall back to defaults and every card turns RED with axioma_config: fail."
+  theme:
+    type: str
+    default: dark
+    description: "Signal palette: dark (night skin) or light (day skin)."
+  palette:
+    type: str
+    default: default
+    description: "default (traffic colors), cvd (color-vision-safe) or none (style and words only)."
+  words:
+    type: str
+    default: always
+    description: "always: the word (stop/caution/go/second look) follows every marked span; plain_only: words only where color is unavailable."
+  budget:
+    type: dict
+    default: {}
+    description: "Rarity budget: max_spans (3), max_whispers (2), max_span_words (16). Over-budget spans render plain and are logged."
+  messaging_marker:
+    type: bool
+    default: true
+    description: "Add (second look) to whispers on messaging surfaces; false = whisper is log-only there."

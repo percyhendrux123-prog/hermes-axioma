@@ -1,0 +1,12 @@
+{
+ "splice_closer": "ok  done",
+ "splice_used_opener": "Real $\\color{#FF453A}{\\underline{\\textsf{\\textbf{a}}}}$ (stop) then x",
+ "splice_used_go": "x a passed",
+ "splice_zero_width": "ok rm -rf build",
+ "splice_backslashes": "ok  done",
+ "splice_cut_off": "ok $ more",
+ "intent_punct_then_letter": "Goal: xship it.Next we test.",
+ "intent_open_punct_after_letter": "word(ship) it now",
+ "intent_bold_control": "Plan: **ship it** next.",
+ "stop_after_letter_punct": "See a$\\color{#FF453A}{\\underline{\\textsf{\\textbf{.env file}}}}$ (stop) here."
+}

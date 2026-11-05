@@ -1,0 +1,10 @@
+Rendering test for a Hermes plugin (no action, no tools). Reply with exactly the text between the two ===== lines, verbatim, character for character, with nothing before or after it and no code fence.
+=====
+I can do that, but shipping $\color{#FF453A}{\underline{\textsf{\textbf{without an eval or a test}}}}$ (stop) means the $\color{#FFCC00}{\underline{\textsf{merge into Hermes}}}$ (caution) lands under your name.
+
+The plugin suite $\color{#30D158}{\textsf{\textit{passed 114 of 114}}}$ (go) on both dispatch paths. The reach estimate is $\color{#EADFB8}{\textsf{about 4,200 users}}$ (second look).
+
+Do you want me to run the eval first?
+
+Escaping check: $\color{#FFCC00}{\underline{\textsf{pay \$5 \{now\} \textbackslash{} 100\% \#1 \& a\_b \textasciicircum{} \textasciitilde{}}}}$ (caution) while the plan costs $20 a month.
+=====

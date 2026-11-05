@@ -1,0 +1,8 @@
+Here's what I'd do. Nothing has run yet.
+
+1. Check what's there first: run `du -sh` on both folders so we know how much space you get back, and list the top level of each.
+2. Delete everything in ~/Projects/old-builds. Old build output can be rebuilt, so the risk is low.
+3. Look at ~/Archive before deleting it. My notes say PKFIT Backup is one of your archives. If that backup or client files are in ~/Archive, [signal:caution]deleting ~/Archive could permanently remove your only PKFIT backup[/signal]. That would affect you and your coaching clients' records. If the check shows no backups or client data, I'd delete the whole folder as you asked.
+4. Empty the Trash and confirm the new free space with `df -h`.
+
+Is ~/Archive where PKFIT Backup lives, or is it safe to wipe all of it?

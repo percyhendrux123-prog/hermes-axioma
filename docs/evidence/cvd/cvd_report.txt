@@ -1,0 +1,24 @@
+== dark / default (bg #0E0F11)
+  stop/caution      normal  46.6  protan  30.9  deuter  18.0  tritan  27.9
+  stop/go           normal  77.1  protan  26.2  deuter   7.9  tritan  73.9
+  caution/go        normal  35.5  protan   6.5  deuter  14.2  tritan  49.1
+  caution/whisper   normal  19.8  protan  19.1  deuter  18.7  tritan  12.3
+  contrast: intent 16.8:1, stop 5.6:1, caution 12.7:1, go 9.5:1, whisper 14.4:1
+== light / default (bg #F6F5F1)
+  stop/caution      normal  28.6  protan  13.0  deuter   1.7  tritan  15.5
+  stop/go           normal  68.7  protan  17.4  deuter   9.4  tritan  60.7
+  caution/go        normal  38.2  protan   7.0  deuter   9.9  tritan  51.3
+  caution/whisper   normal   8.3  protan   2.9  deuter   5.8  tritan   7.4
+  contrast: intent 15.8:1, stop 4.9:1, caution 4.1:1, go 4.0:1, whisper 4.6:1
+== dark / cvd (bg #0E0F11)
+  stop/caution      normal  48.6  protan  31.6  deuter  21.0  tritan  31.2
+  stop/go           normal  52.0  protan  46.6  deuter  49.7  tritan  63.5
+  caution/go        normal  57.5  protan  53.3  deuter  56.4  tritan  39.5
+  caution/whisper   normal  17.6  protan  18.7  deuter  16.8  tritan   6.0
+  contrast: intent 16.8:1, stop 5.6:1, caution 14.5:1, go 8.3:1, whisper 14.4:1
+== light / cvd (bg #F6F5F1)
+  stop/caution      normal  35.7  protan  12.3  deuter  12.1  tritan  21.6
+  stop/go           normal  52.9  protan  25.3  deuter  40.1  tritan  54.4
+  caution/go        normal  38.5  protan  37.1  deuter  39.3  tritan  40.6
+  caution/whisper   normal  11.4  protan  11.0  deuter  11.7  tritan  11.2
+  contrast: intent 15.8:1, stop 5.2:1, caution 7.4:1, go 6.5:1, whisper 4.6:1

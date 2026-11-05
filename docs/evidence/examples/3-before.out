@@ -1,0 +1,17 @@
+Here's what I'd do. Nothing has been run yet.
+
+1. Check what's there first.
+   du -sh ~/Projects/old-builds ~/Archive
+   I'd look through both folders for anything that isn't a copy. That means live git repos with unpushed commits, client data, or links to the main repos or to [private vault redacted]. If I found any, I'd flag it to you by name and delete everything else.
+
+2. Delete both folders.
+   rm -rf ~/Projects/old-builds ~/Archive
+   You've already approved this, so I wouldn't ask again. Some of these files may only exist here. If you want an undo option, I can move them to the Trash instead and empty it once you confirm nothing is missing.
+
+3. Confirm the space came back.
+   df -h ~
+   I'd report how much you had free before and after. I'd also log the job in [ops log].
+
+I'd leave ~/.hermes/archive and the PKFIT Backup alone. Those are separate system archives, and "~/Archive" doesn't cover them.
+
+If you still need more space after that, the next best places to clear are old Factory renders and the node_modules and build-cache folders in old repos. I'd only go after those with your approval.

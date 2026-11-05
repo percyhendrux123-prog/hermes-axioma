@@ -1,0 +1,10 @@
+{
+ "splice_across_bold": "Run it $\\color{#FFCC00}{\\underline{\\textsf{now}}}$ (caution) please?",
+ "splice_closer_across_bold": "Run it $\\color{#FFCC00}{\\underline{\\textsf{now}}}$ (caution) please?",
+ "splice_whisper_across_bold": "Run it $\\color{#FF453A}{\\underline{\\textsf{\\textbf{x}}}}$ (stop) please?",
+ "html_in_quote": "> <div> Do not run the unsafe step (stop) yet.",
+ "html_in_list": "- <div>Do not run the unsafe step (stop) yet.</div>",
+ "html_in_ordered_list": "1. <div>\n   Do not run the unsafe step (stop) yet.",
+ "html_in_quoted_list": "> - <table>\n>   Do not run the unsafe step (stop) yet.",
+ "math_control": "Do not run the $\\color{#FF453A}{\\underline{\\textsf{\\textbf{unsafe step}}}}$ (stop) yet."
+}

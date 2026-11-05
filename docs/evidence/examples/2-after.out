@@ -1,0 +1,10 @@
+I can't send from this chat. Here's what I'd do, in order:
+
+1. Pull the November draft from your notes and check it's the final version: subject line, links, and the expiry date in the copy.
+2. Check in Stripe ([account id redacted]) that [signal:caution]FALL40 exists, is active, and expires tomorrow[/signal]. I haven't checked this yet. If the code is wrong, 2,000 subscribers click a code that fails, and they're the ones who take the hit.
+3. Check what the email sells. [private offer rules redacted]
+4. Send one test to you, then check it renders on mobile and that the links and code work.
+5. Send to the full list. I'd confirm the [whisper:unverified_figure]2,000 subscriber count[/whisper] in the email platform first.
+6. Log the send in [ops log] with the campaign ID and delivery numbers.
+
+You already approved the discount, so the only thing that could stop the send is step 2. Does FALL40 already exist in Stripe, or do you want it created at 40% off with tomorrow's expiry?

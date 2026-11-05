@@ -1,0 +1,10 @@
+Nothing done yet. I need your OK on two things first.
+
+Here's what I'd do: find the plugin's repo, check that it builds and loads in Hermes, then open a pull request to the Hermes repo. That PR would say plainly that the plugin hasn't been evaluated or tested.
+
+Two things to know first:
+
+- Shipping without a test is your call. But I'd still do one quick check that the plugin loads before opening the PR. If it crashes on load, it will be rejected or reverted fast, and that reflects on Axiom.
+- If "merge to hermes" means the public NousResearch repo, opening the PR posts publicly under your GitHub account. If you mean your local Hermes install or a fork you own, it's a private change and I can just do it.
+
+I also want to confirm the name. I'm reading "hermes-axioma" as the Axiom plugin. Reply "public PR" or "local only," and say whether the quick load check is OK, and I'll go.

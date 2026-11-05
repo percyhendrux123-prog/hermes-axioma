@@ -1,0 +1,56 @@
+⚠ A previous `hermes update` pulled new code but did not restart running gateways.
+  Gateways may still be serving pre-update modules (mixed sys.modules).
+  Run `hermes update` or `hermes gateway restart`.
+
+✓ manifest — plugin.yaml parses
+✓ manifest fields — name, version, description present
+✓ requires_hermes — spec '>=0.22.5' parses
+✓ config schema — shape valid
+✓ requires_env — all entries UPPER_SNAKE
+✓ oauth — not declared
+✓ loadable — entry: __init__.py
+✓ python dependencies — none declared
+✓ capability probe — register() ran in isolation
+✓ declared tools — matches registrations
+✓ declared hooks — matches registrations
+✓ declared middleware — matches registrations
+✓ built-in tool collisions — no collisions
+✓ security scan — caution
+✓ no core override — no runtime rebinds of Hermes core
+⚠ security scan caution: destructive_home_rm (pass-12.txt:42), 
+destructive_root_rm (pass-10.txt:55), destructive_root_rm (pass-12.txt:41), 
+destructive_root_rm (pass-13.txt:28), destructive_root_rm (pass-13.txt:29), 
+destructive_root_rm (pass-13.txt:30), destructive_root_rm (pass-13.txt:31), 
+destructive_root_rm (pass-13.txt:33), destructive_root_rm (pass-13.txt:51), 
+destructive_root_rm (pass-14.txt:28), destructive_root_rm (pass-14.txt:29), 
+destructive_root_rm (pass-14.txt:30), destructive_root_rm (pass-14.txt:31), 
+destructive_root_rm (pass-15.txt:48), destructive_root_rm (pass-16.txt:70), 
+destructive_root_rm (pass-5.txt:42), destructive_root_rm (pass-7.txt:16), 
+destructive_root_rm (pass-7.txt:18), destructive_root_rm (pass-8.txt:26), 
+destructive_root_rm (pass13-findings-red-before-fix.txt:200), 
+destructive_root_rm (pass13-findings-red-before-fix.txt:215), 
+destructive_root_rm (pass13-findings-red-before-fix.txt:230), 
+destructive_root_rm (pass13-findings-red-before-fix.txt:245), 
+destructive_root_rm (pass13-findings-red-before-fix.txt:305), 
+destructive_root_rm (pass13-findings-red-before-fix.txt:320), 
+destructive_root_rm (pass13-findings-red-before-fix.txt:335), 
+destructive_root_rm (pass13-findings-red-before-fix.txt:350), 
+destructive_root_rm (pass14-findings-red-before-fix.txt:259), 
+destructive_root_rm (pass14-findings-red-before-fix.txt:274), 
+destructive_root_rm (pass14-findings-red-before-fix.txt:304), 
+destructive_root_rm (pass14-findings-red-before-fix.txt:319), 
+destructive_root_rm (pass14-findings-red-before-fix.txt:334), 
+destructive_root_rm (pass14-findings-red-before-fix.txt:364), 
+destructive_root_rm (pass3-findings-red-before-fix.txt:53), destructive_root_rm 
+(pass5-findings-red-before-fix.txt:46), destructive_root_rm 
+(pass7-findings-red-before-fix.txt:5), destructive_root_rm 
+(test_eval_changes.py:62), destructive_root_rm (test_findings.py:257), 
+destructive_root_rm (test_findings.py:402), destructive_root_rm 
+(test_findings.py:566), invisible_unicode (pass-11.txt:34), invisible_unicode 
+(pass-12.txt:49), invisible_unicode (pass-16.txt:56), invisible_unicode 
+(pass-25.txt:18), invisible_unicode (pass-25.txt:20), invisible_unicode 
+(pass-26.txt:12), invisible_unicode (pass-26.txt:14), invisible_unicode 
+(pass10-findings-red-before-fix.txt:376)
+◆ Isolation — runs in the plugin host (plugins.isolation: host)
+
+Validation passed.

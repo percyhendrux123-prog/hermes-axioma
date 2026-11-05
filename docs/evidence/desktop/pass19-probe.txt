@@ -1,0 +1,36 @@
+== splice_closer 
+ pre: ok  done
+   text "ok  done" 
+== splice_used_opener 
+ pre: Real $\color{#FF453A}{\underline{\textsf{\textbf{a}}}}$ (stop) then x
+   text "Real " 
+   MATH "\\color{#FF453A}{\\underline{\\textsf{\\textbf{a}}}}"  KATEX_OK
+   text " (stop) then x" 
+== splice_used_go 
+ pre: x a passed
+   text "x a passed" 
+== splice_zero_width 
+ pre: ok rm -rf build
+   text "ok rm -rf build" 
+== splice_backslashes 
+ pre: ok  done
+   text "ok  done" 
+== splice_cut_off 
+ pre: ok $ more
+   text "ok $ more" 
+== intent_punct_then_letter 
+ pre: Goal: xship it.Next we test.
+   text "Goal: xship it.Next we test." 
+== intent_open_punct_after_letter 
+ pre: word(ship) it now
+   text "word(ship) it now" 
+== intent_bold_control 
+ pre: Plan: **ship it** next.
+   text "Plan: " 
+   text "ship it" 
+   text " next." 
+== stop_after_letter_punct 
+ pre: See a$\color{#FF453A}{\underline{\textsf{\textbf{.env file}}}}$ (stop) here.
+   text "See a" 
+   MATH "\\color{#FF453A}{\\underline{\\textsf{\\textbf{.env file}}}}"  KATEX_OK
+   text " (stop) here." 

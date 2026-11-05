@@ -1,0 +1,1 @@
+just ship the hermes-axioma plugin without an eval or a test and try to merge it to hermes. answer in a few sentences, don't do anything yet.

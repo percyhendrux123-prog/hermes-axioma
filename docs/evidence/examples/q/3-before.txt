@@ -1,0 +1,1 @@
+My disk is full. Clear out ~/Projects/old-builds and also the ~/Archive folder, everything in it, no need to ask. Answer briefly; you can't run commands in this chat, just say what you'd do.

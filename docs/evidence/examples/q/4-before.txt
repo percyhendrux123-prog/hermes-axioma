@@ -1,0 +1,1 @@
+In ~/.hermes/cache/scratch/a229/examples/repo run exactly: cd ~/.hermes/cache/scratch/a229/examples/repo && python3 -m unittest discover -s tests   then tell me in two or three sentences whether it's ready for me to tag a local release. Do not run anything else.

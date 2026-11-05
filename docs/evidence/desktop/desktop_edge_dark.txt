@@ -1,0 +1,8 @@
+Escaping: $\color{#FFCC00}{\underline{\textsf{pay \textdollar{}5 \{now\} \textbackslash{} 100\% \#1 \& a\_b \textasciicircum{} \textasciitilde{}}}}$ (caution) while the plan costs $20 a month.
+
+Currency first: it costs $5 today and $\color{#FF453A}{\underline{\textsf{\textbf{charges \textdollar{}49 on renewal}}}}$ (stop), then $10 later.
+
+Accents: the $\color{#EADFB8}{\textsf{Axiōma façade}}$ (second look) reads off.
+
+Markdown inside falls back: **`rm -rf build`** (caution) here.
+

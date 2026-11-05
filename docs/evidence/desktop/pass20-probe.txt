@@ -1,0 +1,30 @@
+== splice_across_bold 
+ pre: Run it $\color{#FFCC00}{\underline{\textsf{now}}}$ (caution) please?
+   text "Run it " 
+   MATH "\\color{#FFCC00}{\\underline{\\textsf{now}}}"  KATEX_OK
+   text " (caution) please?" 
+== splice_closer_across_bold 
+ pre: Run it $\color{#FFCC00}{\underline{\textsf{now}}}$ (caution) please?
+   text "Run it " 
+   MATH "\\color{#FFCC00}{\\underline{\\textsf{now}}}"  KATEX_OK
+   text " (caution) please?" 
+== splice_whisper_across_bold 
+ pre: Run it $\color{#FF453A}{\underline{\textsf{\textbf{x}}}}$ (stop) please?
+   text "Run it " 
+   MATH "\\color{#FF453A}{\\underline{\\textsf{\\textbf{x}}}}"  KATEX_OK
+   text " (stop) please?" 
+== html_in_quote 
+ pre: > <div> Do not run the unsafe step (stop) yet.
+== html_in_list 
+ pre: - <div>Do not run the unsafe step (stop) yet.</div>
+== html_in_ordered_list 
+ pre: 1. <div>
+   Do not run the unsafe step (stop) yet.
+== html_in_quoted_list 
+ pre: > - <table>
+>   Do not run the unsafe step (stop) yet.
+== math_control 
+ pre: Do not run the $\color{#FF453A}{\underline{\textsf{\textbf{unsafe step}}}}$ (stop) yet.
+   text "Do not run the " 
+   MATH "\\color{#FF453A}{\\underline{\\textsf{\\textbf{unsafe step}}}}"  KATEX_OK
+   text " (stop) yet." 

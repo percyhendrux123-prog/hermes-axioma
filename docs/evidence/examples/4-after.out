@@ -1,0 +1,1 @@
+The suite passed: [signal:go;check=mcp__terminal]114 tests ran, OK, exit code 0[/signal]. That's enough for a local tag, but [whisper:assumption]11 tests were skipped[/whisper], and I didn't look into why because you asked me to run only that one command. If those skipped tests cover something this release changes, check them before you tag.
