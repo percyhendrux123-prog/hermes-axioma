@@ -421,12 +421,15 @@ human answered. A conforming card carries a fingerprint for that.
   shown then answered, and name any mismatch: no card with that code, a record changed after it
   was written, an answer recorded under a different code, or (when the human pastes the card they
   saw) a line added, changed, missing or out of order. `/signals cards` lists recent codes.
-- **What it detects.** A card changed in transit, when the human compares the code or pastes the
-  words, and a log record edited after it was written.
+- **What it detects.** Comparing the code catches a card swapped or replayed in transit (it shows
+  another card's code, or a code this log never issued). Pasting the words the human saw catches a
+  card whose words were edited while its code was kept. The seals catch a log record edited after
+  it was written.
 - **What it does NOT prove.** A compromised host, or anyone holding the local key, can forge both
-  ends: a matching code on the screen and a matching record in the log. Lines added outside the
-  card (before its first line or after its last) are not distinguished from host framing. The code
-  confirms the log; the human still has to look at the card.
+  ends: a matching code on the screen and a matching record in the log. A deleted record is not
+  detected unless its partner record remains. Lines added outside the card (before its first line
+  or after its last) are not distinguished from host framing. The code confirms the log; the human
+  still has to look at the card.
 
 ---
 

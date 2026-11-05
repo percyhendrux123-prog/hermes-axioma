@@ -273,9 +273,11 @@ line next to the question (spec 5.6, "Shown equals staged"). It is a keyed finge
 card text Hermes received, the tool, the exact arguments and the card ID, logged when the card is
 handed to Hermes and again with your answer. `/signals cards` lists recent codes. `/signals verify
 <code>` says, in plain words, what was staged, what was shown and what was answered, and names any
-mismatch; paste the card you saw on the lines after the code to check the words too. It detects a
-card changed in transit and a log record edited afterwards. It cannot catch a compromised host or
-anyone holding the local key file, who can forge both ends.
+mismatch; paste the card you saw on the lines after the code to check the words too. Comparing the
+code catches a card swapped or replayed in transit; pasting the words catches edited words under a
+kept code; the seals catch a log record edited afterwards. It cannot catch a compromised host or
+anyone holding the local key file, who can forge both ends, and a deleted record is not detected
+unless its partner remains.
 
 ## A218 evaluation (cards, before this plugin existed)
 
