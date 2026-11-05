@@ -1,6 +1,6 @@
 # hermes-axioma
 
-Inline signal color for Hermes Agent · MIT · v0.2.0
+Inline signal color for Hermes Agent · MIT · v0.3.0
 
 The agent writes its normal reply. Axioma colors only the few phrases inside it that deserve your
 attention before you act, and puts a word next to each one so the meaning never depends on color.
