@@ -326,7 +326,8 @@ them). None is ever executed; the full list is in `docs/evidence/validate-a229.t
 
 ## License
 
-Code: MIT ([LICENSE](LICENSE)). The markup follows the Axiōma Signal Spec v0.1, a draft intended
-for the public domain (CC0) and not yet published.
+Code: MIT ([LICENSE](LICENSE)). The markup follows the
+[Axiōma Signal Spec v0.1](spec/AXIOMA-SIGNAL-SPEC-v0.1.md), a public draft dedicated to the public
+domain under CC0 1.0 ([spec/LICENSE](spec/LICENSE)).
 
 Installs from the Hermes plugin catalog at a reviewed, exact commit. No self-updater.
