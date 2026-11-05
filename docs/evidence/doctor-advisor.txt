@@ -1,4 +1,4 @@
-Plugin Doctor: /Users/percykeith/dev/hermes-axioma
+Plugin Doctor: <repo>
   manifest: hermes-axioma 0.1.0 (standalone)
   OK: runtime discovery, manifest parsing, import, and registration passed
   registrations: 1 tool(s), 5 hook(s)

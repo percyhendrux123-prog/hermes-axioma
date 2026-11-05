@@ -2,7 +2,6 @@
 import sys
 sys.path.insert(0, '.')
 from cvdlib import MACHADO, simulate, lab, de2000, contrast, hex2rgb
-sys.path.insert(0, '/Users/percykeith/dev/hermes-axioma')
 from axioma.signal import PALETTES
 BG = {'dark': '#0E0F11', 'light': '#F6F5F1'}
 for (theme, pal), colors in PALETTES.items():

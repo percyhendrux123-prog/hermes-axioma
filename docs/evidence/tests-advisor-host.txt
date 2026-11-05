@@ -61,10 +61,10 @@ test_p2_1_mid_word_hash_is_not_a_comment (test_findings.Pass7Findings.test_p2_1_
 test_p2_2_command_named_by_expansion_is_flagged (test_findings.Pass7Findings.test_p2_2_command_named_by_expansion_is_flagged) ... ok
 test_p3_4_terminal_push_without_sender_field_is_not_sender_checked (test_findings.Pass7Findings.test_p3_4_terminal_push_without_sender_field_is_not_sender_checked) ... ok
 test_p3_5_only_real_whisper_markers_are_stripped (test_findings.Pass7Findings.test_p3_5_only_real_whisper_markers_are_stripped) ... ok
-test_card_reaches_hermes_prompt_and_the_human_decides_on_both_paths (test_host.HostTests.test_card_reaches_hermes_prompt_and_the_human_decides_on_both_paths) ... /Users/percykeith/.hermes/hermes-agent/hermes_cli/plugins_manifest.py:456: DeprecationWarning: 'maxsplit' is passed as positional argument
+test_card_reaches_hermes_prompt_and_the_human_decides_on_both_paths (test_host.HostTests.test_card_reaches_hermes_prompt_and_the_human_decides_on_both_paths) ... <hermes-agent>/hermes_cli/plugins_manifest.py:456: DeprecationWarning: 'maxsplit' is passed as positional argument
   parts = re.split(r"[-+]", str(v).strip().lstrip("v"), 1)[0].split(".")
 ok
-test_cronjob_alias_is_classified_after_canonicalization_on_both_paths (test_host.HostTests.test_cronjob_alias_is_classified_after_canonicalization_on_both_paths) ... /Users/percykeith/.hermes/hermes-agent/hermes_cli/plugins_manifest.py:456: DeprecationWarning: 'maxsplit' is passed as positional argument
+test_cronjob_alias_is_classified_after_canonicalization_on_both_paths (test_host.HostTests.test_cronjob_alias_is_classified_after_canonicalization_on_both_paths) ... <hermes-agent>/hermes_cli/plugins_manifest.py:456: DeprecationWarning: 'maxsplit' is passed as positional argument
   parts = re.split(r"[-+]", str(v).strip().lstrip("v"), 1)[0].split(".")
 ok
 test_host_policy_decides_unattended_and_yolo (test_host.HostTests.test_host_policy_decides_unattended_and_yolo) ... plugin-escalated tool call 'axioma_synthetic_send_email' in non-interactive non-gateway context (pattern: plugin_rule:axioma:send:axioma_synthetic_send_email:green:774e8db33f3a49209afef236db9d3618): GO · proceed: yes / no
@@ -80,32 +80,32 @@ test_question_and_proceed_survive_the_cli_approval_panel (test_host.HostTests.te
 Hermes's CLI panel puts the description last and truncates it; ours leads with them. ... ok
 test_red_card_never_offers_yes_and_answers_are_logged_without_bodies (test_host.HostTests.test_red_card_never_offers_yes_and_answers_are_logged_without_bodies) ... --- Logging error ---
 Traceback (most recent call last):
-  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/handlers.py", line 79, in emit
+  File "<python>/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/handlers.py", line 79, in emit
     if self.shouldRollover(record):
        ~~~~~~~~~~~~~~~~~~~^^^^^^^^
-  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/handlers.py", line 197, in shouldRollover
+  File "<python>/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/handlers.py", line 197, in shouldRollover
     self.stream = self._open()
                   ~~~~~~~~~~^^
-  File "/Users/percykeith/.hermes/hermes-agent/hermes_logging.py", line 588, in _open
+  File "<hermes-agent>/hermes_logging.py", line 588, in _open
     stream = super()._open()
-  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/__init__.py", line 1248, in _open
+  File "<python>/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/__init__.py", line 1248, in _open
     return open_func(self.baseFilename, self.mode,
                      encoding=self.encoding, errors=self.errors)
 FileNotFoundError: [Errno 2] No such file or directory: '/var/folders/07/b9gphpxx7x1dvfrwt2gvzxd80000gn/T/tmp223z0rnf/logs/agent.log'
 Call stack:
-  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/threading.py", line 1044, in _bootstrap
+  File "<python>/python-3.14.9+20261021-darwin-arm64/lib/python3.14/threading.py", line 1044, in _bootstrap
     self._bootstrap_inner()
-  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/threading.py", line 1082, in _bootstrap_inner
+  File "<python>/python-3.14.9+20261021-darwin-arm64/lib/python3.14/threading.py", line 1082, in _bootstrap_inner
     self._context.run(self.run)
-  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/threading.py", line 1024, in run
+  File "<python>/python-3.14.9+20261021-darwin-arm64/lib/python3.14/threading.py", line 1024, in run
     self._target(*self._args, **self._kwargs)
-  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/handlers.py", line 1627, in _monitor
+  File "<python>/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/handlers.py", line 1627, in _monitor
     self.handle(record)
-  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/handlers.py", line 1608, in handle
+  File "<python>/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/handlers.py", line 1608, in handle
     handler.handle(record)
-  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/__init__.py", line 1027, in handle
+  File "<python>/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/__init__.py", line 1027, in handle
     self.emit(record)
-  File "/Users/percykeith/.hermes/hermes-agent/hermes_logging.py", line 553, in emit
+  File "<hermes-agent>/hermes_logging.py", line 553, in emit
     super().emit(record)
 Message: 'capability_check plugin=%s capability=%s decision=%s checked_by=plugin_capability_granted evidence=%s'
 Arguments: ('hermes-axioma', 'tools.override', 'deny', 'not granted')
@@ -113,64 +113,64 @@ ok
 test_remembered_session_approval_never_covers_a_later_call (test_host.HostTests.test_remembered_session_approval_never_covers_a_later_call)
 Real Hermes allowlist: 'session' on one GREEN card does not skip the next card. ... --- Logging error ---
 Traceback (most recent call last):
-  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/handlers.py", line 79, in emit
+  File "<python>/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/handlers.py", line 79, in emit
     if self.shouldRollover(record):
        ~~~~~~~~~~~~~~~~~~~^^^^^^^^
-  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/handlers.py", line 197, in shouldRollover
+  File "<python>/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/handlers.py", line 197, in shouldRollover
     self.stream = self._open()
                   ~~~~~~~~~~^^
-  File "/Users/percykeith/.hermes/hermes-agent/hermes_logging.py", line 588, in _open
+  File "<hermes-agent>/hermes_logging.py", line 588, in _open
     stream = super()._open()
-  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/__init__.py", line 1248, in _open
+  File "<python>/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/__init__.py", line 1248, in _open
     return open_func(self.baseFilename, self.mode,
                      encoding=self.encoding, errors=self.errors)
 FileNotFoundError: [Errno 2] No such file or directory: '/var/folders/07/b9gphpxx7x1dvfrwt2gvzxd80000gn/T/tmp223z0rnf/logs/agent.log'
 Call stack:
-  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/threading.py", line 1044, in _bootstrap
+  File "<python>/python-3.14.9+20261021-darwin-arm64/lib/python3.14/threading.py", line 1044, in _bootstrap
     self._bootstrap_inner()
-  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/threading.py", line 1082, in _bootstrap_inner
+  File "<python>/python-3.14.9+20261021-darwin-arm64/lib/python3.14/threading.py", line 1082, in _bootstrap_inner
     self._context.run(self.run)
-  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/threading.py", line 1024, in run
+  File "<python>/python-3.14.9+20261021-darwin-arm64/lib/python3.14/threading.py", line 1024, in run
     self._target(*self._args, **self._kwargs)
-  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/handlers.py", line 1627, in _monitor
+  File "<python>/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/handlers.py", line 1627, in _monitor
     self.handle(record)
-  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/handlers.py", line 1608, in handle
+  File "<python>/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/handlers.py", line 1608, in handle
     handler.handle(record)
-  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/__init__.py", line 1027, in handle
+  File "<python>/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/__init__.py", line 1027, in handle
     self.emit(record)
-  File "/Users/percykeith/.hermes/hermes-agent/hermes_logging.py", line 553, in emit
+  File "<hermes-agent>/hermes_logging.py", line 553, in emit
     super().emit(record)
 Message: 'capability_check plugin=%s capability=%s decision=%s checked_by=plugin_capability_granted evidence=%s'
 Arguments: ('hermes-axioma', 'tools.override', 'deny', 'not granted')
 ok
 test_unclassified_tools_are_untouched_on_both_paths (test_host.HostTests.test_unclassified_tools_are_untouched_on_both_paths) ... --- Logging error ---
 Traceback (most recent call last):
-  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/handlers.py", line 79, in emit
+  File "<python>/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/handlers.py", line 79, in emit
     if self.shouldRollover(record):
        ~~~~~~~~~~~~~~~~~~~^^^^^^^^
-  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/handlers.py", line 197, in shouldRollover
+  File "<python>/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/handlers.py", line 197, in shouldRollover
     self.stream = self._open()
                   ~~~~~~~~~~^^
-  File "/Users/percykeith/.hermes/hermes-agent/hermes_logging.py", line 588, in _open
+  File "<hermes-agent>/hermes_logging.py", line 588, in _open
     stream = super()._open()
-  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/__init__.py", line 1248, in _open
+  File "<python>/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/__init__.py", line 1248, in _open
     return open_func(self.baseFilename, self.mode,
                      encoding=self.encoding, errors=self.errors)
 FileNotFoundError: [Errno 2] No such file or directory: '/var/folders/07/b9gphpxx7x1dvfrwt2gvzxd80000gn/T/tmp223z0rnf/logs/agent.log'
 Call stack:
-  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/threading.py", line 1044, in _bootstrap
+  File "<python>/python-3.14.9+20261021-darwin-arm64/lib/python3.14/threading.py", line 1044, in _bootstrap
     self._bootstrap_inner()
-  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/threading.py", line 1082, in _bootstrap_inner
+  File "<python>/python-3.14.9+20261021-darwin-arm64/lib/python3.14/threading.py", line 1082, in _bootstrap_inner
     self._context.run(self.run)
-  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/threading.py", line 1024, in run
+  File "<python>/python-3.14.9+20261021-darwin-arm64/lib/python3.14/threading.py", line 1024, in run
     self._target(*self._args, **self._kwargs)
-  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/handlers.py", line 1627, in _monitor
+  File "<python>/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/handlers.py", line 1627, in _monitor
     self.handle(record)
-  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/handlers.py", line 1608, in handle
+  File "<python>/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/handlers.py", line 1608, in handle
     handler.handle(record)
-  File "/Users/percykeith/.hermes/tools/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/__init__.py", line 1027, in handle
+  File "<python>/python-3.14.9+20261021-darwin-arm64/lib/python3.14/logging/__init__.py", line 1027, in handle
     self.emit(record)
-  File "/Users/percykeith/.hermes/hermes-agent/hermes_logging.py", line 553, in emit
+  File "<hermes-agent>/hermes_logging.py", line 553, in emit
     super().emit(record)
 Message: 'capability_check plugin=%s capability=%s decision=%s checked_by=plugin_capability_granted evidence=%s'
 Arguments: ('hermes-axioma', 'tools.override', 'deny', 'not granted')

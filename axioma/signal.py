@@ -103,7 +103,7 @@ SPLICED = re.compile(r'\[\s*\\?/?\s*(?:signal|whisper)\b[^\]\[\n]*\]'
                      r'|\[\s*\\?/?\s*(?:sig(?:n(?:a(?:l)?)?)?|whi(?:s(?:p(?:e(?:r)?)?)?)?)\s*(?=\[|$)',
                      re.IGNORECASE | re.MULTILINE)
 FENCE = re.compile(r'^[ \t]*(?:(?:>|[-+*]|\d{1,9}[.)])[ \t]*)*(`{3,}|~{3,})(.*)$')
-# Exact Axiōma tag forms (A231). A reply holds tags only if it has one of these: an opener with a
+# Exact Axiōma tag forms. A reply holds tags only if it has one of these: an opener with a
 # known value and its ']' ([signal:stop;why=x], [whisper:assumption]) or an exact closer
 # ([/signal], [\/whisper]). A reply without one is returned unchanged, so loose, broken or cut-off
 # lookalikes in ordinary text and code (df[signal > 0], mask[sig[0]]) are never touched.
@@ -343,10 +343,10 @@ class Signal:
             elif tokens[i][0] == 'cclose':
                 seen = seen | {tokens[i][1][0]}
             elif valid[i] and not tokens[i][1][2]:
-                seen = frozenset()  # A231: a valid opener in code does not take its outer span's closers
+                seen = frozenset()  # a valid opener in code does not take its outer span's closers
         for i, (kind, value, pos) in enumerate(tokens):
             if kind == 'open' and value[2] and value[0] not in closer_after[i]:
-                tokens[i] = ('text', value[3], pos)  # A231: an opener in code with no closer stays as written
+                tokens[i] = ('text', value[3], pos)  # an opener in code with no closer stays as written
             elif kind == 'open' and not valid[i] and value[0] not in closer_after[i]:
                 if len(value) == 4 and value[2]:
                     tokens[i] = ('text', value[3], pos)  # code: kept as written
@@ -360,7 +360,7 @@ class Signal:
             close_raw = None
             if kind == 'cclose':
                 if open_tag is None or open_tag[0] != value[0] or nested.get(value[0]):
-                    # A231: a closer in code that closes nothing, a span of another kind, or a
+                    # a closer in code that closes nothing, a span of another kind, or a
                     # nested opener kept as code text, stays as written.
                     if open_tag is not None and nested.get(value[0]):
                         nested[value[0]] -= 1
@@ -376,7 +376,7 @@ class Signal:
                     open_tag = value[:3]  # a nested opener inside a span is dropped
                     open_raw, open_pos = (value[3] if len(value) > 3 else ''), pos
                 elif len(value) > 3 and value[2]:
-                    buf.append(value[3])  # A231: a nested opener in code stays as written
+                    buf.append(value[3])  # a nested opener in code stays as written
                     nested[value[0]] = nested.get(value[0], 0) + 1  # and so does its closer in code
                     if kept is not None:
                         kept.append((pos, value[3]))
@@ -389,7 +389,7 @@ class Signal:
                     out.append(Span(tag_kind, level, reason, params.get('why'), params.get('check'), body,
                                     code=in_code))
                 else:
-                    # A231: a tag written in code that forms no span (empty or mismatched) stays as
+                    # a tag written in code that forms no span (empty or mismatched) stays as
                     # written; a tag in prose goes, and the body stays plain text.
                     head = open_raw if in_code else ''
                     tail = close_raw or ''
@@ -401,7 +401,7 @@ class Signal:
                     out.append(head + body + tail)
                 open_tag, buf, nested = None, [], {}
         if open_tag is not None and open_tag[2] and open_raw:
-            # A231: an opener in code left open (its closer went to a nested pair) stays as written.
+            # an opener in code left open (its closer went to a nested pair) stays as written.
             if kept is not None:
                 kept.append((open_pos, open_raw))
             out.append(open_raw)
@@ -415,7 +415,7 @@ class Signal:
         for m in TAG.finditer(segment):
             if code and not ((m.group('okind') and _parse_value(m.group('okind').lower(), m.group('value')) is not None)
                              or (m.group('close') and STRICT_CLOSE.fullmatch(m.group(0)))):
-                continue  # A231: inside code, anything but an exact tag (known value) stays as written
+                continue  # inside code, anything but an exact tag (known value) stays as written
             tokens.append(('text', segment[pos:m.start()], base + pos))
             at = base + m.start()
             if m.group('close') and code:
@@ -581,7 +581,7 @@ class Signal:
         surface = platform.strip().lower() if isinstance(platform, str) else ''
         pieces = self.unsplice_pieces(self.parse(text))
         if self.joined(''.join(p.text if isinstance(p, Span) else p for p in pieces)):
-            # A231: removal joined text into a live tag inside code (adversarial): clean code too.
+            # removal joined text into a live tag inside code (adversarial): clean code too.
             skip_code = False
             pieces = self.unsplice_pieces(self.parse(text), skip_code=False)
         else:
@@ -713,7 +713,7 @@ class Signal:
         code = self.in_code(plain) if skip_code else (lambda i: False)
         for start, end, key in self.shape_ends(plain):
             if code(start):
-                continue  # A231: nothing inside code is removed here
+                continue  # nothing inside code is removed here
             i = bisect.bisect_right(starts, start) - 1
             if i >= 0 and end <= starts[i] + len(kept[i][1]) and plain[start:end] == key:
                 continue  # a lookalike the parser keeps as written
@@ -750,7 +750,7 @@ class Signal:
         allowed = Counter(key for piece in kept if '[' in piece for _, _, key, _ in cls.shapes(piece))
         for _ in range(32):
             code = cls.in_code(out) if skip_code else (lambda i: False)  # once per round (speed)
-            found = [s for s in cls.shapes(out) if not code(s[0])]  # A231: code stays
+            found = [s for s in cls.shapes(out) if not code(s[0])]  # code stays
             have = Counter(key for _, _, key, _ in found)
             extra = {k: n - allowed.get(k, 0) for k, n in have.items() if n > allowed.get(k, 0)}
             if not extra:

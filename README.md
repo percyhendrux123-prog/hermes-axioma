@@ -131,7 +131,7 @@ The plugin enforces what it can in code:
   own render chain (its markdown preprocess, tail repair, remark-math and KaTeX) for 60 context cases after review
   passes 9 to 11, and the character set was checked against Desktop's KaTeX build
   ([katex-allow-check.txt](docs/evidence/desktop/katex-allow-check.txt)):
-  [docs/evidence/desktop/desktop-pipeline-probe-a229.txt](docs/evidence/desktop/desktop-pipeline-probe-a229.txt),
+  [docs/evidence/desktop/desktop-pipeline-probe-v0.2-inline.txt](docs/evidence/desktop/desktop-pipeline-probe-v0.2-inline.txt),
   0 KaTeX errors.
 - **Terminal:** [docs/evidence/desktop/terminal-app-cli-render.png](docs/evidence/desktop/terminal-app-cli-render.png),
   the plugin's `platform="cli"` output in macOS Terminal: night, day, color-vision-safe and
@@ -176,7 +176,7 @@ Details and evidence: [docs/HOST-GAPS.md](docs/HOST-GAPS.md).
 - **HTML entities inside a Desktop color span show as source.** `A &amp; B` inside a span is drawn
   as `A &amp; B` by KaTeX, where prose would show `A & B`. Write the character itself.
 - **The TUI was not visually tested.** Its renderer receives the same ANSI text as the CLI.
-- **No evidence yet that inline spans help readers.** The A218 evaluation below measured cards. A
+- **No evidence yet that inline spans help readers.** The blind-replay evaluation below measured cards. A
   blind test of inline spans is still open.
 
 ## The advisory card (secondary)
@@ -284,7 +284,7 @@ a log record edited afterwards by someone who cannot read the key file. It canno
 compromised host or anyone who can read the key file, who can forge both ends, and a deleted
 record is not detected unless its partner remains.
 
-## A218 evaluation (cards, before this plugin existed)
+## Blind-replay evaluation (cards, before this plugin existed)
 
 Anonymized one-run blind replay of 50 real requests: 18 known problem cases, 28 routine.
 
@@ -325,7 +325,7 @@ Tests use private loader wiring and `unittest.mock`; none of it ships. The valid
 `destructive_root_rm` and `destructive_home_rm` (destructive-command strings in classification tests
 and in captured test and review output under `docs/`) and `invisible_unicode` (zero-width and
 bidi characters that tests and review notes use on purpose to check that tags never hide behind
-them). None is ever executed; the full list is in `docs/evidence/validate-a229.txt`.
+them). None is ever executed; the full list is in `docs/evidence/validate-v0.2-inline.txt`.
 
 ## Acknowledgments
 
