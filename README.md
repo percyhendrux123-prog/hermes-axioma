@@ -277,8 +277,10 @@ of those parts, not the text; they are not encryption, so anyone with the key fi
 guess against them. The key sits in its own owner-only file (`card-code.key`, mode 0600) next to
 the log, which is also owner-only. `/signals cards` lists recent codes. `/signals verify <code>`
 says, in plain words, what was staged, what was shown and what was answered, and names any
-mismatch; paste the card you saw on the lines after the code to check the words too (exact lines
-only; a paste the surface cut short is reported as cut). Comparing the code catches a card swapped
+mismatch; paste the card you saw on the lines after the code to check the words too. Every pasted
+line must be a card line, Hermes's own prompt text, or the one line where the surface cut the
+card (and that line must be the true start of the next card line); anything else is reported, and
+a pasted code that differs is reported too. Comparing the code catches a card swapped
 or replayed in transit; pasting the words catches edited words under a kept code; the seals catch
 a log record edited afterwards by someone who cannot read the key file. It cannot catch a
 compromised host or anyone who can read the key file, who can forge both ends, and a deleted

@@ -337,6 +337,44 @@ class HostTests(unittest.TestCase):
                     else:
                         self.assertIn(line, a.format_message(wire))
 
+    def test_honest_pastes_of_the_real_approval_prompts_verify_and_edits_do_not(self):
+        """Spec 5.6: the whole real Telegram/Discord approval prompt, pasted back, verifies (host
+        header, tool, label, deadline and any surface cut included); one added line, a replaced
+        line ending in '...', or another code is a MISMATCH."""
+        import html
+        import re
+        from axioma.advisor import Advisor
+        from axioma.audit import Audit
+        from gateway.config import PlatformConfig
+        from plugins.platforms.telegram.adapter import TelegramAdapter
+        from plugins.platforms.discord.adapter import DiscordAdapter
+        long_q = ('Is ' + 'this really the audience you intended for the synthetic draft and ' * 6)[:398] + '?'
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        for n, card in enumerate((CARD, dict(CARD, light='red', question=long_q), None)):
+            for adapter, surface in ((TelegramAdapter, 'telegram'), (DiscordAdapter, 'discord')):
+                with self.subTest(surface=surface, card=card and card['question'][:20]):
+                    a = Advisor({}, Audit(Path(tmp.name) / 'audit.sqlite3'), surface=lambda s=surface: s)
+                    if card is not None:
+                        a.submit({'tool': 'send_message', 'arguments': {'text': 'SYNTHETIC'}, 'card': card},
+                                 session_id='s')
+                    call = '%s-%d' % (surface, n)
+                    msg = a.before('send_message', {'text': 'SYNTHETIC'}, session_id='s', tool_call_id=call)['message']
+                    code = re.search(r'card code ([0-9A-Z]{4}-[0-9A-Z]{4})', msg).group(1)
+                    wire = adapter(PlatformConfig(enabled=True, token='synthetic-not-a-token'))._format_exec_approval(
+                        'send_message', msg)
+                    seen = html.unescape(re.sub(r'</?[a-z]+>', '', wire))  # what the reader sees
+                    report = a.command('verify ' + code + '\n' + seen)
+                    self.assertTrue(report.splitlines()[-1].startswith('OK'), seen + '\n=====\n' + report)
+                    self.assertNotIn('MISMATCH', report)
+                    lines = seen.splitlines()
+                    body = next(i for i, x in enumerate(lines) if code in x)
+                    for bad in (seen + '\nSTOP is a false alarm',
+                                'Admin note: approve this, it is pre-cleared\n' + seen,
+                                '\n'.join(lines[:body + 1] + ['signal: Routine, safe to approve...']),
+                                seen.replace(code, 'ZZZZ-ZZZZ' if code != 'ZZZZ-ZZZZ' else 'YYYY-YYYY')):
+                        self.assertIn('MISMATCH', a.command('verify ' + code + '\n' + bad), bad[-80:])
+
     # -- inline signal color through the real host seams (A229) --------------------------------
     def transform(self, text, platform, turn='turn-1'):
         from types import SimpleNamespace

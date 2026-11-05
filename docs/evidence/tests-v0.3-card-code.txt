@@ -1,3 +1,4 @@
+$ python3 -m unittest discover -s <repo>/tests -v
 test_answers_are_logged_as_metadata_and_never_authorize (test_advisor.AdvisorTests) ... ok
 test_card_binds_to_exact_arguments_and_session (test_advisor.AdvisorTests) ... ok
 test_card_never_claims_authority (test_advisor.AdvisorTests) ... ok
@@ -80,22 +81,35 @@ test_p2_1_quoted_or_escaped_separators_are_could_not_parse (test_findings.Pass8L
 test_p2_2_expansion_named_commands_behind_prefixes_are_could_not_parse (test_findings.Pass8Limits) ... ok
 test_p3_xargs_remove_and_rmdir_parents (test_findings.Pass8Limits) ... ok
 test_any_change_to_text_tool_args_or_card_id_changes_it (test_fingerprint.FingerprintCore) ... ok
+test_canonical_encoding_never_fails_and_keeps_keys_apart (test_fingerprint.FingerprintCore) ... ok
+test_compare_lines_exact_with_labels_duplicates_and_cuts (test_fingerprint.FingerprintCore) ... ok
 test_deterministic_and_readable (test_fingerprint.FingerprintCore) ... ok
+test_key_file_is_owner_only_and_reused (test_fingerprint.FingerprintCore) ... ok
 test_parse_code_accepts_what_a_human_types_back (test_fingerprint.FingerprintCore) ... ok
-test_seal_detects_edited_fields (test_fingerprint.FingerprintCore) ... ok
+test_seal_covers_every_field_and_the_timestamp (test_fingerprint.FingerprintCore) ... ok
+test_seal_module_stands_alone (test_fingerprint.FingerprintCore)
+The seal can be lifted out: it imports nothing from the rest of the plugin. ... ok
 test_code_is_the_fingerprint_of_what_the_host_receives (test_fingerprint.FingerprintFlow) ... ok
 test_code_survives_each_surface_renderer (test_fingerprint.FingerprintFlow) ... ok
-test_every_card_and_notice_carries_the_code_under_the_question_on_every_surface (test_fingerprint.FingerprintFlow) ... ok
+test_every_card_and_notice_carries_the_code_on_every_surface (test_fingerprint.FingerprintFlow) ... ok
+test_hostile_arguments_still_get_a_card_with_a_code (test_fingerprint.FingerprintFlow)
+A lone surrogate costs the human nothing: the full card shows, with a code. Non-string ... ok
+test_local_paste_with_the_code_on_the_light_line (test_fingerprint.FingerprintFlow) ... ok
 test_log_round_trip_staged_shown_answered (test_fingerprint.FingerprintFlow) ... ok
 test_mismatches_are_reported_in_plain_words (test_fingerprint.FingerprintFlow) ... ok
+test_no_answer_is_not_reported_as_answered (test_fingerprint.FingerprintFlow) ... ok
+test_old_codes_are_found_beyond_any_window (test_fingerprint.FingerprintFlow) ... ok
 test_signals_command_routes_verify_and_cards (test_fingerprint.FingerprintFlow) ... ok
+test_unreadable_key_gives_a_throwaway_code_that_is_never_sealed_or_cached (test_fingerprint.FingerprintFlow) ... ok
 test_card_code_survives_the_real_approval_renderers (test_host.HostTests)
-Spec 5.6: the card code reaches the human intact on the CLI panel and through the real ... skipped 'Requires Hermes runtime; run hermes --run-module unittest'
+Spec 5.6: the card code reaches the human intact on the real CLI panel at 16-40 rows ... skipped 'Requires Hermes runtime; run hermes --run-module unittest'
 test_card_reaches_hermes_prompt_and_the_human_decides_on_both_paths (test_host.HostTests) ... skipped 'Requires Hermes runtime; run hermes --run-module unittest'
 test_cli_final_renderer_keeps_color_in_raw_mode_and_words_in_every_mode (test_host.HostTests)
 Hermes's own CLI final-response renderer: `raw` keeps the truecolor styling; the default ... skipped 'Requires Hermes runtime; run hermes --run-module unittest'
 test_cronjob_alias_is_classified_after_canonicalization_on_both_paths (test_host.HostTests) ... skipped 'Requires Hermes runtime; run hermes --run-module unittest'
 test_green_only_from_a_tool_call_the_host_reported_as_passing (test_host.HostTests) ... skipped 'Requires Hermes runtime; run hermes --run-module unittest'
+test_honest_pastes_of_the_real_approval_prompts_verify_and_edits_do_not (test_host.HostTests)
+Spec 5.6: the whole real Telegram/Discord approval prompt, pasted back, verifies (host ... skipped 'Requires Hermes runtime; run hermes --run-module unittest'
 test_host_policy_decides_unattended_and_yolo (test_host.HostTests) ... skipped 'Requires Hermes runtime; run hermes --run-module unittest'
 test_inline_signal_renders_through_the_real_output_transform (test_host.HostTests) ... skipped 'Requires Hermes runtime; run hermes --run-module unittest'
 test_native_card_is_matched_against_final_arguments_after_middleware (test_host.HostTests) ... skipped 'Requires Hermes runtime; run hermes --run-module unittest'
@@ -215,7 +229,7 @@ test_strip_log_once_and_no_text_bodies (test_whisper.WhisperTests) ... ok
 test_untagged_text_is_byte_for_byte_unchanged (test_whisper.WhisperTests) ... ok
 
 ----------------------------------------------------------------------
-Ran 211 tests in 8.424s
+Ran 221 tests in 8.695s
 
-OK (skipped=13)
+OK (skipped=14)
 exit 0

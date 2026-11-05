@@ -345,7 +345,7 @@ class Advisor:
         if len(answers) > 1:
             problems.append('more than one answer is recorded for this card.')
         if pasted.strip():
-            out += self.compare_text(fp, row, pasted, problems)
+            out += self.compare_text(fp, row, pasted, problems, code)
         else:
             out.append('words: not checked. Paste the card text after the code to check them too.')
         if problems:
@@ -367,15 +367,38 @@ class Advisor:
             pass
         return labels
 
-    def compare_text(self, fp, row, pasted, problems):
+    @staticmethod
+    def host_chrome():
+        """The host's own prompt text (header, deadline, smart-deny line, buttons), localized when
+        the host is present; English otherwise. A pasted line is accepted as host text only when it
+        equals one of these exactly (markup aside)."""
+        chrome: list = list(card_seal.CHROME)
+        try:
+            from gateway.platforms import base_exec_approval as ea
+            chrome += [ea.ea_header_text(), ea.ea_smart_deny_line_text(),
+                       ea.format_approval_deadline_line(ea.approval_timeout_seconds())]
+            chrome += list(ea.ea_action_labels().values())
+        except Exception:
+            pass
+        try:
+            from agent.i18n import t
+            chrome += [t('platform.discord.approval.question'),
+                       t('platform.discord.approval.requested_command_label')]
+        except Exception:
+            pass
+        return chrome
+
+    def compare_text(self, fp, row, pasted, problems, code=None):
         """Line-by-line check of a pasted card against the keyed line digests (no bodies stored).
-        Exact lines only (after whitespace cleanup); one host label at a line start is allowed.
-        Lines before the first and after the last card line are host framing. A line the surface
-        cut ('...') ends the check, and the staged lines after it are reported as cut."""
+        Every pasted line must be a staged line (one host label at its start allowed), the host's
+        own prompt text, or the single line where the surface cut the card, which must be a true
+        start of the next staged line. Anything else is reported."""
         expected = list(row.get('line_digests') or [])
         if not expected:
             return ['words: this record has no line digests to compare.']
-        found, notes, summary = compare_lines(fp, expected, pasted, self.host_labels())
+        found, notes, summary = compare_lines(
+            fp, expected, pasted, self.host_labels(), prefixes=row.get('prefix_tags'),
+            chrome=self.host_chrome(), tool_digest=row.get('tool_digest'), code=code)
         if found:
             problems.extend('the pasted card differs from what was staged: ' + x for x in found)
             return ['words: ' + x for x in notes]

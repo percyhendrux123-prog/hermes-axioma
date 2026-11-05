@@ -18,7 +18,8 @@ Interface used by the host plugin (nothing else here knows about it):
     Fingerprint(key)                   .digests() .code_from() .code() .seal() .sealed()
     stamp(text, code, messaging)       put the code line on the card; unstamp() removes it
     parse_code(text)                   what a human types back -> 'XXXX-XXXX' or None
-    compare_lines(fp, expected, pasted, labels)   pasted card vs staged line digests
+    compare_lines(fp, expected, pasted, labels, prefixes, chrome, tool_digest, code)
+                                       pasted card vs staged line digests and prefix tags
 """
 import difflib
 import hashlib
@@ -43,6 +44,13 @@ CODE_ARG = re.compile(r'\s*(?:card\s+)?(?:code\s+)?#?([0-9A-Za-z]{4}[\s\-]?[0-9A
 # Labels a host may put in front of the first description line (exact prefixes only, never a
 # suffix match: "anything + staged line" must not count as the staged line).
 LABELS = ('Why it was flagged', 'Reason', 'Description')
+# The host's own prompt text in English (the host plugin adds the localized forms at run time).
+CHROME = ('Hermes wants to run a command that needs your OK',
+          'Do you want Hermes to run this command?', 'Requested command:',
+          "If you don't answer within 5 minutes it will NOT run.",
+          'Smart DENY: owner override applies to this one operation only.',
+          'Allow Once', 'Allow Session', 'Always Allow', 'Deny')
+TAG = 8  # hex characters per keyed prefix tag (32 bits; useless without the key)
 CUT_MARKS = ('...', '\u2026')
 CUT_LINE = re.compile(r'^\W*\(?description truncated\)?\W*$', re.I)
 
@@ -164,6 +172,7 @@ class Fingerprint:
             'tool_digest': self.mac('tool', str(tool)).hex()[:32],
             'args_digest': self.mac('args', canonical(args)).hex()[:32],
             'line_digests': [self.line_digest(x) for x in self.card_lines(text)],
+            'prefix_tags': [self.prefix_tags(x) for x in self.card_lines(text)],
         }
 
     def code_from(self, card_id, text_digest, tool_digest, args_digest):
@@ -182,6 +191,23 @@ class Fingerprint:
 
     def line_digest(self, line):
         return self.mac('line', clean_line(line)).hex()[:16]
+
+    def prefix_tag(self, text):
+        return self.mac('prefix', clean_line(text)).hex()[:TAG]
+
+    def prefix_tags(self, line):
+        """Keyed tags of every strict prefix of one card line, so a line the surface cut ('...')
+        can be checked as a true start of that line. Without the key they say nothing about the
+        words; their count does show roughly how long the line is."""
+        line, seen, out = clean_line(line), set(), []
+        for k in range(1, len(line)):
+            if not line[:k].strip():
+                continue
+            tag = self.prefix_tag(line[:k])
+            if tag not in seen:
+                seen.add(tag)
+                out.append(tag)
+        return ''.join(out)
 
 
 def stamp(text, code, messaging=False):
@@ -203,6 +229,20 @@ def unstamp(text):
 
 
 # -- pasted card vs staged lines ------------------------------------------------------------------
+# Markup a surface may wrap around its own prompt text (bold, code fences, HTML tags, a warning
+# sign, the CLI panel border). Stripped only when comparing a line with the host's prompt text,
+# never when comparing a line with the card.
+_MARKUP = re.compile(r'</?(?:b|i|u|s|pre|code|strong|em)>|\*\*|__|`|[\u2502\u2500\u256d\u256e\u2570\u256f\u250c\u2510\u2514\u2518|]')
+_WARN = re.compile(r'^(?:\u26a0\ufe0f?|\u231b)\s*')
+_FENCE = re.compile(r'^\s*```[A-Za-z0-9_+-]*\s*$')  # a code fence, with or without its language
+CODE_SEEN = re.compile(r'card code ([0-9A-Za-z]{4}-[0-9A-Za-z]{4})')
+
+
+def _unmark(line):
+    line = _FENCE.sub('', str(line))
+    return clean_line(_WARN.sub('', clean_line(_MARKUP.sub(' ', line))))
+
+
 def _label_forms(labels):
     forms = []
     for label in labels:
@@ -212,18 +252,37 @@ def _label_forms(labels):
     return forms
 
 
-def compare_lines(fp, expected, pasted, labels=LABELS):
+def _plural(items, one, many):
+    return '%s %s %s' % (many if len(items) > 1 else one, ', '.join(items), 'are' if len(items) > 1 else 'is')
+
+
+def compare_lines(fp, expected, pasted, labels=LABELS, prefixes=None, chrome=CHROME, tool_digest=None,
+                  code=None):
     """Compare a pasted card with the staged line digests. Returns (problems, notes, summary):
     problems are mismatches in plain words, notes are honest limits (such as a surface cut).
 
-    A pasted line matches only if it equals a staged line exactly (after whitespace cleanup), or
-    equals one after removing one allowlisted host label at its start. Lines before the first
-    and after the last matching line are treated as host framing. A line that ends in '...' marks
-    where the surface cut the card: staged lines after it are reported as cut, not as changed."""
+    Every non-empty pasted line must be one of these, or it is reported as added or changed:
+      - a staged card line, exactly (after whitespace cleanup), or exactly after removing one
+        allowlisted host label at its start;
+      - the host's own prompt text, exactly (header, deadline, buttons: `chrome`), or the tool
+        name the card was staged for (checked against `tool_digest`), ignoring only markup;
+      - the one line where the surface cut the card: after the last card line, it ends in '...'
+        and the text before the marker is a strict prefix of the next staged line (checked
+        against that line's keyed `prefixes`), or it is a '(description truncated)' line.
+    Staged lines after a valid cut are reported as cut, not as changed. A pasted card that
+    shows a card code other than `code` is a mismatch."""
     expected = list(expected or [])
     forms = _label_forms(labels)
     want = set(expected)
-    seq, cut_at, partial = [], None, None  # seq: (pasted line number, digest or None, cleaned)
+    host = {_unmark(c) for c in (chrome or ())} - {''}
+    problems, notes = [], []
+    if code:
+        seen = {parse_code(m) or m.upper() for m in CODE_SEEN.findall(str(pasted))}
+        others = sorted(seen - {code})
+        if others:
+            problems.append('the pasted card shows card code %s, but the code being checked is %s.'
+                            % (' and '.join(others), code))
+    entries = []  # (pasted line number, kind, digest or None, cleaned line)
     for n, raw in enumerate(str(pasted).split('\n'), 1):
         line = clean_line(CODE_SUFFIX.sub('', raw))
         if not line or CODE_LINE.match(line):
@@ -232,63 +291,88 @@ def compare_lines(fp, expected, pasted, labels=LABELS):
         if d not in want:
             d = next((fp.line_digest(line[len(f):]) for f in forms if line.startswith(f)
                       and fp.line_digest(line[len(f):]) in want), None)
-        if d is None and (CUT_LINE.match(line) or line.endswith(CUT_MARKS)):
-            if seq and any(x[1] for x in seq):
-                cut_at, partial = n, line
-                break
-        seq.append((n, d, line))
-    hits = [i for i, x in enumerate(seq) if x[1]]
-    if not hits:
-        return (['none of the pasted lines is a line of the staged card.'], [], None)
-    lo, hi = hits[0], hits[-1]
-    # A changed first or last card line looks like host framing; when that staged line is
-    # missing, the unmatched pasted line right next to the card is read as its changed copy.
-    if lo > 0 and seq[lo][1] != expected[0] and expected[0] not in [x[1] for x in seq]:
-        lo -= 1
-    if hi < len(seq) - 1 and cut_at is None and seq[hi][1] != expected[-1] \
-            and expected[-1] not in [x[1] for x in seq]:
-        hi += 1
-    inside = seq[lo:hi + 1]
-    got = [x[1] for x in inside]
-    problems, notes = [], []
-    added, moved, missing = [], [], []
+        if d is not None:
+            entries.append((n, 'card', d, line))
+            continue
+        bare = _unmark(line)
+        unlabelled = next((line[len(f):] for f in forms if line.startswith(f)), line)
+        if not bare or CODE_LINE.match(bare) or CODE_LINE.match(_unmark(unlabelled)):
+            continue  # markup only (a code fence, a border), or the code line inside markup
+        if bare in host or (tool_digest and hmac.compare_digest(
+                fp.mac('tool', bare).hex()[:32], str(tool_digest))):
+            entries.append((n, 'host', None, line))
+        elif CUT_LINE.match(line):
+            entries.append((n, 'cutline', None, line))
+        elif line.endswith(CUT_MARKS):
+            entries.append((n, 'cut', None, line))
+        else:
+            entries.append((n, 'other', None, line))
+    cards = [e for e in entries if e[1] == 'card']
+    if not cards and not any(e[1] == 'cut' for e in entries):
+        return (problems + ['none of the pasted lines is a line of the staged card.'], [], None)
+    # The cut, if any: the first cut line with no card line after it.
+    last_card = max((i for i, e in enumerate(entries) if e[1] == 'card'), default=-1)
+    cut_i = next((i for i, e in enumerate(entries) if e[1] in ('cut', 'cutline') and i > last_card), None)
+    got = [e[2] for e in cards]
+    moved, missing, last_matched = [], [], -1
     matcher = difflib.SequenceMatcher(None, expected, got, autojunk=False)
-    last_matched = -1
     for op, i1, i2, j1, j2 in matcher.get_opcodes():
         if op == 'equal':
             last_matched = i2 - 1
             continue
-        for j in range(j1, j2):
-            n, d, line = inside[j]
-            if d is None:
-                look = unicodedata.normalize('NFKC', line) != line
-                added.append('%d%s' % (n, ' (look-alike characters)' if look else ''))
-            else:
-                moved.append(str(n))
+        moved += [str(cards[j][0]) for j in range(j1, j2)]
         missing += list(range(i1, i2))
-    cut = []
-    if cut_at is not None:
-        cut = [i for i in missing if i > last_matched]
-        missing = [i for i in missing if i <= last_matched]
+    cut, cut_note = [], None
+    if cut_i is not None:
+        n, kind, _, line = entries[cut_i]
+        nxt = last_matched + 1
+        ok = False
+        if kind == 'cutline':
+            ok = last_matched >= 0
+        elif nxt < len(expected) and prefixes and nxt < len(prefixes):
+            text = clean_line(line[:-(3 if line.endswith('...') else 1)])
+            tags = str(prefixes[nxt] or '')
+            tags = {tags[i:i + TAG] for i in range(0, len(tags), TAG)}
+            ok = any(c and fp.prefix_tag(c) in tags
+                     for c in [text] + [clean_line(text[len(f):]) for f in forms if text.startswith(f)])
+        if ok:
+            cut = [i for i in missing if i >= nxt]
+            missing = [i for i in missing if i < nxt]
+            cut_note = (n, line, kind, nxt)
+    added = []
+    for i, (n, kind, _, line) in enumerate(entries):
+        if i == cut_i and cut_note:
+            continue
+        if kind == 'cutline' and cut_note and i > cut_i:
+            continue  # a second truncation marker after an honest cut
+        if kind in ('other', 'cut', 'cutline'):
+            look = unicodedata.normalize('NFKC', line) != line
+            added.append('%d%s' % (n, ' (look-alike characters)' if look else ''))
     if added:
-        problems.append('pasted line%s %s %s not on the staged card (added or changed).' % (
-            's' if len(added) > 1 else '', ', '.join(added), 'are' if len(added) > 1 else 'is'))
+        problems.append(_plural(added, 'pasted line', 'pasted lines') +
+                        " not on the staged card and not the host's own prompt text (added or changed;"
+                        " a line ending in '...' counts as a cut only when it is the start of the next"
+                        ' staged line).')
     if moved:
-        problems.append('pasted line%s %s %s out of order or repeated.' % (
-            's' if len(moved) > 1 else '', ', '.join(moved), 'are' if len(moved) > 1 else 'is'))
+        problems.append(_plural(moved, 'pasted line', 'pasted lines') + ' out of order or repeated.')
     if missing:
         problems.append('staged line%s %s of %d %s missing or changed.' % (
             's' if len(missing) > 1 else '', ', '.join(str(i + 1) for i in missing), len(expected),
             'are' if len(missing) > 1 else 'is'))
-    if cut and partial is not None:
-        notes.append('cut by the surface at pasted line %d (%r): staged line%s %s of %d could not be '
-                     'checked.' % (cut_at, partial[:40], 's' if len(cut) > 1 else '',
-                                   ', '.join(str(i + 1) for i in cut), len(expected)))
+    host_lines = [str(e[0]) for e in entries if e[1] == 'host']
+    if host_lines:
+        notes.append("%s the host's own prompt text (header, tool name, deadline or buttons), "
+                     'checked against that text.' % _plural(host_lines, 'pasted line', 'pasted lines'))
+    if cut and cut_note:
+        n, line, kind, nxt = cut_note
+        where = '' if kind == 'cutline' else ', the true start of staged line %d' % (nxt + 1)
+        notes.append('cut by the surface at pasted line %d (%r)%s: staged line%s %s of %d could not '
+                     'be checked.' % (n, line[:40], where, 's' if len(cut) > 1 else '',
+                                      ', '.join(str(i + 1) for i in cut), len(expected)))
     summary = None
     if not problems:
-        checked = len(expected) - len(cut)
         summary = ('all %d lines of the pasted card match what was staged, in order.' % len(expected)
                    if not cut else
                    'the first %d of %d staged lines match, in order; the rest was cut by the surface.'
-                   % (checked, len(expected)))
+                   % (len(expected) - len(cut), len(expected)))
     return problems, notes, summary

@@ -12,7 +12,7 @@ FIELDS = {'event', 'card_id', 'categories', 'light', 'valid', 'answer', 'choice'
           'span_id', 'level', 'surface', 'shown', 'check_ok',
           # Card code (spec 5.6): the code, keyed digests of what it covers, a seal, and a mark
           # when the code was made with a throwaway key (the key file could not be read).
-          'fingerprint', 'text_digest', 'tool_digest', 'args_digest', 'line_digests', 'seal', 'key'}
+          'fingerprint', 'text_digest', 'tool_digest', 'args_digest', 'line_digests', 'prefix_tags', 'seal', 'key'}
 
 
 def _owner_only(path, mode):

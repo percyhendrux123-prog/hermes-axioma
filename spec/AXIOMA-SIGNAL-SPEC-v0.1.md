@@ -427,11 +427,17 @@ human answered. A conforming card carries a fingerprint for that.
 - **What the human can check.** `/signals verify <code>` MUST show, in plain words, staged then
   shown then answered, and name any mismatch: no card with that code, a record changed after it
   was written, an answer recorded under a different code, or (when the human pastes the card they
-  saw) a line added, changed, missing, repeated or out of order. A pasted line counts only if it
-  equals a staged line exactly (whitespace aside), or does after removing one known host label
-  at its start; look-alike characters are a different line. A paste the surface cut short is
-  reported as cut, not as changed. When no answer is recorded, the check says so and does not
-  claim the answer agrees. `/signals cards` lists recent codes.
+  saw) a line added, changed, missing, repeated or out of order, or a pasted card that shows a
+  different code from the one being checked. Every non-empty pasted line MUST be accounted for:
+  it equals a staged line exactly (whitespace aside), or does after removing one known host label
+  at its start; or it is the host's own prompt text exactly (its header, the tool name, its
+  deadline line or its buttons, markup aside); or it is the single line where the surface cut the
+  card. Any other line, before, inside or after the card, is reported as added; look-alike
+  characters are a different line. A line ending in `...` counts as the cut only if it comes
+  after the last card line and the text before the marker is a strict prefix of the next staged
+  line, checked against keyed tags of that line's prefixes; the staged lines after it are then
+  reported as cut (not checked), never as matching. When no answer is recorded, the check says so
+  and does not claim the answer agrees. `/signals cards` lists recent codes.
 - **What it detects.** Comparing the code catches a card swapped or replayed in transit (it shows
   another card's code, or a code this log never issued). Pasting the words the human saw catches a
   card whose words were edited while its code was kept. The seals catch a log record edited
@@ -439,9 +445,11 @@ human answered. A conforming card carries a fingerprint for that.
 - **What it does NOT prove.** A compromised host, or anyone who can read the key file, can forge
   both ends: a matching code on the screen and a matching record in the log, with valid seals.
   Keyed digests are not encryption: with the key, a guess at a card line or an argument can be
-  tested. A deleted record is not detected unless its partner record remains. Lines added outside
-  the card (before its first line or after its last) are not distinguished from host framing. The
-  code confirms the log; the human still has to look at the card.
+  tested. The prefix tags show roughly how long each card line is. A deleted record is not
+  detected unless its partner record remains. A host prompt text the check does not know (a new
+  host wording or language) is reported as an added line: a false alarm, never a false OK. Words
+  the surface cut off were never shown and cannot be checked. The code confirms the log; the
+  human still has to look at the card.
 
 ---
 
