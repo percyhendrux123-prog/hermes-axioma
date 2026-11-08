@@ -55,15 +55,14 @@ class Advisor:
 
     def keyed(self):
         """(Fingerprint, durable) for spec 5.6. The key lives in its own owner-only file next to
-        the log. Only a key read from that file is cached; when it cannot be read, this call gets a
-        throwaway key (the code still shows, cannot be verified later, and is logged unsealed and
-        marked as such) and the next call tries the file again."""
-        if self._fp is not None:
-            return self._fp, True
+        the log. Recheck the file and its parent on every use; a cached key must not bypass a
+        permission failure. When it cannot be read safely, this call gets a throwaway key (the
+        code still shows, cannot be verified later, and is logged unsealed and marked as such)."""
         try:
             self._fp = Fingerprint(load_key(self.key_path()))
             return self._fp, True
         except Exception:
+            self._fp = None
             return Fingerprint.ephemeral(), False
 
     @property
@@ -289,8 +288,9 @@ class Advisor:
         stamp_ = lambda t: time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(t))
         out, problems = ['card code ' + code], []
         if not durable:
-            return out + ['NOT CHECKED: the card code key file cannot be read right now, so no code can '
-                          'be checked. Nothing was changed.']
+            return out + ['NOT CHECKED: the card code key cannot be read safely, or the key and parent '
+                          'cannot be verified as owner-only; durable verification refused. '
+                          'Nothing was changed.']
         rows = self.audit.card_rows(fingerprint=code)
         shown = [r for r in rows if r['event'] == 'presented_to_host']
         if not shown:

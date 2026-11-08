@@ -137,11 +137,24 @@ def load_key(path):
 
 
 def _tighten(path, mode):
+    """Tighten, then verify; a refused or ineffective chmod must not certify a key."""
     try:
-        if stat.S_IMODE(os.stat(path).st_mode) & ~mode:
+        info = os.stat(path, follow_symlinks=False)
+        right_type = stat.S_ISDIR(info.st_mode) if mode == 0o700 else stat.S_ISREG(info.st_mode)
+        if not right_type or info.st_uid != os.getuid():
+            raise PermissionError('card code key and parent must be owner-only; durable verification refused')
+        if stat.S_IMODE(info.st_mode) & ~mode:
             os.chmod(path, mode)
     except OSError:
-        pass
+        pass  # The independent check below decides whether the path is safe.
+    try:
+        info = os.stat(path, follow_symlinks=False)
+        right_type = stat.S_ISDIR(info.st_mode) if mode == 0o700 else stat.S_ISREG(info.st_mode)
+        if (not right_type or info.st_uid != os.getuid() or
+                stat.S_IMODE(info.st_mode) & ~mode):
+            raise PermissionError('unsafe key path')
+    except OSError as exc:
+        raise PermissionError('card code key and parent must be owner-only; durable verification refused') from exc
 
 
 # -- the code -------------------------------------------------------------------------------------

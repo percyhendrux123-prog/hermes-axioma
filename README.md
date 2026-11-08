@@ -275,7 +275,10 @@ fingerprint of the exact card text Hermes received, the tool, the exact argument
 logged when the card is handed to Hermes and again with your answer. The log keeps keyed digests
 of those parts, not the text; they are not encryption, so anyone with the key file can test a
 guess against them. The key sits in its own owner-only file (`card-code.key`, mode 0600) next to
-the log, which is also owner-only. `/signals cards` lists recent codes. `/signals verify <code>`
+the log, which is also owner-only. The key and its parent directory (mode 0700) are checked for
+current-user ownership, file/directory type and owner-only permissions after any tightening and
+on each key use. If that cannot be established, codes use a throwaway key and durable verification
+returns `NOT CHECKED`, never `OK`. `/signals cards` lists recent codes. `/signals verify <code>`
 says, in plain words, what was staged, what was shown and what was answered, and names any
 mismatch; paste the card you saw on the lines after the code to check the words too. Every pasted
 line must be a card line, Hermes's own prompt text, or the one line where the surface cut the
