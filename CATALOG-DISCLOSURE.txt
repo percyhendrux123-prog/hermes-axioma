@@ -1,2 +1,8 @@
 Outside-plugin reads — exact replacement/addition sentence for the catalog description's disclosure:
 Optional operator-configured preflights probe file-presence metadata for required SKILL.md paths under external skill roots and lstat metadata for external device-lock paths; the policy resolves configured workspace/output roots and candidate remove/move paths, including symlinks, for containment checks, without reading those files' contents.
+
+Malformed-tag promise — replace "malformed tags never leak." with this exact sentence:
+In completed replies that Axioma transforms, malformed tags in prose are removed when a recognized tag is present; malformed-only replies and preserved code/lookalike text can retain raw brackets, and raw tags can appear during streaming before the final transform.
+
+Compatibility dependency — exact addition sentence for the catalog description's disclosure:
+Pasted-card verification optionally imports undocumented gateway.platforms.base_exec_approval text helpers and agent.i18n.t behind one compatibility function to recognize localized host framing, falling back to built-in English text if they are absent or change; it neither inspects approval state nor overrides approval.

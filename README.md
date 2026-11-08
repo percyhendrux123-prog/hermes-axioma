@@ -1,6 +1,6 @@
 # hermes-axioma
 
-Inline signal color for Hermes Agent · MIT · v0.3.0
+Inline signal color for Hermes Agent · MIT · v0.3.1
 
 The agent writes its normal reply. Axioma colors only the few phrases inside it that deserve your
 attention before you act, and puts a word next to each one so the meaning never depends on color.
@@ -22,6 +22,18 @@ Hermes" is yellow and underlined. Nothing else in the reply changes. There are n
 
 Axioma **advises**. It never blocks, approves or executes anything. Hermes's own approval system and
 the person reading decide.
+
+## Install from the catalog
+
+```sh
+hermes plugins install hermes-axioma
+hermes plugins enable hermes-axioma
+```
+
+The catalog installs a reviewed, exact commit, not this repository's latest branch tip. The 0.3.1
+fixes reach catalog installs only after the catalog pin is updated. Restart Hermes after enabling.
+Read [Limits](#limits-read-before-installing) and [Disclosures](#disclosures) before installing;
+local-checkout validation commands are under [Verification](#verification).
 
 ## Accessibility first
 
@@ -55,8 +67,11 @@ Color is never the only cue. Every marked phrase carries three things where the 
 | Telegram, Discord, Slack and other markdown chats | **Bold** plus the word. |
 | SMS, iMessage, email, unknown surfaces | The word only. |
 
-Malformed tags never leak from a reply that holds a tag (an exact tag, or one a cut-off stream left;
-see the next paragraph for what counts): unclosed, empty, nested, mismatched, unknown-level, valueless
+In completed replies that Axioma transforms, malformed tags in prose are removed when a recognized
+tag is present (an exact tag, or one a cut-off stream left; see the next paragraph). This is not a
+blanket promise that raw brackets never appear: malformed-only replies, preserved code/lookalikes
+and streaming output have the exceptions below and under [Limits](#limits-read-before-installing).
+In eligible prose, unclosed, empty, nested, mismatched, unknown-level, valueless
 (`[signal]x[/signal]`), loose (`[signal stop]`, `[signal=stop]`) and broken tags (an opener or closer whose `]` is missing, anywhere in a line) are removed and the text
 inside stays plain; a broken tag never swallows the tags after it. Lookalikes with no closer, such as `array[signal]` or `samples[signal_1]`, are left alone. A lookalike or malformed opener never takes the closer of a real span after it (`arr[signal] and [signal:stop]x[/signal]` keeps the stop). If removing a tag joins the text around it into something tag-shaped (`[[/signal]/signal]`) or changes what is code, that is removed too (in prose; inside code see "Nothing inside code is stripped" below): the reply is parsed again as the human reads it, and only lookalikes that parse keeps as text remain. A reply that
 was only tags becomes `(empty reply)`.
