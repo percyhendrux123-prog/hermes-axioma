@@ -69,5 +69,33 @@ class KeyPermissions(unittest.TestCase):
             self.assertIsNone(a._fp)
 
 
+class ContinuedCommands(unittest.TestCase):
+    def test_continued_push_and_deploy_get_advisories(self):
+        from axioma.advisor import Advisor
+        from axioma.audit import Audit
+        from axioma.policy import Policy
+        cases = [('git \\\npush origin main', 'send'),
+                 ('git pu\\\nsh origin main', 'send'),
+                 ('git \\\r\npush origin main', 'send'),
+                 ('gh pr \\\ncreate --title synthetic', 'send'),
+                 ('netlify \\\ndeploy --prod', 'spin'),
+                 ('npm run de\\\nploy', 'spin'),
+                 ('docker stack \\\ndeploy synthetic', 'spin')]
+        for command, category in cases:
+            with self.subTest(command=repr(command)), tempfile.TemporaryDirectory() as tmp:
+                args = {'command': command}
+                self.assertEqual(Policy().classify('terminal', args), (category,))
+                a = Advisor({}, Audit(Path(tmp) / 'audit.sqlite3'))
+                result = a.before('terminal', args, session_id='s', tool_call_id='c')
+                self.assertEqual(result['action'], 'approve')
+                self.assertNotIn('advisory unavailable', result['message'])
+                row = a.audit.card_rows()[0]
+                self.assertEqual(row['categories'], [category])
+                # Classification normalization must not change the exact staged arguments.
+                parts = a.fp.digests(row['card_id'], 'terminal', args, '')
+                self.assertEqual(row['args_digest'], parts['args_digest'])
+                self.assertEqual(args['command'], command)
+
+
 if __name__ == '__main__':
     unittest.main()

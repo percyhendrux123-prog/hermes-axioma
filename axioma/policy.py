@@ -390,7 +390,7 @@ class Policy:
                     action = 'spawn'
                 if action not in [a.strip().lower() for a in rule['actions']]:
                     continue
-            if regex is not None and not regex.search(str(args.get('command', ''))):
+            if regex is not None and not regex.search(self._command(args)):
                 continue
             found.add(rule['category'])
         if self.scrub_enabled and tool == 'terminal' and (self.scrubs(args) or self.unparsed(tool, args)):
