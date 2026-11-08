@@ -153,5 +153,51 @@ class PreflightConfiguration(unittest.TestCase):
             self.assertEqual(checks.skills, {'builder': skill})
 
 
+class ApprovalTextCompatibility(unittest.TestCase):
+    def test_missing_or_changed_host_helpers_keep_english_fallback(self):
+        from axioma import advisor, seal
+        from types import SimpleNamespace
+        self.assertTrue(callable(getattr(advisor, 'host_prompt_text', None)))
+        real_import = __import__
+        for renderer in (None, SimpleNamespace(),
+                         SimpleNamespace(ea_reason_label_text=lambda: 1 / 0)):
+            def importing(name, *args, **kwargs):
+                if name == 'gateway.platforms':
+                    if renderer is None:
+                        raise ImportError('synthetic missing host')
+                    return SimpleNamespace(base_exec_approval=renderer)
+                if name == 'agent.i18n':
+                    raise ImportError('synthetic missing i18n')
+                return real_import(name, *args, **kwargs)
+            with self.subTest(renderer=renderer), patch('builtins.__import__', side_effect=importing):
+                self.assertEqual(advisor.host_prompt_text(), (list(seal.LABELS), list(seal.CHROME)))
+
+    def test_available_host_helpers_add_localized_exact_text(self):
+        from axioma import advisor, seal
+        from types import SimpleNamespace
+        self.assertTrue(callable(getattr(advisor, 'host_prompt_text', None)))
+        renderer = SimpleNamespace(ea_reason_label_text=lambda: 'Synthetic reason',
+                                   ea_header_text=lambda: 'Synthetic header',
+                                   ea_smart_deny_line_text=lambda: 'Synthetic denial',
+                                   approval_timeout_seconds=lambda: 90,
+                                   format_approval_deadline_line=lambda seconds: 'Synthetic deadline %d' % seconds,
+                                   ea_action_labels=lambda: {'once': 'Synthetic once'})
+        real_import = __import__
+        def importing(name, *args, **kwargs):
+            if name == 'gateway.platforms':
+                return SimpleNamespace(base_exec_approval=renderer)
+            if name == 'agent.i18n':
+                return SimpleNamespace(t=lambda key: 'Synthetic ' + key)
+            return real_import(name, *args, **kwargs)
+        with patch('builtins.__import__', side_effect=importing):
+            labels, chrome = advisor.host_prompt_text()
+        self.assertEqual(labels, list(seal.LABELS) + ['Synthetic reason'])
+        for expected in ('Synthetic header', 'Synthetic denial', 'Synthetic deadline 90',
+                         'Synthetic once', 'Synthetic platform.discord.approval.question',
+                         'Synthetic platform.discord.approval.requested_command_label'):
+            self.assertIn(expected, chrome)
+        self.assertTrue(set(seal.CHROME).issubset(chrome))
+
+
 if __name__ == '__main__':
     unittest.main()

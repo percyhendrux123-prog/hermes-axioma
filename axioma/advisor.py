@@ -39,6 +39,33 @@ def card_key(session_id, tool, args):
     return (str(session_id), digest([ALIASES.get(tool, tool), args]))
 
 
+def host_prompt_text():
+    """Compatibility boundary for undocumented host-renderer text helpers; English fallback.
+
+    Used only to recognize exact host framing in pasted cards, never to inspect or alter approval.
+    Missing or changed helpers cost localized framing recognition, not card verification itself.
+    """
+    labels, chrome = list(card_seal.LABELS), list(card_seal.CHROME)
+    try:
+        from gateway.platforms import base_exec_approval as ea
+        localized_labels = [ea.ea_reason_label_text()]
+        localized_chrome = [ea.ea_header_text(), ea.ea_smart_deny_line_text(),
+                            ea.format_approval_deadline_line(ea.approval_timeout_seconds())]
+        localized_chrome += list(ea.ea_action_labels().values())
+        labels += [s for s in localized_labels if isinstance(s, str) and s.strip()]
+        chrome += [s for s in localized_chrome if isinstance(s, str) and s.strip()]
+    except Exception:
+        pass
+    try:
+        from agent.i18n import t
+        localized = [t('platform.discord.approval.question'),
+                     t('platform.discord.approval.requested_command_label')]
+        chrome += [s for s in localized if isinstance(s, str) and s.strip()]
+    except Exception:
+        pass
+    return labels, chrome
+
+
 class Advisor:
     def __init__(self, config, audit, checks_config=None, surface=lambda: '', clock=time.monotonic):
         self.audit, self.surface, self.clock = audit, surface, clock
@@ -356,38 +383,6 @@ class Advisor:
                           'No answer is recorded yet, so there is no answer to check. ' + tail]
         return out + ['OK: staged, shown and answered records agree, and none were changed after writing. ' + tail]
 
-    @staticmethod
-    def host_labels():
-        """Labels the host may put in front of the description (exact prefixes only)."""
-        labels: list = list(card_seal.LABELS)
-        try:
-            from gateway.platforms.base_exec_approval import ea_reason_label_text
-            labels.append(ea_reason_label_text())
-        except Exception:
-            pass
-        return labels
-
-    @staticmethod
-    def host_chrome():
-        """The host's own prompt text (header, deadline, smart-deny line, buttons), localized when
-        the host is present; English otherwise. A pasted line is accepted as host text only when it
-        equals one of these exactly (markup aside)."""
-        chrome: list = list(card_seal.CHROME)
-        try:
-            from gateway.platforms import base_exec_approval as ea
-            chrome += [ea.ea_header_text(), ea.ea_smart_deny_line_text(),
-                       ea.format_approval_deadline_line(ea.approval_timeout_seconds())]
-            chrome += list(ea.ea_action_labels().values())
-        except Exception:
-            pass
-        try:
-            from agent.i18n import t
-            chrome += [t('platform.discord.approval.question'),
-                       t('platform.discord.approval.requested_command_label')]
-        except Exception:
-            pass
-        return chrome
-
     def compare_text(self, fp, row, pasted, problems, code=None):
         """Line-by-line check of a pasted card against the keyed line digests (no bodies stored).
         Every pasted line must be a staged line (one host label at its start allowed), the host's
@@ -396,9 +391,10 @@ class Advisor:
         expected = list(row.get('line_digests') or [])
         if not expected:
             return ['words: this record has no line digests to compare.']
+        labels, chrome = host_prompt_text()
         found, notes, summary = compare_lines(
-            fp, expected, pasted, self.host_labels(), prefixes=row.get('prefix_tags'),
-            chrome=self.host_chrome(), tool_digest=row.get('tool_digest'), code=code)
+            fp, expected, pasted, labels, prefixes=row.get('prefix_tags'),
+            chrome=chrome, tool_digest=row.get('tool_digest'), code=code)
         if found:
             problems.extend('the pasted card differs from what was staged: ' + x for x in found)
             return ['words: ' + x for x in notes]

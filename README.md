@@ -325,7 +325,14 @@ Runtime surfaces: `ctx.register_tool`, `register_hook`, `register_command`, `get
 `session_surface`; `plugins.plugin_storage.plugin_data_dir`; `agent.secret_scope.get_secret`
 (presence only, for the optional provider-conflict check). Hooks: `pre_tool_call`, `post_tool_call`,
 `post_approval_response`, `pre_llm_call`, `on_session_finalize`, `transform_llm_output`. No
-middleware, overrides, monkeypatches, private approval probes, subprocesses, network or model calls.
+middleware, overrides, monkeypatches, private approval-state probes, subprocesses, network or model calls.
+Pasted-card verification has one best-effort compatibility boundary, `host_prompt_text()` in
+`axioma/advisor.py`, which imports undocumented `gateway.platforms.base_exec_approval` text helpers
+and `agent.i18n.t` to recognize localized host labels, headers, deadlines and buttons exactly. It
+does not read approval state or grant approval. If those helpers are absent or change, it falls
+back to the built-in English text: card/code verification still works, but unrecognized localized
+framing may be reported as added or changed text. A public host prompt-text API would remove this
+internal dependency.
 Optional operator-configured preflights read filesystem metadata outside the plugin's own data:
 required `SKILL.md` paths under configured external skill roots are checked for file presence, and
 configured external device-lock paths are probed with `lstat`. The policy resolves configured
