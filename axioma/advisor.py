@@ -111,6 +111,10 @@ class Advisor:
             at = time.time()
             if metadata.get('event') in LIFECYCLE:
                 fp, durable = keyed or self.keyed()
+                if keyed is not None and durable:
+                    # A pending answer can outlive safe key permissions (or the key itself).
+                    current, safe = self.keyed()
+                    durable = safe and current.key == fp.key
                 if durable:
                     # The seal covers every field and the timestamp (spec 5.6).
                     metadata['seal'] = fp.seal(dict(metadata, at=at))

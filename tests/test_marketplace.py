@@ -41,6 +41,23 @@ class KeyPermissions(unittest.TestCase):
                 load_key(key)
             self.assertEqual(target.stat().st_mode & 0o777, 0o644)
 
+    def test_rejected_parent_symlink_is_not_chmodded_by_audit_logging(self):
+        from axioma.advisor import Advisor
+        from axioma.audit import Audit
+        with tempfile.TemporaryDirectory() as tmp:
+            target = Path(tmp) / 'external'
+            target.mkdir(mode=0o755)
+            os.chmod(target, 0o755)
+            parent = Path(tmp) / 'plugin-data'
+            parent.symlink_to(target, target_is_directory=True)
+            a = Advisor({}, Audit(parent / 'audit.sqlite3'))
+            result = a.before('send_message', {})
+            self.assertEqual(result['action'], 'approve')
+            self.assertEqual(target.stat().st_mode & 0o777, 0o755)
+            report = a.command('verify ' + code_of(result['message']))
+            self.assertIn('NOT CHECKED', report)
+            self.assertIn('owner-only', report)
+
     def test_other_owner_is_refused_even_with_owner_only_modes(self):
         from axioma.seal import load_key
         with tempfile.TemporaryDirectory() as tmp:
@@ -50,6 +67,25 @@ class KeyPermissions(unittest.TestCase):
             with patch('axioma.seal.os.getuid', return_value=os.getuid() + 1):
                 with self.assertRaisesRegex(PermissionError, 'owner-only'):
                     load_key(key)
+
+    def test_cached_answer_key_is_not_used_durably_after_permissions_fail(self):
+        from axioma.advisor import Advisor
+        from axioma.audit import Audit
+        with tempfile.TemporaryDirectory() as tmp:
+            a = Advisor({}, Audit(Path(tmp) / 'audit.sqlite3'))
+            a.submit({'tool': 'send_message', 'arguments': {}, 'card': CARD}, session_id='s')
+            shown = a.before('send_message', {}, session_id='s', tool_call_id='c')
+            code = code_of(shown['message'])
+            os.chmod(a.key_path(), 0o644)
+            with patch('axioma.seal.os.chmod', side_effect=PermissionError('synthetic')):
+                a.respond(pattern_key='plugin_rule:' + shown['rule_key'], choice='once',
+                          session_id='s', tool_call_id='c')
+            answer = next(r for r in a.audit.card_rows(fingerprint=code) if r['event'] == 'answer')
+            self.assertNotIn('seal', answer)
+            self.assertEqual(answer.get('key'), 'throwaway')
+            os.chmod(a.key_path(), 0o600)
+            self.assertIn('MISMATCH', a.command('verify ' + code))
+            self.assertNotIn('OK:', a.command('verify ' + code))
 
     def test_cached_key_does_not_bypass_permission_recheck(self):
         from axioma.advisor import Advisor

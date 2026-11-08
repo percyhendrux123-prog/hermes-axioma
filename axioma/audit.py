@@ -16,9 +16,11 @@ FIELDS = {'event', 'card_id', 'categories', 'light', 'valid', 'answer', 'choice'
 
 
 def _owner_only(path, mode):
-    """Tighten to owner-only. Best effort: a filesystem that refuses chmod still works."""
+    """Tighten local paths only, never symlink targets. A refused chmod is best effort."""
     try:
-        if stat.S_IMODE(os.stat(path).st_mode) & ~mode:
+        info = os.stat(path, follow_symlinks=False)
+        right_type = stat.S_ISDIR(info.st_mode) if mode == 0o700 else stat.S_ISREG(info.st_mode)
+        if right_type and info.st_uid == os.getuid() and stat.S_IMODE(info.st_mode) & ~mode:
             os.chmod(path, mode)
     except OSError:
         pass
