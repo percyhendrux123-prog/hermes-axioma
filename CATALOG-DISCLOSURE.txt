@@ -1,0 +1,2 @@
+Outside-plugin reads — exact replacement/addition sentence for the catalog description's disclosure:
+Optional operator-configured preflights probe file-presence metadata for required SKILL.md paths under external skill roots and lstat metadata for external device-lock paths; the policy resolves configured workspace/output roots and candidate remove/move paths, including symlinks, for containment checks, without reading those files' contents.

@@ -323,6 +323,11 @@ Runtime surfaces: `ctx.register_tool`, `register_hook`, `register_command`, `get
 (presence only, for the optional provider-conflict check). Hooks: `pre_tool_call`, `post_tool_call`,
 `post_approval_response`, `pre_llm_call`, `on_session_finalize`, `transform_llm_output`. No
 middleware, overrides, monkeypatches, private approval probes, subprocesses, network or model calls.
+Optional operator-configured preflights read filesystem metadata outside the plugin's own data:
+required `SKILL.md` paths under configured external skill roots are checked for file presence, and
+configured external device-lock paths are probed with `lstat`. The policy resolves configured
+workspace/output roots and candidate remove/move paths, including symlinks, to check containment.
+These are path/metadata checks, not reads of skill, lock or candidate-file contents.
 Tests use private loader wiring and `unittest.mock`; none of it ships. The validator reports cautions only:
 `destructive_root_rm` and `destructive_home_rm` (destructive-command strings in classification tests
 and in captured test and review output under `docs/`) and `invisible_unicode` (zero-width and
