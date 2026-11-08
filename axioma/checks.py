@@ -58,9 +58,9 @@ class Checks:
             raise ValueError('senders must map identities to boolean send rights')
         self.senders = {norm(k): v for k, v in senders.items()}
         skills = config.get('skills', {})
-        if not isinstance(skills, dict):
-            raise ValueError('skills must be a profile mapping')
-        self.skills = {norm(k): v for k, v in skills.items() if isinstance(k, str)}
+        if not isinstance(skills, dict) or not all(isinstance(k, str) and norm(k) for k in skills):
+            raise ValueError('skills must map nonempty profile names to rules')
+        self.skills = {norm(k): v for k, v in skills.items()}
         for profile, r in skills.items():
             if not isinstance(r, dict) or set(r) != {'root', 'required'} or not isinstance(r['required'], list):
                 raise ValueError('skills requires root and required list')
@@ -68,6 +68,9 @@ class Checks:
                 raise ValueError('skills root must be absolute')
             if not all(isinstance(s, str) and re.fullmatch(r'[a-zA-Z0-9_-]+', s) for s in r['required']):
                 raise ValueError('invalid skill identifier')
+        for kind in ('provider_conflicts', 'locks'):
+            if not isinstance(config.get(kind, []), list):
+                raise ValueError(kind + ' must be a list')
         for r in config.get('provider_conflicts', []):
             if not isinstance(r, dict) or set(r) != {'provider', 'key_envs'} or not isinstance(r['provider'], str):
                 raise ValueError('invalid provider conflict')
@@ -138,7 +141,10 @@ class Checks:
                 profile = norm(task.get('assignee') or task.get('profile'))
                 rule = self.skills.get(profile)
                 if rule:
-                    good = all((Path(rule['root']) / s / 'SKILL.md').is_file() for s in rule['required'])
+                    try:
+                        good = all((Path(rule['root']) / s / 'SKILL.md').is_file() for s in rule['required'])
+                    except OSError:
+                        good = False  # inaccessible metadata is a failed preflight, not unavailable advice
                     results.append({'check': 'skills', 'pass': good})
         providers = {norm(args.get('provider'))}
         if isinstance(args.get('tasks'), list):

@@ -97,5 +97,61 @@ class ContinuedCommands(unittest.TestCase):
                 self.assertEqual(args['command'], command)
 
 
+class PreflightConfiguration(unittest.TestCase):
+    def test_inaccessible_skill_metadata_is_failed_red_preflight(self):
+        from axioma.advisor import Advisor
+        from axioma.audit import Audit
+        with tempfile.TemporaryDirectory() as tmp:
+            config = {'skills': {'builder': {'root': tmp, 'required': ['safety']}}}
+            for staged in (False, True):
+                for error in (PermissionError('synthetic private error'), OSError('synthetic')):
+                    with self.subTest(staged=staged, error=type(error).__name__):
+                        a = Advisor({}, Audit(Path(tmp) / 'audit.sqlite3'), checks_config=config)
+                        args = {'tasks': [{'profile': ' Builder '}]}
+                        if staged:
+                            a.submit({'tool': 'delegate_task', 'arguments': args,
+                                      'card': {**CARD, 'light': 'green'}}, session_id='s')
+                        with patch('axioma.checks.Path.is_file', side_effect=error):
+                            result = a.before('delegate_task', args, session_id='s')
+                        self.assertEqual(result['action'], 'approve')
+                        self.assertIn('STOP', result['message'])
+                        self.assertIn('skills: fail', result['message'])
+                        self.assertNotIn('advisory unavailable', result['message'])
+                        self.assertNotIn('private error', result['message'])
+                        row = a.audit.card_rows()[0]
+                        self.assertEqual(row['light'], 'red')
+                        self.assertIn({'check': 'skills', 'pass': False}, row['checks'])
+
+    def test_invalid_profile_keys_and_list_types_flag_config_error(self):
+        from axioma.advisor import Advisor
+        from axioma.audit import Audit
+        from axioma.checks import Checks
+        with tempfile.TemporaryDirectory() as tmp:
+            skill = {'root': tmp, 'required': ['safety']}
+            cases = [{'skills': {7: skill}}, {'skills': {None: skill}},
+                     {'skills': {' ': skill}}, {'skills': []},
+                     {'skills': {'builder': {'root': tmp, 'required': 'safety'}}},
+                     {'provider_conflicts': {}}, {'provider_conflicts': ''},
+                     {'locks': {}}, {'locks': ''}]
+            for invalid in cases:
+                with self.subTest(config=invalid):
+                    config = {'deny': [{'tool': 'read_file', 'pattern': 'synthetic'}],
+                              **invalid}
+                    with self.assertRaises(ValueError):
+                        Checks(config)
+                    checks, had_error = Checks.lenient(config)
+                    self.assertTrue(had_error)
+                    self.assertTrue(checks.hard_red('read_file', {'path': 'synthetic'}))
+                    a = Advisor({}, Audit(Path(tmp) / 'audit.sqlite3'), checks_config=config)
+                    self.assertTrue(a.config_error)
+                    msg = a.before('kanban_create', {'assignee': 'builder'})['message']
+                    self.assertIn('STOP', msg)
+                    self.assertIn('axioma_config: fail', msg)
+                    self.assertNotIn('advisory unavailable', msg)
+            checks, had_error = Checks.lenient({'skills': {7: skill, ' Builder ': skill}})
+            self.assertTrue(had_error)
+            self.assertEqual(checks.skills, {'builder': skill})
+
+
 if __name__ == '__main__':
     unittest.main()
