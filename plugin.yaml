@@ -1,11 +1,11 @@
 name: hermes-axioma
-version: "0.4.1"
-description: "Inline signal color in the agent's normal reply (color + style + word, never color alone), plus an advisory card before send/spend/spin/scrub. Advisor, not a gate."
+version: "0.5.0"
+description: "Inline signal color in the agent's normal reply (color + style + word, never color alone), plus an advisory card before send/spend/spin/scrub, and a plain-English charter interview that compiles to a settings block. Advisor, not a gate."
 author: hermes-axioma contributors
 license: MIT
 requires_hermes: ">=0.22.5"
 api_version: 1
-provides_tools: [axioma_card]
+provides_tools: [axioma_card, axioma_charter]
 provides_hooks: [pre_tool_call, post_tool_call, post_approval_response, pre_llm_call, on_session_finalize, transform_llm_output]
 
 config_schema:

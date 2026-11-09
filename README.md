@@ -1,6 +1,6 @@
 # hermes-axioma
 
-Inline signal color for Hermes Agent · MIT · v0.4.1
+Inline signal color for Hermes Agent · MIT · v0.5.0
 
 The agent writes its normal reply. Axioma colors only the few phrases inside it that deserve your
 attention before you act, and puts a word next to each one so the meaning never depends on color.
@@ -310,6 +310,100 @@ Unrecognized cosmetic settings fall back to their defaults. An invalid policy or
 every rule that is valid on its own, and every classified call gets a RED card naming
 `axioma_config: fail` until it is fixed.
 
+## Axiōma Charter
+
+The settings above are easy to get wrong if you have never read a policy file. The Charter is a short
+interview in plain English. The agent asks ten questions, one at a time, reads your answers back,
+and compiles them into two things: a one-page charter you can read, and the matching `policy` and
+`checks` settings block.
+
+The charter lists **the rules the card warns on**. Axiōma still only advises. Nothing in the Charter
+blocks, approves or runs anything, and the tool applies nothing: it does not edit `config.yaml` or
+any profile. You copy the settings block in by hand, then restart Hermes.
+
+How to run it: ask the agent to run the Axiōma Charter interview. It uses the `axioma_charter`
+tool with three actions: `questions` (the interview), `compile` (your answers to the charter,
+the settings block and a list of problems) and `show` (the last charter). `/charter` prints the last
+charter, or says how to start. `compile` writes two files, `CHARTER.md` and `charter-settings.yaml`,
+to `<HERMES_HOME>/plugin-data/hermes-axioma/charter/`, nowhere else.
+
+What it asks, and the setting each answer becomes:
+
+| Question, in short | Setting it becomes |
+|---|---|
+| Anyone the agent must never message | `checks.deny` (send, post, publish tools) |
+| Accounts it may send from | `checks.senders` |
+| Extra tools that buy things | `policy.add`, category `spend` |
+| Keep the delete and move warning, or turn it off | `policy.remove: [scrub]` |
+| The folder it works in, and where output goes | `policy.workspace`, `policy.output_dir` |
+| Whether deletes and moves inside those folders may skip the card | decides whether the two folders above are used |
+| Extra tools that start scheduled jobs or other agents | `policy.add`, category `spin` |
+| Words, providers or targets that must always turn the card red | `checks.deny` |
+| Anything that could never be undone | `checks.non_reversible` |
+
+There is no question about who the agent may message without asking, because the plugin has no such
+setting: every send gets a card, and a card never grants permission.
+
+Missing or unclear answers make no rule. Each one is named in the charter under "Open questions".
+An answer cannot make a rule looser than the defaults. A built-in rule is removed only when you
+answer "turn off" to the delete and move question, and a folder is trusted only after an explicit
+"yes". The compiled block is run through the plugin's own `Policy` and `Checks` validation before it
+is shown, so it can never be one that turns every card red with `axioma_config: fail`. The same
+answers always give the same text, and a short fingerprint printed on both files lets you match them.
+
+A worked example, with made-up names only:
+
+```text
+senders:      assistant@example.invalid
+spend_tools:  buy_widgets
+scrub:        keep
+workspace:    /Users/example/projects/demo
+output_dir:   /Users/example/projects/demo/output
+skip_inside:  yes
+deny_words:   receive_only
+(the other four questions: none)
+```
+
+The charter (shortened):
+
+```text
+# Axiōma Charter
+Fingerprint: AXC-a3d1e36f2c85 (the same code is on charter-settings.yaml)
+
+These are the rules the Axiōma card warns on. Axiōma advises: it does not block, approve or run
+anything. ... Nothing on this page has been applied to any setting.
+
+2. (senders) RULE: sending is limited to `assistant@example.invalid`. A send that names a different
+   sender, or no sender at all, shows a RED card.
+3. (spend_tools) RULE: a card for spending on calls to `buy_widgets`.
+5. (workspace) RULE: the folder is `/Users/example/projects/demo`. Deletes and moves inside it skip
+   the card; anything outside it still shows one.
+9. (deny_words) RULE: a red card whenever `receive_only` appears in a send, post, payment, job,
+   agent or terminal call.
+```
+
+The settings block (the `deny` rule is repeated for 13 tool families in the real file; shortened):
+
+```yaml
+policy:
+  workspace: "/Users/example/projects/demo"
+  output_dir: "/Users/example/projects/demo/output"
+  add:
+    - {id: "charter-spend-1", category: "spend", tool: "buy_widgets"}
+checks:
+  deny:
+    - {tool: "*send*", pattern: "(?i)(?:receive_only)"}
+    # ... the same pattern for the other tool families
+  senders:
+    "assistant@example.invalid": true
+```
+
+Limits: words are matched as plain text in the call's arguments, ignoring capital letters, so a
+different spelling is not caught. Once a sender list exists, any send that does not name one of
+those senders shows a red card, including a send that names no sender. Reads and searches are not
+scanned for your red-card words. Delete and move detection is the best-effort shell reading described
+above.
+
 ## Audit and `/signals`
 
 `<HERMES_HOME>/plugin-data/hermes-axioma/audit.sqlite3`, local only. Every complete stop, caution,
@@ -385,6 +479,9 @@ does not read approval state or grant approval. If those helpers are absent or c
 back to the built-in English text: card/code verification still works, but unrecognized localized
 framing may be reported as added or changed text. A public host prompt-text API would remove this
 internal dependency.
+The Charter (`axioma_charter`, `/charter`) is pure local code: it writes two files, `CHARTER.md` and
+`charter-settings.yaml`, in a `charter` folder inside the plugin's own data folder, reads them back for
+`show`, and makes no network or model call and no change to `config.yaml` or any profile.
 Optional operator-configured preflights read filesystem metadata outside the plugin's own data:
 required `SKILL.md` paths under configured external skill roots are checked for file presence, and
 configured external device-lock paths are probed with `lstat`. The policy resolves configured

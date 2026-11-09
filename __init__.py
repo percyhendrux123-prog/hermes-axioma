@@ -10,6 +10,7 @@ ctx.session_surface, plugins.plugin_storage.plugin_data_dir.
 """
 from .axioma.advisor import Advisor
 from .axioma.audit import Audit
+from .axioma import charter
 from .axioma.signal import GUIDANCE as SIGNAL_GUIDANCE, Signal
 
 CARD_GUIDANCE = '''AXIOMA CARD (advisory): before a send/spend/spin/scrub call, call axioma_card with the target
@@ -49,7 +50,9 @@ def data_root():
 
 
 def register(ctx):
-    audit = Audit(data_root() / 'audit.sqlite3')
+    root = data_root()
+    audit = Audit(root / 'audit.sqlite3')
+    charter_dir = lambda: root / 'charter'
     surface = getattr(ctx, 'session_surface', None)
     advisor = Advisor(ctx.get_config('policy', default={}), audit,
                       checks_config=ctx.get_config('checks', default={}),
@@ -64,6 +67,8 @@ def register(ctx):
         advisor.finalize(**kwargs)
         signal.finalize(**kwargs)
     ctx.register_tool(name='axioma_card', toolset='axioma', schema=SCHEMA, handler=advisor.submit)
+    ctx.register_tool(name='axioma_charter', toolset='axioma', schema=charter.SCHEMA,
+                      handler=charter.make_handler(charter_dir))
     ctx.register_hook('pre_tool_call', advisor.before)
     ctx.register_hook('post_tool_call', signal.observe)
     ctx.register_hook('post_approval_response', advisor.respond)
@@ -81,3 +86,6 @@ def register(ctx):
                                      '/signals cards lists card codes; /signals verify <code> checks '
                                      'staged -> shown -> answered.')
     ctx.register_command('whispers', signal.listing, description='Same list as /signals (kept for older notes).')
+    ctx.register_command('charter', charter.command(charter_dir),
+                         description='Show the last Axiōma Charter (the rules the card warns on), or how '
+                                     'to start the interview. Applies nothing.')

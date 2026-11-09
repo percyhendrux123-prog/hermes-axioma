@@ -35,12 +35,13 @@ class RegistrationTests(unittest.TestCase):
             ctx = Context()
             with patch.object(module, 'data_root', return_value=Path(tmp)):
                 module.register(ctx)
-            self.assertEqual(set(ctx.tools), {'axioma_card'})
+            self.assertEqual(set(ctx.tools), {'axioma_card', 'axioma_charter'})
+            self.assertFalse(ctx.tools['axioma_charter'].get('override', False))
             self.assertFalse(ctx.tools['axioma_card'].get('override', False))
             self.assertEqual(set(ctx.hooks), {'pre_tool_call', 'post_tool_call', 'post_approval_response',
                                                'pre_llm_call', 'on_session_finalize', 'transform_llm_output'})
             self.assertEqual(set(ctx.middleware), set(), 'advisor registers no execution middleware')
-            self.assertEqual(set(ctx.commands), {'signals', 'whispers'})
+            self.assertEqual(set(ctx.commands), {'signals', 'whispers', 'charter'})
             guidance = ctx.hooks['pre_llm_call']()['context']
             self.assertIn('[signal:stop', guidance)
             self.assertIn('best-effort', guidance)

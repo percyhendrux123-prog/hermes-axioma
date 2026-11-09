@@ -1,0 +1,590 @@
+"""Axiōma Charter: a plain-English interview compiled into one page and a settings block.
+
+ADVISOR ONLY, like the rest of the plugin. The charter lists the rules the card warns on. It does
+not enforce, block or approve anything, and it never edits a Hermes config or profile: the only
+things this module writes are CHARTER.md and charter-settings.yaml inside one directory the caller
+names. Pure standard library; no network, no model call.
+
+STRICT RULE. A missing, unclear or invalid answer makes NO rule and is named as a problem. No answer
+can make a rule looser than the plugin defaults, and no default rule is removed, unless the answer
+says so in so many words (`scrub` = "turn off"; a folder is only trusted after "yes").
+"""
+from fnmatch import fnmatchcase
+import hashlib
+import json
+import os
+from pathlib import Path
+import re
+
+from .checks import Checks
+from .policy import DEFAULTS, Policy
+
+CHARTER_FILE = 'CHARTER.md'
+SETTINGS_FILE = 'charter-settings.yaml'
+MAX_ITEMS, MAX_LEN = 20, 120
+
+NOTHING_APPLIED = (
+    'Nothing was applied. This tool wrote two files in the charter folder and changed no setting, '
+    'no config.yaml and no profile. To use these rules, the owner opens %s, copies its policy and '
+    'checks blocks into the hermes-axioma settings in the Hermes config by hand (merging with any '
+    'policy or checks block already there), and restarts Hermes. Axiōma then shows the cards '
+    'described in %s; it still only advises.' % (SETTINGS_FILE, CHARTER_FILE))
+
+# Tool-name globs a "red card" word is looked for in: sending, posting, paying, starting jobs or
+# agents, and terminal commands. Reads and searches are left out on purpose. Every non-terminal
+# default rule tool matches one of these (a test keeps it that way).
+ACTION_TOOLS = ['*send*', '*post*', '*publish*', '*pay*', '*purchase*', '*charge*', '*refund*',
+                '*checkout*', '*cron*', '*job*', 'delegate_task', 'kanban_create', 'terminal']
+MESSAGE_TOOLS = ['*send*', '*post*', '*publish*']
+
+INTRO = ('Axiōma shows a card before the agent sends, spends, starts something or deletes. It never '
+         'blocks and never allows: there is no list of people the agent may message without a card. '
+         'These questions only tell the card what to warn about. Ask them one at a time, in plain '
+         'English, and use the owner\'s own words as the answer. If the owner has not answered, '
+         'leave that answer out; do not guess.')
+
+QUESTIONS = [
+    {'id': 'never_message',
+     'ask': 'Is there anyone the agent must never message on your behalf, such as a person, an email '
+            'address or a chat handle? Name each one, or say "none".',
+     'shape': 'A list of names, addresses or handles (up to 20), or "none".',
+     'example': ['legal@example.invalid', 'Jordan Example'],
+     'maps_to': ['checks.deny']},
+    {'id': 'senders',
+     'ask': 'Which email addresses or accounts may the agent send from? Name each one, or say '
+            '"no limit". If you name any, a message that does not say it is from one of them will '
+            'show a red card.',
+     'shape': 'A list of addresses or account names (up to 20), or "no limit".',
+     'example': ['assistant@example.invalid'],
+     'maps_to': ['checks.senders']},
+    {'id': 'spend_tools',
+     'ask': 'Does the agent have any tool that buys things or moves money, beyond the common '
+            'payment tools Axiōma already knows? Give the tool names, or say "none".',
+     'shape': 'A list of tool names (up to 20), or "none".',
+     'example': ['buy_widgets'],
+     'maps_to': ['policy.add']},
+    {'id': 'scrub',
+     'ask': 'Should the agent\'s file deletes and moves show a warning card? Say "keep" to keep the '
+            'built-in warning, or "turn off" to remove it. Turning it off removes a built-in rule.',
+     'shape': 'Exactly "keep" or "turn off".',
+     'example': 'keep',
+     'maps_to': ['policy.remove']},
+    {'id': 'workspace',
+     'ask': 'Which single folder does the agent do its work in? Give the full path, or say "none".',
+     'shape': 'A full folder path (not your whole home folder), or "none".',
+     'example': '/Users/example/projects/demo',
+     'maps_to': ['policy.workspace']},
+    {'id': 'output_dir',
+     'ask': 'Which folder should the files it makes be saved in? Give the full path, or say "none".',
+     'shape': 'A full folder path (not your whole home folder), or "none".',
+     'example': '/Users/example/projects/demo/output',
+     'maps_to': ['policy.output_dir']},
+    {'id': 'skip_inside',
+     'ask': 'Ask only if you named a folder above. Inside those folders, may deletes and moves skip '
+            'the warning card? Anything outside them will still show one. Say "no" to keep a card '
+            'on every delete and move.',
+     'shape': '"yes" or "no".',
+     'example': 'no',
+     'ask_when': 'workspace or output_dir is a folder',
+     'maps_to': ['policy.workspace', 'policy.output_dir']},
+    {'id': 'spin_tools',
+     'ask': 'Beyond the scheduled jobs and helper agents Axiōma already watches, does the agent have '
+            'other tools that start scheduled jobs or other agents? Give the tool names, or say '
+            '"none".',
+     'shape': 'A list of tool names (up to 20), or "none".',
+     'example': ['schedule_report'],
+     'maps_to': ['policy.add']},
+    {'id': 'deny_words',
+     'ask': 'Are there words, provider names or targets (a website, a server, an account) that must '
+            'always turn the card red when they appear in what the agent is about to do? List them, '
+            'or say "none".',
+     'shape': 'A list of words or names (up to 20), or "none".',
+     'example': ['receive_only', 'prod-database'],
+     'maps_to': ['checks.deny']},
+    {'id': 'never_undo',
+     'ask': 'Is there anything that could never be undone if the agent got it wrong, such as closing '
+            'an account, transferring a domain or erasing a backup? List the words that would show '
+            'up in that action, or say "none".',
+     'shape': 'A list of words or names (up to 20), or "none".',
+     'example': ['transfer-domain', 'close-account'],
+     'maps_to': ['checks.non_reversible']},
+]
+IDS = [q['id'] for q in QUESTIONS]
+
+NONE_WORDS = {'none', 'nothing', 'nobody', 'no one', 'n/a', 'no'}
+NO_LIMIT = {'no limit', 'no limits', 'any', 'anyone', 'unlimited'}
+YES, NO = {'yes', 'y', 'true'}, {'no', 'n', 'false'}
+TURN_OFF = {'turn off', 'turn-off', 'turn_off', 'turnoff'}
+TOOL_NAME = re.compile(r'[A-Za-z0-9_.:*?-]{3,100}')
+
+
+def questions():
+    """The interview, in order, as plain data."""
+    return [dict(q, ask_when=q.get('ask_when', 'always')) for q in QUESTIONS]
+
+
+# -- parsing ------------------------------------------------------------------------------------
+def _clean(text):
+    """A stripped one-line string, or None when it holds control characters."""
+    text = text.strip()
+    return None if any(ord(c) < 32 or ord(c) == 127 for c in text) else text
+
+
+def _word(value):
+    """A short answer word: str lowercased and stripped; bool as yes/no; anything else None."""
+    if isinstance(value, bool):
+        return 'yes' if value else 'no'
+    if isinstance(value, str):
+        text = _clean(value)
+        return None if text is None else ' '.join(text.lower().split())
+    return None
+
+
+def _items(value, lower=False, allow_none=NONE_WORDS):
+    """(items, problem). items == [] means the owner said "none"; None means no usable answer."""
+    if isinstance(value, str):
+        word = _word(value)
+        if word is None:
+            return None, 'the answer holds a line break or control character'
+        if not word:
+            return None, 'the answer is empty'
+        if word in allow_none:
+            return [], None
+        parts = re.split(r'[\n,]', value)
+    elif isinstance(value, (list, tuple)) and not value:
+        return None, 'the answer is empty (say "none" if you mean none)'
+    elif isinstance(value, (list, tuple)) and all(isinstance(p, str) for p in value):
+        parts = list(value)
+        if len(parts) == 1 and _word(parts[0]) in allow_none:
+            return [], None
+    else:
+        return None, 'the answer is not a list of words or "none"'
+    items = []
+    for part in parts:
+        text = _clean(part)
+        if text is None:
+            return None, 'an item holds a line break or control character'
+        if not text:
+            if isinstance(value, str):
+                continue
+            return None, 'an item is empty'
+        text = text.lower() if lower else text
+        if len(text) > MAX_LEN:
+            return None, 'an item is longer than %d characters' % MAX_LEN
+        if text not in items:
+            items.append(text)
+    if not items:
+        return None, 'the answer is empty'
+    if any(i.lower() in NONE_WORDS | NO_LIMIT for i in items):
+        return None, 'the answer mixes "none" or "no limit" with names, or is unclear'
+    if len(items) > MAX_ITEMS:
+        return None, 'more than %d items; narrow the list' % MAX_ITEMS
+    return items, None
+
+
+def _folder(value):
+    """(path | '' for none | None, problem)."""
+    if not isinstance(value, str):
+        return None, 'the answer is not a folder path or "none"'
+    text = _clean(value)
+    if text is None or not text:
+        return None, 'the answer is empty or holds a control character'
+    if text.lower() in NONE_WORDS:
+        return '', None
+    path = Path(text)
+    if not path.is_absolute():
+        return None, 'the folder must be a full path starting at the top of the disk'
+    if '..' in path.parts:
+        return None, 'the folder path may not contain ".."'
+    if len(path.parts) < 3 or (path.parts[1] in ('Users', 'home') and len(path.parts) <= 3):
+        return None, 'the folder is too broad; name a project folder, not a whole disk or home folder'
+    return str(path), None
+
+
+def _tool_names(value):
+    items, problem = _items(value)
+    if items:
+        for name in items:
+            if not TOOL_NAME.fullmatch(name) or len(re.sub(r'[*?]', '', name)) < 3:
+                return None, 'tool name %s is not a plain tool name (letters, digits, _ . : - and * only)' % json.dumps(name)
+    return items, problem
+
+
+def _pattern(items):
+    """Case-insensitive plain-text match of any item against the call's JSON arguments."""
+    literal = [re.sub(r'([\\.^$*+?{}\[\]|()])', r'\\\1', json.dumps(item, ensure_ascii=False)[1:-1])
+               for item in items]
+    return '(?i)(?:' + '|'.join(literal) + ')'
+
+
+# -- compile ------------------------------------------------------------------------------------
+class _State:
+    def __init__(self):
+        self.policy, self.checks = {}, {}
+        self.deny, self.irreversible, self.add = [], [], []
+        self.lines, self.problems = {}, []
+
+    def rule(self, qid, text):
+        self.lines[qid] = 'RULE: ' + text
+
+    def none(self, qid, text):
+        self.lines[qid] = 'NONE: ' + text
+
+    def problem(self, qid, text):
+        text = text[0].upper() + text[1:]
+        self.problems.append({'question': qid, 'problem': text})
+        self.lines[qid] = 'OPEN: no rule made. ' + text
+
+
+def _q(text):
+    return '`' + str(text).replace('`', "'") + '`'
+
+
+def _join(items):
+    return ', '.join(_q(i) for i in items)
+
+
+def _list_question(answers, qid, state, parser=_items, **kw):
+    """The parsed items for a list question, or None (a problem is recorded) when unusable."""
+    if qid not in answers:
+        state.problem(qid, 'not answered.')
+        return None
+    items, problem = parser(answers[qid], **kw)
+    if items is None:
+        state.problem(qid, (problem or 'unclear') + '.')
+    return items
+
+
+def _reds(tools, items):
+    return [{'tool': t, 'pattern': _pattern(items)} for t in tools]
+
+
+def _red_question(answers, state, qid, tools, bucket, text, none_text):
+    items = _list_question(answers, qid, state)
+    if items is None:
+        return
+    if items:
+        bucket.extend(_reds(tools, items))
+        state.rule(qid, text % _join(items))
+    else:
+        state.none(qid, none_text)
+
+
+def _tool_question(answers, state, qid, category, words):
+    items = _list_question(answers, qid, state, _tool_names)
+    if items is None:
+        return
+    if items:
+        for n, name in enumerate(items, 1):
+            state.add.append({'id': 'charter-%s-%d' % (category, n), 'category': category, 'tool': name})
+        state.rule(qid, 'a card for %s on calls to %s.' % (words, _join(items)))
+    else:
+        state.none(qid, 'you named no extra tools. The built-in rules for %s stay.' % words)
+
+
+def _compile_all(answers, state):
+    _red_question(answers, state, 'never_message', MESSAGE_TOOLS, state.deny,
+                  'a red card on any send, post or publish call that names %s.',
+                  'you named no one. Every send still shows a card.')
+    items = _list_question(answers, 'senders', state, _items, lower=True, allow_none=NO_LIMIT)
+    if items is not None:
+        bad = [i for i in items if re.search(r'\s', i)]
+        if bad:
+            state.problem('senders', 'an address or account has a space in it: %s.' % _join(bad))
+        elif items:
+            state.checks['senders'] = dict((i, True) for i in items)
+            state.rule('senders', 'sending is limited to %s. A send that names a different sender, or no '
+                                  'sender at all, shows a RED card.' % _join(items))
+        else:
+            state.none('senders', 'you set no limit. Every send still shows a card.')
+    _tool_question(answers, state, 'spend_tools', 'spend', 'spending')
+    _scrub_and_folders(answers, state)
+    _tool_question(answers, state, 'spin_tools', 'spin', 'starting jobs or agents')
+    _red_question(answers, state, 'deny_words', ACTION_TOOLS, state.deny,
+                  'a red card whenever %s appears in a send, post, payment, job, agent or terminal call.',
+                  'you named no words.')
+    _red_question(answers, state, 'never_undo', ACTION_TOOLS, state.irreversible,
+                  'a red card, marked as non-reversible, whenever %s appears in a send, post, payment, job, '
+                  'agent or terminal call.', 'you named nothing that cannot be undone.')
+
+
+def _scrub_and_folders(answers, state):
+    # scrub: the only way to remove a default rule is the exact words "turn off".
+    if 'scrub' not in answers:
+        state.problem('scrub', 'not answered. The built-in delete and move warning stays on.')
+    else:
+        word = _word(answers['scrub'])
+        if word == 'keep':
+            state.none('scrub', 'you kept the built-in delete and move warning.')
+        elif word in TURN_OFF:
+            state.policy['remove'] = ['scrub']
+            state.rule('scrub', 'the built-in delete and move warning is removed (you said "turn off").')
+        else:
+            state.problem('scrub', 'the answer must be exactly "keep" or "turn off". The warning stays on.')
+    # folders
+    folders = {}
+    for qid in ('workspace', 'output_dir'):
+        if qid not in answers:
+            state.problem(qid, 'not answered.')
+            continue
+        path, problem = _folder(answers[qid])
+        if path is None:
+            state.problem(qid, problem + '.')
+        else:
+            folders[qid] = path
+    named = dict((k, v) for k, v in folders.items() if v)
+    for qid in folders:
+        if not folders[qid]:
+            state.none(qid, 'you named no folder. Every delete and move shows a card.')
+    if not named:
+        state.none('skip_inside', 'not needed: no folder was named.')
+        return
+    answer = _word(answers['skip_inside']) if 'skip_inside' in answers else None
+    if 'skip_inside' not in answers:
+        state.problem('skip_inside', 'not answered, so the folder%s you named are not used. Every delete and '
+                                     'move still shows a card.' % ('s' if len(named) > 1 else ''))
+    elif answer in YES:
+        for qid, path in named.items():
+            state.policy[qid] = path
+            state.rule(qid, 'the folder is %s. Deletes and moves inside it skip the card; anything outside it '
+                            'still shows one.' % _q(path))
+        state.rule('skip_inside', 'you said yes: deletes and moves inside the named folder%s skip the warning card.'
+                   % ('s' if len(named) > 1 else ''))
+    elif answer in NO:
+        for qid, path in named.items():
+            state.lines[qid] = 'NONE: you named %s but said no to skipping the card inside it, so no folder is set.' % _q(path)
+        state.none('skip_inside', 'you said no. Every delete and move still shows a card.')
+    else:
+        state.problem('skip_inside', 'the answer must be "yes" or "no", so the folder%s you named are not used.'
+                      % ('s' if len(named) > 1 else ''))
+
+
+def _canonical(settings):
+    return json.dumps(settings, sort_keys=True, separators=(',', ':'), ensure_ascii=True)
+
+
+def fingerprint(settings):
+    return 'AXC-' + hashlib.sha256(_canonical(settings).encode('ascii')).hexdigest()[:12]
+
+
+def validate(settings):
+    """Run the block through the plugin's own validators. Returns a list of error strings."""
+    errors = []
+    try:
+        Policy(settings.get('policy', {}))
+        if Policy.lenient(settings.get('policy', {}))[1]:
+            errors.append('policy: lenient loader reported an error')
+    except Exception as exc:
+        errors.append('policy: %s' % exc)
+    try:
+        Checks(settings.get('checks', {}))
+        if Checks.lenient(settings.get('checks', {}))[1]:
+            errors.append('checks: lenient loader reported an error')
+    except Exception as exc:
+        errors.append('checks: %s' % exc)
+    return errors
+
+
+def _scalar(value):
+    return json.dumps(value, ensure_ascii=True)
+
+
+def _flow(rule):
+    return '{' + ', '.join('%s: %s' % (k, _scalar(v)) for k, v in rule.items()) + '}'
+
+
+def settings_yaml(settings, fp):
+    """The settings block as YAML, in the nesting the README's Operator settings shows."""
+    out = ['# Axiōma Charter settings, fingerprint %s' % fp,
+           '# Nothing has applied this file. Copy it by hand into the hermes-axioma settings.',
+           'plugins:', '  entries:', '    hermes-axioma:', '      settings:']
+    base = '        '
+    for block in ('policy', 'checks'):
+        body = settings[block]
+        if not body:
+            out.append('%s%s: {}' % (base, block))
+            continue
+        out.append('%s%s:' % (base, block))
+        for key, value in body.items():
+            if isinstance(value, dict):
+                out.append('%s  %s:' % (base, key))
+                out += ['%s    %s: %s' % (base, _scalar(k), 'true' if v else 'false') for k, v in value.items()]
+            elif isinstance(value, list):
+                out.append('%s  %s:' % (base, key))
+                out += ['%s    - %s' % (base, _flow(v) if isinstance(v, dict) else _scalar(v)) for v in value]
+            else:
+                out.append('%s  %s: %s' % (base, key, _scalar(value)))
+    return '\n'.join(out) + '\n'
+
+
+def _defaults_line(removed):
+    counts = {}
+    for rule in DEFAULTS:
+        counts[rule['category']] = counts.get(rule['category'], 0) + 1
+    text = 'Built-in rules that stay on: %d for sending, %d for spending, %d for starting jobs or agents' % (
+        counts.get('send', 0), counts.get('spend', 0), counts.get('spin', 0))
+    if removed:
+        return text + ' (listed in axioma/policy.py). The delete and move warning was turned off by your answer.'
+    return text + ' (listed in axioma/policy.py), and the delete and move warning.'
+
+
+def render_charter(state, settings, fp):
+    removed = 'scrub' in settings['policy'].get('remove', [])
+    lines = ['# Axiōma Charter', '',
+             'Fingerprint: %s (the same code is on charter-settings.yaml)' % fp, '',
+             'These are the rules the Axiōma card warns on. Axiōma advises: it does not block, approve '
+             'or run anything. Hermes\'s own approval prompt and you decide. Nothing on this page has '
+             'been applied to any setting.', '', '## Your answers']
+    for number, qid in enumerate(IDS, 1):
+        if qid in state.lines:
+            lines.append('%d. (%s) %s' % (number, qid, state.lines[qid]))
+    lines += ['', '## Still in force from the defaults', '- ' + _defaults_line(removed),
+              '- Every card is advice. A red card does not stop the call; you answer it in the Hermes prompt.']
+    if state.problems:
+        lines += ['', '## Open questions',
+                  'These answers were missing or unclear. They made no rule. Answer them and compile again.']
+        lines += ['- (%s) %s' % (p['question'], p['problem']) for p in state.problems]
+    lines += ['', '## Limits',
+              '- Words are matched as plain text in the call\'s arguments, ignoring capital letters. A different '
+              'spelling is not caught.',
+              '- Delete and move detection is best-effort shell reading. See the README.',
+              '', '## To use this',
+              'Copy the policy and checks blocks from charter-settings.yaml into the hermes-axioma settings by '
+              'hand and restart Hermes. The Axiōma Charter tool does not edit any config.']
+    return '\n'.join(lines) + '\n'
+
+
+def compile_charter(answers):
+    """answers (dict: question id -> answer) -> dict with settings, charter, settings_yaml, problems,
+    fingerprint. Deterministic: the same answers always give byte-identical text."""
+    state = _State()
+    if not isinstance(answers, dict):
+        state.problems.append({'question': 'answers', 'problem': 'the answers must be an object keyed by question id.'})
+        answers = {}
+    for key in sorted(k for k in answers if k not in IDS):
+        state.problems.append({'question': str(key)[:40], 'problem': 'not a question id; ignored.'})
+    _compile_all(answers, state)
+    policy = {}
+    for key in ('workspace', 'output_dir', 'remove'):
+        if key in state.policy:
+            policy[key] = state.policy[key]
+    if state.add:
+        policy['add'] = state.add
+    checks = {}
+    if state.deny:
+        checks['deny'] = state.deny
+    if state.irreversible:
+        checks['non_reversible'] = state.irreversible
+    if 'senders' in state.checks:
+        checks['senders'] = state.checks['senders']
+    settings = {'policy': policy, 'checks': checks}
+    errors = validate(settings)
+    if errors:
+        # Fail safe: an empty block is the plugin defaults, never a looser set.
+        settings = {'policy': {}, 'checks': {}}
+        for error in errors:
+            state.problems.append({'question': 'validation', 'problem': error + '. No rules were produced.'})
+        state.lines = dict((q, 'OPEN: no rule made. The compiled block failed the plugin\'s own validation.')
+                           for q in state.lines)
+    fp = fingerprint(settings)
+    return {'settings': settings, 'charter': render_charter(state, settings, fp),
+            'settings_yaml': settings_yaml(settings, fp), 'problems': state.problems,
+            'fingerprint': fp, 'complete': not state.problems}
+
+
+# -- files and tool -----------------------------------------------------------------------------
+def _write(path, text):
+    tmp = path.with_name(path.name + '.tmp')
+    fd = os.open(str(tmp), os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+    with os.fdopen(fd, 'w', encoding='utf-8') as handle:
+        handle.write(text)
+    os.replace(str(tmp), str(path))
+
+
+def write_charter(result, directory):
+    """Write CHARTER.md and charter-settings.yaml into `directory` (created owner-only). Nothing else."""
+    directory = Path(directory)
+    directory.mkdir(mode=0o700, parents=True, exist_ok=True)
+    _write(directory / CHARTER_FILE, result['charter'])
+    _write(directory / SETTINGS_FILE, result['settings_yaml'])
+    return [str(directory / CHARTER_FILE), str(directory / SETTINGS_FILE)]
+
+
+def read_charter(directory):
+    """(charter text, settings yaml) of the last compile, or None when there is none."""
+    try:
+        directory = Path(directory)
+        return ((directory / CHARTER_FILE).read_text(encoding='utf-8'),
+                (directory / SETTINGS_FILE).read_text(encoding='utf-8'))
+    except OSError:
+        return None
+
+
+NO_CHARTER = ('No charter has been compiled yet. Ask the agent to run the Axiōma Charter interview: it asks '
+              'the questions one at a time, reads your answers back, then compiles the page. Nothing is '
+              'applied to any setting.')
+
+SCHEMA = {
+    'name': 'axioma_charter',
+    'description': 'Axiōma Charter: a plain-English permission interview that compiles into a one-page '
+                   'charter and a matching settings block. Advice only: it applies nothing, edits no '
+                   'config and no profile. Actions: questions (the interview), compile (answers -> '
+                   'charter text, settings YAML and problems; writes CHARTER.md and '
+                   'charter-settings.yaml in the plugin data folder), show (the last compiled charter). '
+                   'Ask the questions ONE AT A TIME in plain English, no jargon, and pass the owner\'s own '
+                   'answers; leave an unanswered question out rather than guessing. Before compile, read '
+                   'all answers back in plain words and get the owner\'s yes (use preview: true to read '
+                   'the charter itself back without writing a file), then read the compiled charter and '
+                   'every problem back. Tell the owner nothing was applied and that they apply the '
+                   'settings by hand.',
+    'parameters': {'type': 'object', 'required': ['action'], 'additionalProperties': False, 'properties': {
+        'action': {'type': 'string', 'enum': ['questions', 'compile', 'show']},
+        'answers': {'type': 'object', 'description': 'Question id -> the owner\'s answer (compile only).'},
+        'preview': {'type': 'boolean', 'description': 'compile only: return the charter without writing files.'},
+    }},
+}
+
+
+def make_handler(directory_fn):
+    """Tool handler. `directory_fn()` names the one charter folder; the caller cannot choose a path."""
+    def handler(args, **kwargs):
+        def reply(**fields):
+            return json.dumps(dict(fields, applied=False, note=NOTHING_APPLIED), ensure_ascii=False)
+        try:
+            if not isinstance(args, dict) or set(args) - {'action', 'answers', 'preview'}:
+                return reply(error='expected {action, answers?, preview?}')
+            action = args.get('action')
+            if action == 'questions':
+                return reply(status='questions', intro=INTRO, questions=questions())
+            if action == 'compile':
+                result = compile_charter(args.get('answers'))
+                fields = dict(status='compiled', fingerprint=result['fingerprint'], complete=result['complete'],
+                              problems=result['problems'], charter=result['charter'],
+                              settings_yaml=result['settings_yaml'])
+                if args.get('preview') is True:
+                    return reply(files=[], **fields)
+                return reply(files=write_charter(result, directory_fn()), **fields)
+            if action == 'show':
+                found = read_charter(directory_fn())
+                if found is None:
+                    return reply(status='none', message=NO_CHARTER)
+                return reply(status='shown', charter=found[0], settings_yaml=found[1],
+                             files_match=_fingerprints(found[0]) == _fingerprints(found[1]) != [])
+            return reply(error='action must be questions, compile or show')
+        except Exception as exc:
+            return reply(error='charter failed: ' + str(exc)[:200])
+    return handler
+
+
+def _fingerprints(text):
+    return sorted(set(re.findall(r'AXC-[0-9a-f]{12}', text)))
+
+
+def command(directory_fn):
+    """The /charter slash command: print the last charter, or say how to start."""
+    def run(raw=''):
+        found = read_charter(directory_fn())
+        if found is None:
+            return NO_CHARTER
+        return found[0] + '\nNothing was applied. Settings: %s in the charter folder.' % SETTINGS_FILE
+    return run

@@ -467,7 +467,8 @@ class FingerprintFlow(unittest.TestCase):
                 self.hooks[key] = fn
 
             def register_tool(self, **kw):
-                self.tool = kw
+                if kw['name'] == 'axioma_card':
+                    self.tool = kw
 
             def register_command(self, key, fn, **kw):
                 self.commands[key] = fn

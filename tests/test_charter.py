@@ -1,0 +1,391 @@
+from fnmatch import fnmatchcase
+import hashlib
+import itertools
+import json
+import os
+from pathlib import Path
+import sys
+import tempfile
+import unittest
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+
+from axioma import charter  # noqa: E402
+from axioma.audit import Audit  # noqa: E402
+from axioma.advisor import Advisor  # noqa: E402
+from axioma.checks import Checks  # noqa: E402
+from axioma.policy import DEFAULTS, Policy  # noqa: E402
+
+EMPTY = {'policy': {}, 'checks': {}}
+PROBES = {
+    'policy.add': ('add', [{'id': 'p', 'category': 'spend', 'tool': 'buy_widgets'}]),
+    'policy.remove': ('remove', ['scrub']),
+    'policy.workspace': ('workspace', '/Users/example/projects/demo'),
+    'policy.output_dir': ('output_dir', '/Users/example/projects/demo/output'),
+    'checks.deny': ('deny', [{'tool': '*send*', 'pattern': 'x'}]),
+    'checks.non_reversible': ('non_reversible', [{'tool': '*send*', 'pattern': 'x'}]),
+    'checks.senders': ('senders', {'a@example.invalid': True}),
+}
+
+
+def full_answers(**changes):
+    answers = dict((q['id'], q['example']) for q in charter.QUESTIONS)
+    answers['skip_inside'] = 'yes'
+    answers.update(changes)
+    return answers
+
+
+def categories(settings, calls):
+    policy = Policy(settings['policy'])
+    return [policy.classify(tool, args) for tool, args in calls]
+
+
+CALLS = [
+    ('send_message', {'target': 'x'}), ('connectors__gmail__send_email', {}), ('post_tweet', {}),
+    ('mcp__stripe__create_payment', {}), ('mcp__stripe__create_refund', {}), ('cronjob', {'action': 'create'}),
+    ('delegate_task', {'tasks': [{}]}), ('kanban_create', {}), ('terminal', {'command': 'git push origin main'}),
+    ('terminal', {'command': 'netlify deploy --prod'}), ('terminal', {'command': 'rm -rf /tmp/anything'}),
+    ('terminal', {'command': 'rm notes.txt'}), ('terminal', {'command': 'mv /a/b /c/d'}),
+    ('terminal', {'command': 'rm /Users/example/projects/demo/old.txt'}),
+    ('read_file', {}), ('terminal', {'command': 'ls'}),
+]
+
+
+class QuestionTests(unittest.TestCase):
+    def test_plain_english_and_complete(self):
+        qs = charter.questions()
+        self.assertTrue(8 <= len(qs) <= 12)
+        self.assertEqual(len(set(q['id'] for q in qs)), len(qs))
+        for q in qs:
+            with self.subTest(q=q['id']):
+                for key in ('id', 'ask', 'shape', 'example', 'maps_to', 'ask_when'):
+                    self.assertTrue(q[key], key)
+                self.assertTrue(q['ask'].rstrip().endswith(('.', '?', '"')))
+                for jargon in ('regex', 'glob', 'yaml', 'json', 'fnmatch', 'category', 'rule id', 'sqlite'):
+                    self.assertNotIn(jargon, q['ask'].lower())
+
+    def test_every_question_maps_to_a_setting_the_plugin_reads(self):
+        for q in charter.QUESTIONS:
+            for target in q['maps_to']:
+                with self.subTest(q=q['id'], target=target):
+                    self.assertIn(target, PROBES, 'unverified setting')
+                    key, sample = PROBES[target]
+                    block, validator = target.split('.')[0], (Policy if target.startswith('policy.') else Checks)
+                    validator({key: sample})  # the plugin accepts this key...
+                    with self.assertRaises(ValueError):
+                        validator({'not_a_real_key': sample})  # ...and rejects an invented one
+
+    def test_every_mapped_setting_appears_in_the_example_compile(self):
+        settings = charter.compile_charter(full_answers(scrub='turn off'))['settings']
+        for q in charter.QUESTIONS:
+            for target in q['maps_to']:
+                block, key = target.split('.')
+                with self.subTest(target=target):
+                    self.assertIn(key, settings[block])
+
+    def test_action_tools_cover_every_default_tool_rule(self):
+        for rule in DEFAULTS:
+            if rule['tool'] != 'terminal':
+                with self.subTest(rule=rule['id']):
+                    self.assertTrue(any(fnmatchcase(rule['tool'], g) for g in charter.ACTION_TOOLS))
+
+
+class CompileTests(unittest.TestCase):
+    def test_full_example_is_accepted_by_the_plugin_validators(self):
+        result = charter.compile_charter(full_answers())
+        self.assertEqual(result['problems'], [])
+        self.assertTrue(result['complete'])
+        self.assertEqual(set(result['settings']), {'policy', 'checks'})
+        Policy(result['settings']['policy'])
+        Checks(result['settings']['checks'])
+        self.assertFalse(Policy.lenient(result['settings']['policy'])[1])
+        self.assertFalse(Checks.lenient(result['settings']['checks'])[1])
+        with tempfile.TemporaryDirectory() as tmp:
+            advisor = Advisor(result['settings']['policy'], Audit(Path(tmp) / 'a.sqlite3'),
+                              checks_config=result['settings']['checks'])
+            self.assertFalse(advisor.config_error, 'would turn every card RED with axioma_config: fail')
+
+    def test_compiled_rules_do_what_the_charter_says(self):
+        settings = charter.compile_charter(full_answers())['settings']
+        policy, checks = Policy(settings['policy']), Checks(settings['checks'])
+        self.assertEqual(policy.classify('buy_widgets', {}), ('spend',))
+        self.assertEqual(policy.classify('schedule_report', {}), ('spin',))
+        self.assertEqual(policy.classify('terminal', {'command': 'rm /Users/example/projects/demo/old.txt'}), ())
+        self.assertEqual(policy.classify('terminal', {'command': 'rm /Users/example/other/old.txt'}), ('scrub',))
+        self.assertTrue(checks.hard_red('send_message', {'target': 'JORDAN EXAMPLE'}))
+        self.assertTrue(checks.hard_red('connectors__gmail__send_email', {'to': 'legal@example.invalid'}))
+        self.assertTrue(checks.hard_red('terminal', {'command': 'deploy to prod-database'}))
+        self.assertTrue(checks.hard_red('mcp__x__create_payment', {'note': 'close-account'}))
+        self.assertFalse(checks.hard_red('read_file', {'path': 'prod-database'}), 'reads are not scoped in')
+        self.assertFalse(checks.hard_red('send_message', {'target': 'someone else'}))
+        card = {'intent': 'i', 'light': 'green', 'signal': 's', 'question': 'q?', 'affects': ['me']}
+        _, results = checks.apply('send_message', {'target': 't', 'sender': 'other@example.invalid'}, card, ('send',))
+        self.assertEqual([r for r in results if r['check'] == 'sender_rights'], [{'check': 'sender_rights', 'pass': False}])
+        _, results = checks.apply('send_message', {'sender': 'Assistant@Example.invalid'}, card, ('send',))
+        self.assertTrue(all(r['pass'] for r in results if r['check'] == 'sender_rights'))
+
+    def test_special_characters_in_a_word_still_match_literally(self):
+        settings = charter.compile_charter({'deny_words': ['a.b', 'say "hi"', 'back\\slash', '(x)']})['settings']
+        checks = Checks(settings['checks'])
+        for text in ('a.b', 'say "hi"', 'back\\slash', '(x)', 'A.B'):
+            self.assertTrue(checks.hard_red('terminal', {'command': text}), text)
+        self.assertFalse(checks.hard_red('terminal', {'command': 'aXb'}))
+
+    def test_bad_answers_make_no_rule_and_name_a_problem(self):
+        bad = {
+            'never_message': [None, 123, [], '', '   ', {}, 'x' * 121, ['a', 5], 'bad\x07', ['ok', ''], 7.5,
+                              ['n%d' % i for i in range(21)]],
+            'senders': [None, [], '', 'none', 'maybe me', ['two words@example.invalid'], 5, ['a\x00']],
+            'spend_tools': [None, [], '', 'rm -rf /', '*', '**', 'a b', ['ok_tool', 'bad tool'], 5, 'x'],
+            'spin_tools': [None, [], '', '*', '??', 'a;b', 7],
+            'scrub': [None, '', 'maybe', 'off please', 'remove it', 'no', 'yes', True, ['turn off'], 5],
+            'deny_words': [None, [], '', 7, {'a': 1}, ['x', None]],
+            'never_undo': [None, [], '', 7, ['\n']],
+        }
+        for qid, values in bad.items():
+            for value in values:
+                with self.subTest(qid=qid, value=value):
+                    result = charter.compile_charter({qid: value})
+                    self.assertEqual(result['settings'], EMPTY)
+                    self.assertIn(qid, [p['question'] for p in result['problems']])
+
+    def test_bad_folders_make_no_rule(self):
+        bad = [None, 5, '', 'relative/dir', '~/work', '/', '/work', '/Users', '/Users/example', '/home/example',
+               '/a/../b/c', '/x/y/\x07', ['/a/b/c']]
+        for qid in ('workspace', 'output_dir'):
+            for value in bad:
+                with self.subTest(qid=qid, value=value):
+                    result = charter.compile_charter({qid: value, 'skip_inside': 'yes'})
+                    self.assertEqual(result['settings'], EMPTY)
+                    self.assertIn(qid, [p['question'] for p in result['problems']])
+
+    def test_folder_needs_an_explicit_yes(self):
+        folder = {'workspace': '/Users/example/projects/demo'}
+        for value in (None, '', 'maybe', 'sure', 5, ['yes'], 'no', 'NO', False):
+            with self.subTest(skip_inside=value):
+                answers = dict(folder, skip_inside=value) if value is not None else dict(folder)
+                result = charter.compile_charter(answers)
+                self.assertNotIn('workspace', result['settings']['policy'])
+                if value in ('no', 'NO', False):
+                    self.assertNotIn('skip_inside', [p['question'] for p in result['problems']])
+                else:
+                    self.assertIn('skip_inside', [p['question'] for p in result['problems']])
+        for value in ('yes', 'YES', ' Yes ', True):
+            result = charter.compile_charter(dict(folder, skip_inside=value))
+            self.assertEqual(result['settings']['policy']['workspace'], folder['workspace'])
+
+    def test_missing_answers_are_problems_not_rules(self):
+        result = charter.compile_charter({})
+        self.assertEqual(result['settings'], EMPTY)
+        named = set(p['question'] for p in result['problems'])
+        self.assertEqual(named, set(charter.IDS) - {'skip_inside'})
+        self.assertFalse(result['complete'])
+        self.assertEqual(charter.compile_charter(None)['settings'], EMPTY)
+        self.assertEqual(charter.compile_charter('yes')['settings'], EMPTY)
+
+    def test_unknown_question_id_is_named_and_ignored(self):
+        result = charter.compile_charter(dict(full_answers(), remove=['scrub'], invented='x'))
+        self.assertEqual(sorted(p['question'] for p in result['problems']), ['invented', 'remove'])
+        self.assertNotIn('remove', result['settings']['policy'])
+
+    def test_a_partly_bad_set_keeps_only_the_good_answers(self):
+        result = charter.compile_charter(full_answers(spend_tools='*', senders='no limit'))
+        self.assertEqual([p['question'] for p in result['problems']], ['spend_tools'])
+        self.assertNotIn('senders', result['settings']['checks'])
+        self.assertEqual([r['id'] for r in result['settings']['policy']['add']], ['charter-spin-1'])
+
+    def test_none_answers_are_not_problems(self):
+        answers = {'never_message': 'none', 'senders': 'no limit', 'spend_tools': 'None', 'scrub': 'keep',
+                   'workspace': 'none', 'output_dir': 'none', 'spin_tools': ['none'], 'deny_words': 'nothing',
+                   'never_undo': 'none'}
+        result = charter.compile_charter(answers)
+        self.assertEqual(result['problems'], [])
+        self.assertEqual(result['settings'], EMPTY)
+
+    def test_senders_none_is_not_read_as_no_limit(self):
+        result = charter.compile_charter({'senders': 'none'})
+        self.assertIn('senders', [p['question'] for p in result['problems']])
+
+    def test_no_answer_set_drops_a_default_rule_without_an_explicit_answer(self):
+        junk = [None, '', 'maybe', 'no', 'yes', 'off', 'remove', 5, True, False, [], ['turn off'], 'turn offf',
+                'keep', 'none', '/Users/example/projects/demo', ['a_tool'], 'x@example.invalid']
+        explicit_removal = ('turn off', 'turn-off', 'turn_off', 'turnoff')
+        for scrub, skip, folder in itertools.product(junk + ['turn off'], junk + ['yes'], junk):
+            other = 'maybe'
+            answers = {'scrub': scrub, 'skip_inside': skip, 'workspace': folder, 'output_dir': folder,
+                       'spend_tools': other, 'spin_tools': other, 'never_message': other, 'senders': other,
+                       'deny_words': other, 'never_undo': other}
+            result = charter.compile_charter(answers)
+            policy = result['settings']['policy']
+            said_turn_off = isinstance(scrub, str) and ' '.join(scrub.lower().split()) in explicit_removal
+            if said_turn_off:
+                self.assertEqual(policy['remove'], ['scrub'])
+            else:
+                self.assertNotIn('remove', policy, answers)
+            said_yes = isinstance(skip, (str, bool)) and str(skip).strip().lower() in ('yes', 'true')
+            if not said_yes:
+                self.assertFalse(set(policy) & {'workspace', 'output_dir'}, answers)
+            if not said_turn_off and not set(policy) & {'workspace', 'output_dir'}:
+                # Without those two answers the compiled policy classifies at least what the default does.
+                for default, compiled in zip(categories(EMPTY, CALLS), categories(result['settings'], CALLS)):
+                    self.assertTrue(set(default) <= set(compiled), answers)
+
+    def test_only_the_scrub_answer_ever_changes_remove_and_it_removes_only_scrub(self):
+        policy = charter.compile_charter(full_answers(scrub='turn off'))['settings']['policy']
+        self.assertEqual(policy['remove'], ['scrub'])
+        self.assertEqual(Policy(policy).classify('terminal', {'command': 'rm -rf /tmp/x'}), ())
+        self.assertEqual(Policy(policy).classify('send_message', {}), ('send',))
+
+    def test_deterministic_and_fingerprinted(self):
+        a = charter.compile_charter(full_answers())
+        shuffled = dict(reversed(list(full_answers().items())))
+        b = charter.compile_charter(shuffled)
+        self.assertEqual(a, b)
+        self.assertEqual(json.dumps(a, sort_keys=True), json.dumps(b, sort_keys=True))
+        digest = hashlib.sha256(json.dumps(a['settings'], sort_keys=True, separators=(',', ':'),
+                                           ensure_ascii=True).encode()).hexdigest()[:12]
+        self.assertEqual(a['fingerprint'], 'AXC-' + digest)
+        self.assertIn(a['fingerprint'], a['charter'])
+        self.assertIn(a['fingerprint'], a['settings_yaml'])
+        c = charter.compile_charter(full_answers(deny_words=['something_else']))
+        self.assertNotEqual(a['fingerprint'], c['fingerprint'])
+
+    def test_charter_is_honest_and_one_page(self):
+        text = charter.compile_charter(full_answers())['charter']
+        low = text.lower()
+        for word in ('enforce', 'blocked', 'guarantee', 'prevents'):
+            self.assertNotIn(word, low)
+        self.assertIn('rules the axiōma card warns on', low)
+        self.assertIn('nothing on this page has been applied', low)
+        self.assertLessEqual(len(text.splitlines()), 60)
+        for number, qid in enumerate(charter.IDS, 1):
+            self.assertIn('%d. (%s)' % (number, qid), text, 'every answer has a traceable line')
+
+    def test_yaml_matches_settings_when_a_yaml_reader_is_present(self):
+        try:
+            import yaml
+        except ImportError:
+            self.skipTest('PyYAML not installed')
+        for answers in (full_answers(), full_answers(scrub='turn off', deny_words=['ü "q"', 'a: b']), {}):
+            result = charter.compile_charter(answers)
+            loaded = yaml.safe_load(result['settings_yaml'])
+            self.assertEqual(loaded['plugins']['entries']['hermes-axioma']['settings'], result['settings'])
+
+
+class ToolTests(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.home = Path(self.tmp.name)
+        self.dir = self.home / 'plugin-data' / 'charter'
+        self.call = charter.make_handler(lambda: self.dir)
+
+    def run_tool(self, **args):
+        return json.loads(self.call(args))
+
+    def assertNothingApplied(self, out):
+        self.assertIs(out['applied'], False)
+        self.assertIn('Nothing was applied', out['note'])
+        self.assertIn('by hand', out['note'])
+        self.assertIn('no config.yaml', out['note'])
+
+    def test_questions_action(self):
+        out = self.run_tool(action='questions')
+        self.assertEqual([q['id'] for q in out['questions']], charter.IDS)
+        self.assertIn('one at a time', out['intro'])
+        self.assertNothingApplied(out)
+        self.assertFalse(self.dir.exists(), 'asking questions writes nothing')
+
+    def test_compile_writes_exactly_two_files_inside_the_charter_dir(self):
+        before = sorted(p for p in self.home.rglob('*'))
+        out = self.run_tool(action='compile', answers=full_answers())
+        self.assertNothingApplied(out)
+        self.assertEqual(out['status'], 'compiled')
+        self.assertEqual(out['problems'], [])
+        after = sorted(p for p in self.home.rglob('*') if p not in before)
+        self.assertEqual(sorted(p.name for p in self.dir.iterdir()), ['CHARTER.md', 'charter-settings.yaml'])
+        self.assertEqual(sorted(str(p) for p in after),
+                         sorted([str(self.home / 'plugin-data'), str(self.dir), str(self.dir / 'CHARTER.md'),
+                                 str(self.dir / 'charter-settings.yaml')]))
+        self.assertEqual(sorted(out['files']), sorted(str(p) for p in self.dir.iterdir()))
+        self.assertEqual((self.dir / 'CHARTER.md').read_text(encoding='utf-8'), out['charter'])
+        self.assertEqual((self.dir / 'charter-settings.yaml').read_text(encoding='utf-8'), out['settings_yaml'])
+        if os.name == 'posix':
+            self.assertEqual((self.dir / 'CHARTER.md').stat().st_mode & 0o777, 0o600)
+            self.assertEqual(self.dir.stat().st_mode & 0o777, 0o700)
+
+    def test_a_second_compile_replaces_the_files_and_leaves_no_temp_file(self):
+        self.run_tool(action='compile', answers=full_answers())
+        out = self.run_tool(action='compile', answers=full_answers(deny_words='something_else'))
+        self.assertEqual(sorted(p.name for p in self.dir.iterdir()), ['CHARTER.md', 'charter-settings.yaml'])
+        self.assertIn(out['fingerprint'], (self.dir / 'CHARTER.md').read_text(encoding='utf-8'))
+
+    def test_the_caller_cannot_pick_a_path(self):
+        for extra in ({'path': str(self.home / 'elsewhere')}, {'dir': '/'}, {'output': 'x'}):
+            out = self.run_tool(action='compile', answers=full_answers(), **extra)
+            self.assertIn('error', out)
+            self.assertNothingApplied(out)
+        self.assertFalse(self.dir.exists())
+
+    def test_preview_writes_nothing(self):
+        out = self.run_tool(action='compile', answers=full_answers(), preview=True)
+        self.assertEqual(out['files'], [])
+        self.assertIn('Axiōma Charter', out['charter'])
+        self.assertFalse(self.dir.exists())
+        self.assertNothingApplied(out)
+
+    def test_compile_with_problems_still_says_so_and_applies_nothing(self):
+        out = self.run_tool(action='compile', answers={'scrub': 'maybe'})
+        self.assertFalse(out['complete'])
+        self.assertIn('scrub', [p['question'] for p in out['problems']])
+        self.assertNothingApplied(out)
+
+    def test_show_and_the_slash_command(self):
+        command = charter.command(lambda: self.dir)
+        none = self.run_tool(action='show')
+        self.assertEqual(none['status'], 'none')
+        self.assertNothingApplied(none)
+        self.assertIn('interview', command(''))
+        self.assertIn('Nothing is applied', command(''))
+        compiled = self.run_tool(action='compile', answers=full_answers())
+        shown = self.run_tool(action='show')
+        self.assertEqual(shown['status'], 'shown')
+        self.assertEqual(shown['charter'], compiled['charter'])
+        self.assertTrue(shown['files_match'])
+        self.assertNothingApplied(shown)
+        self.assertIn(compiled['fingerprint'], command(''))
+        (self.dir / 'charter-settings.yaml').write_text(compiled['settings_yaml'].replace(
+            compiled['fingerprint'], 'AXC-000000000000'), encoding='utf-8')
+        self.assertFalse(self.run_tool(action='show')['files_match'])
+
+    def test_every_result_states_nothing_was_applied(self):
+        for args in ({'action': 'questions'}, {'action': 'compile', 'answers': {}}, {'action': 'compile'},
+                     {'action': 'show'}, {'action': 'apply'}, {}, {'action': 'compile', 'answers': 'x'}):
+            with self.subTest(args=args):
+                self.assertNothingApplied(self.run_tool(**args))
+        self.assertNothingApplied(json.loads(self.call('not a dict')))
+
+    def test_handler_never_raises_on_an_unwritable_dir(self):
+        blocked = self.home / 'file'
+        blocked.write_text('x')
+        call = charter.make_handler(lambda: blocked / 'charter')
+        out = json.loads(call({'action': 'compile', 'answers': full_answers()}))
+        self.assertIn('error', out)
+        self.assertNothingApplied(out)
+
+    def test_schema_tells_the_agent_how_to_run_the_interview(self):
+        text = charter.SCHEMA['description'].lower()
+        for needle in ('one at a time', 'plain english', 'read', 'before compile', 'nothing was applied', 'by hand'):
+            self.assertIn(needle, text)
+        self.assertEqual(charter.SCHEMA['parameters']['properties']['action']['enum'], ['questions', 'compile', 'show'])
+
+    def test_module_names_no_network_or_model_imports(self):
+        source = (ROOT / 'axioma' / 'charter.py').read_text(encoding='utf-8')
+        for needle in ('import socket', 'urllib', 'requests', 'http.client', 'subprocess', 'import yaml', 'get_config',
+                       'expanduser', 'Path.home'):
+            self.assertNotIn(needle, source)
+
+
+if __name__ == '__main__':
+    unittest.main()
