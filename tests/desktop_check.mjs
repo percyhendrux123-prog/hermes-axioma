@@ -8,7 +8,7 @@ const here = dirname(fileURLToPath(import.meta.url))
 let src = readFileSync(join(here, '..', 'desktop', 'plugin.js'), 'utf8')
 src = src.replace(/^import[\s\S]*?from '[^']+'\n/gm, '')
 src = src.replace('export default', 'const __plugin =')
-src += '\nreturn { __plugin, $state, $prefs, $light, onGatewayEvent, targetPose, easePose, sweep, running, createEngine, signal, readProof, THEMES, W, H, VERIFIED_MS }\n'
+src += '\nreturn { __plugin, $state, $prefs, $light, onGatewayEvent, targetPose, easePose, sweep, running, createEngine, overlayBox, signal, readProof, THEMES, W, H, VERIFIED_MS }\n'
 
 const atom = v => {
   let value = v
@@ -162,6 +162,14 @@ ctx.handler({ type: 'approval.request', payload: {} })
 check('live gateway events reach the state', api.$state.get().waiting === true)
 check('themes carry the same names as the terminal skins', api.THEMES.map(t => t.name).join() === 'axioma,axioma-day')
 check('no gateway call is made without a click', requests.length === 0)
+
+// overlay box: stays clear of the plugin's own pane
+const ob = api.overlayBox
+check('overlay: no pane, whole window', JSON.stringify(ob(1920, 1080, null)) === JSON.stringify({ left: 0, width: 1920, height: 1080 }))
+check('overlay: hidden pane (zero rect), whole window', ob(1920, 1080, { left: 0, width: 0, height: 0 }).width === 1920)
+check('overlay: pane on the right, stops at its left edge', JSON.stringify(ob(1920, 1080, { left: 1340, width: 340, height: 900 })) === JSON.stringify({ left: 0, width: 1340, height: 1080 }))
+check('overlay: pane on the left, starts at its right edge', JSON.stringify(ob(1920, 1080, { left: 0, width: 320, height: 900 })) === JSON.stringify({ left: 320, width: 1600, height: 1080 }))
+check('overlay: too little room left, whole window', ob(400, 800, { left: 100, width: 300, height: 700 }).width === 400)
 
 console.log(`\n${pass} passed, ${fail} failed`)
 process.exit(fail ? 1 : 0)

@@ -22,7 +22,9 @@
  *
  * The plugin owns one overlay canvas (data-caduceus). It reads gateway events
  * and theme colours. It reads nothing else from the app and changes nothing in
- * the app's own markup.
+ * the app's own markup. The overlay stops at the edge of the plugin's own side
+ * pane (measured from the pane's own element) so the drawing is not doubled
+ * behind it.
  */
 
 import {
@@ -353,6 +355,22 @@ const reducedMotion = () => typeof matchMedia === 'function' && matchMedia('(pre
 const seconds = () => (reducedMotion() ? 0 : performance.now() / 1000)
 
 // ---------------------------------------------------------------- the overlay
+/** The plugin's own pane element while it is mounted; null otherwise. */
+let paneEl = null
+
+/**
+ * Where the overlay sits: the whole window, minus the side the plugin's own
+ * pane occupies (and whatever lies beyond it). `pane` is the pane's rect or null.
+ */
+function overlayBox(vw, vh, pane) {
+  const full = { left: 0, width: vw, height: vh }
+  if (!pane || pane.width < 1 || pane.height < 1) return full
+  const onRight = pane.left + pane.width / 2 >= vw / 2
+  const left = onRight ? 0 : Math.min(vw, Math.max(0, pane.left + pane.width))
+  const right = onRight ? Math.min(vw, Math.max(0, pane.left)) : vw
+  return right - left < 160 ? full : { left, width: right - left, height: vh }
+}
+
 function mountOverlay(ctx) {
   const canvas = document.createElement('canvas')
   canvas.setAttribute('data-caduceus', 'overlay')
@@ -361,14 +379,22 @@ function mountOverlay(ctx) {
   document.body.appendChild(canvas)
   const painter = createPainter(canvas)
 
-  function resize() {
+  let box = ''
+  function resize(force) {
+    const b = overlayBox(window.innerWidth, window.innerHeight, paneEl ? paneEl.getBoundingClientRect() : null)
     const ratio = Math.min(2, window.devicePixelRatio || 1)
-    canvas.width = Math.max(1, Math.floor(window.innerWidth * ratio))
-    canvas.height = Math.max(1, Math.floor(window.innerHeight * ratio))
+    const key = `${b.left}:${b.width}:${b.height}:${ratio}`
+    if (key === box && force !== true) return false
+    box = key
+    canvas.style.left = `${b.left}px`
+    canvas.style.width = `${b.width}px`
+    canvas.width = Math.max(1, Math.floor(b.width * ratio))
+    canvas.height = Math.max(1, Math.floor(b.height * ratio))
     painter.readTheme()
+    return true
   }
-  resize()
-  ctx.addEventListener(window, 'resize', resize)
+  resize(true)
+  ctx.addEventListener(window, 'resize', () => resize(true))
 
   let tick = 0
   ctx.setInterval(() => {
@@ -376,9 +402,10 @@ function mountOverlay(ctx) {
     canvas.style.display = prefs.background ? 'block' : 'none'
     if (!prefs.background || document.hidden) return
     tick++
+    const moved = tick % 5 === 0 && resize() // the pane opened, closed or was dragged
     const s = $state.get()
     const lively = s.busy || s.waiting || running(s).length > 0 || Date.now() - Math.max(s.verifiedAt, s.failedAt) < VERIFIED_MS + 3000
-    if (!lively && tick % 4) return // at rest, a quarter of the frames is plenty
+    if (!lively && !moved && tick % 4) return // at rest, a quarter of the frames is plenty
     if (tick % 40 === 0) painter.readTheme()
     canvas.style.opacity = String(STRENGTH[prefs.strength] || STRENGTH.soft)
     painter.paint(seconds(), prefs.place)
@@ -469,7 +496,9 @@ function CaduceusPane() {
   useValue($light)
   const focused = useValue(host.state.focusedSessionId)
   const [, setNow] = useState(0)
+  const root = useRef(null)
   useEffect(() => { const timer = setInterval(() => setNow(n => n + 1), 1000); return () => clearInterval(timer) }, [])
+  useEffect(() => { const el = root.current; paneEl = el; return () => { if (paneEl === el) paneEl = null } }, [])
 
   const now = Date.now()
   const subs = Object.values(s.subs).sort((a, b) => a.startedAt - b.startedAt)
@@ -479,6 +508,7 @@ function CaduceusPane() {
   const proofLine = !proof ? 'no proof check yet' : `${proof.passed ? 'check passed' : 'check failed'} ${Math.max(0, Math.round((now - proof.at) / 1000))}s ago`
 
   return jsxs('div', {
+    ref: root,
     className: 'flex h-full min-h-0 flex-col text-sm',
     children: [
       jsx(PaneCanvas, {}),
