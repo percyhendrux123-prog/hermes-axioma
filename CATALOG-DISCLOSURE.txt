@@ -6,3 +6,6 @@ In completed replies that Axioma transforms, malformed tags in prose are removed
 
 Compatibility dependency — exact addition sentence for the catalog description's disclosure:
 Pasted-card verification optionally imports undocumented gateway.platforms.base_exec_approval text helpers and agent.i18n.t behind one compatibility function to recognize localized host framing, falling back to built-in English text if they are absent or change; it neither inspects approval state nor overrides approval.
+
+Desktop surface (0.4.0) — exact addition sentence for the catalog description's disclosure:
+The optional Desktop half registers a right-side pane, a status-bar item, two themes, three palette commands, a settings page and a non-interactive canvas behind the chat; it subscribes to all gateway events but uses only event types, worker id/goal/status/tool-count fields and the passed boolean of a standing_proof result, never message text; on a button press it calls session.steer, session.interrupt, subagent.steer or subagent.interrupt with the text the user typed; it keeps its on/off switches in local plugin storage and makes no network or model calls.

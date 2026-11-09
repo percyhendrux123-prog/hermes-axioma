@@ -1,6 +1,6 @@
 # hermes-axioma
 
-Inline signal color for Hermes Agent · MIT · v0.3.1
+Inline signal color for Hermes Agent · MIT · v0.4.0
 
 The agent writes its normal reply. Axioma colors only the few phrases inside it that deserve your
 attention before you act, and puts a word next to each one so the meaning never depends on color.
@@ -31,7 +31,7 @@ hermes plugins enable hermes-axioma
 ```
 
 The catalog installs a reviewed, exact commit, not this repository's latest branch tip. The 0.3.1
-fixes reach catalog installs only after the catalog pin is updated. Restart Hermes after enabling.
+fixes and the 0.4.0 Desktop half reach catalog installs only after the catalog pin is updated. Restart Hermes after enabling.
 Read [Limits](#limits-read-before-installing) and [Disclosures](#disclosures) before installing;
 local-checkout validation commands are under [Verification](#verification).
 
@@ -57,6 +57,37 @@ Color is never the only cue. Every marked phrase carries three things where the 
 - **`palette: none`** gives style and words only. `NO_COLOR` in the environment does the same in a
   terminal.
 - No emoji stand in for words anywhere.
+
+## Axiōma Desktop (0.4.0)
+
+The same plugin carries an optional Desktop half, `desktop/plugin.js`. It draws the state of the
+run as a living caduceus, in code, with no images and no network calls.
+
+| Part | What it shows |
+|---|---|
+| Staff | The main agent. Its row says working, idle or waiting on you. |
+| Serpents | Running workers. The pane lists one row per worker; the two drawn serpents come alive for the first and second. |
+| Amber | The agent is waiting on you (approval, clarify, sudo or secret request). |
+| Wings | Open green only when a `standing_proof` tool call returns `passed: true`; red when it returns `passed: false`. Without the Standing plugin they stay at rest. |
+
+![The pane during the built-in demo: one worker, two workers, waiting, working, proof passed](docs/media/desktop-live-demo.png)
+
+*Hermes Desktop v0.23.0, night theme, the built-in demo. The demo fires labelled fake events; it
+does no real work and every demo row says "demo".*
+
+The side pane can change course or stop the main turn and each running worker. Those buttons call
+the host's own `session.steer`, `session.interrupt`, `subagent.steer` and `subagent.interrupt`.
+Axiōma still approves nothing and blocks nothing.
+
+Each part comes off on its own in Settings → Axiōma Desktop: the background, the side pane, the
+status-bar readout. The two themes (`axioma`, `axioma-day`) are picked like any other theme. Palette
+commands: show or hide the caduceus, show or hide the side pane, run the 20-second demo. Use the
+pane switch to hide the pane; closing a plugin's only pane tab switches the whole Desktop plugin off
+(host behavior).
+
+Checked: `node tests/desktop_check.mjs` (37 checks on poses and registration, SDK stubbed) and the
+demo seen live in Desktop. Not yet observed: a real steer or stop sent from the pane, and real
+worker events from a delegated run.
 
 ## How it renders, per surface
 
@@ -330,6 +361,7 @@ python3 -m unittest discover -s tests -v
 hermes --run-module unittest discover -s /absolute/path/hermes-axioma/tests -v
 hermes plugins validate /absolute/path/hermes-axioma --install-deps
 hermes plugins doctor /absolute/path/hermes-axioma --ci
+node tests/desktop_check.mjs
 ```
 
 Outputs: [docs/evidence/](docs/evidence/).
@@ -353,6 +385,14 @@ required `SKILL.md` paths under configured external skill roots are checked for 
 configured external device-lock paths are probed with `lstat`. The policy resolves configured
 workspace/output roots and candidate remove/move paths, including symlinks, to check containment.
 These are path/metadata checks, not reads of skill, lock or candidate-file contents.
+The Desktop half (`desktop/plugin.js`, 0.4.0) registers one right-side pane, one status-bar item,
+two themes, three palette commands and a settings page, and mounts one non-interactive canvas
+behind the chat. It subscribes to all gateway events and uses only event types and these payload
+fields: worker id, goal, status, task index, tool count and tool name; approval, clarify, sudo and
+secret request/respond types; and the `passed` boolean of a `standing_proof` tool result. It reads
+no message text. On a button press it calls `session.steer`, `session.interrupt`, `subagent.steer`
+or `subagent.interrupt` with the text typed in the pane. It stores its switches in the plugin's own
+Desktop storage (`prefs`). No network, no model calls, no files.
 Tests use private loader wiring and `unittest.mock`; none of it ships. The validator reports cautions only:
 `destructive_root_rm` and `destructive_home_rm` (destructive-command strings in classification tests
 and in captured test and review output under `docs/`) and `invisible_unicode` (zero-width and
