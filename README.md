@@ -372,6 +372,17 @@ them). None is ever executed; the full list is in `docs/evidence/validate-v0.2-i
 - Everyone who reads an agent's words before acting on them, and especially those who cannot see
   the color.
 
+## Works with
+
+Axioma is one part of an operator layer for Hermes Agent, built by Deploy Axiom. Each plugin installs on its own and none requires another. Together they cover a working agent from first reply to finished task:
+
+- [Standing](https://github.com/percyhendrux123-prog/hermes-standing): earned trust. A worker's proven record sets what still needs your approval, and a task is not done until a check passes.
+- **Axioma** (this plugin): marks the few phrases in a reply that should change your decision, and shows an advisory card before a risky call.
+- [Tripwire](https://github.com/percyhendrux123-prog/hermes-tripwire): logs every refusal, so you know when an agent was told no.
+- [Handydandy](https://github.com/percyhendrux123-prog/hermes-handydandy): session-size notices and structured handoffs, so long sessions stop carrying the whole chat.
+- [Gatekeeper](https://github.com/percyhendrux123-prog/hermes-gatekeeper): owner-configured policy checks on recognized outbound messaging calls.
+- [Chiron](https://github.com/percyhendrux123-prog/hermes-chiron): reads your level per topic from your own words and adjusts how the agent talks to you.
+
 ## License
 
 Code: MIT ([LICENSE](LICENSE)). The markup follows the
