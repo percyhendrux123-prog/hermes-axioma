@@ -225,6 +225,8 @@ if (directive()) {
   check('inline: overlong signal capped', !text(tree).includes('x'.repeat(401)))
   for (const p of [props({ light: 'stop' }), { attrs: null, source: '<b>bad</b>' }, { ...props(attrs), source: '::axioma{signal="x" garbage question="?"}' }, { ...props(attrs), attrs: { ...attrs, question: {} } },
     { ...props(attrs), source: '::axioma{light="stop" liGht="go" signal="x" question="?"}' },
+    { ...props(attrs), source: source(attrs).slice(0, -1) + ' a\u00b5="x"}' },
+    { ...props(attrs), source: source(attrs).slice(0, -1) + '\u0085}' },
     props({ ...attrs, signal: '\u{1f642}'.repeat(1024) })]) {
     hooks = []; tree = render(p)
     check('inline: malformed/missing attrs render source plainly without actions', text(tree).includes(p.source) && buttons(tree).length === 0)
@@ -247,6 +249,8 @@ if (directive()) {
   host.composer.submit = submit
   hooks = []; tree = render({ ...props(attrs), sessionId: undefined })
   check('inline: pre-sessionId hosts fail closed, never use active chat', buttons(tree).every(n => n.props.disabled))
+  hooks = []; tree = render({ ...props(attrs), source: source(attrs).slice(0, -1) + '\ufeff}' })
+  check('inline: JavaScript BOM whitespace accepted consistently with audit', text(tree).includes('Axiōma advises, the person decides.') && buttons(tree).length === 2)
 }
 
 // Board cache: only the poll performs I/O; decorate is a synchronous immutable snapshot.
