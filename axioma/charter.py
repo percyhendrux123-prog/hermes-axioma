@@ -273,12 +273,17 @@ def _list_question(answers, qid, state, parser=_items, **kw):
 
 def _triggers(value):
     """_items, but a long unquoted item is a problem, not a rule that never fires. Length guard only."""
+    if isinstance(value, str) and '"' in value:
+        # Split on commas and line breaks OUTSIDE double quotes, so "New York, New York" stays whole.
+        if value.count('"') % 2:
+            return None, 'the answer has an unmatched double quote'
+        value = [p for p in (m.strip() for m in re.findall(r'(?:"[^"]*"|[^",\n])+', value)) if p]
     items, problem = _items(value)
     if not items:
         return items, problem
     out, long = [], []
     for item in items:
-        quoted = len(item) > 2 and item[0] == item[-1] == '"' and '"' not in item[1:-1]
+        quoted = len(item) >= 2 and item[0] == item[-1] == '"' and '"' not in item[1:-1]
         text = item[1:-1].strip() if quoted else item
         if not text:
             return None, 'an item is empty quotes'

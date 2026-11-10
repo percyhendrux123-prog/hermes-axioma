@@ -670,6 +670,23 @@ class ProseAnswerTests(unittest.TestCase):
         empty = charter.compile_charter({'never_undo': ['"  "']})
         self.assertTrue([p for p in empty['problems'] if p['question'] == 'never_undo'])
 
+    def test_quoted_text_with_a_comma_stays_whole_in_a_plain_answer(self):
+        from axioma.checks import Checks
+        for answer in ('"New York, New York"', 'Jordan Example, "New York, New York"', ['"New York, New York"']):
+            r = charter.compile_charter({'never_message': answer})
+            self.assertFalse([p for p in r['problems'] if p['question'] == 'never_message'], answer)
+            checks = Checks(r['settings']['checks'])
+            self.assertTrue(checks.hard_red('send_message', {'target': 'New York, New York'}), answer)
+            self.assertFalse(checks.hard_red('send_message', {'target': 'New York'}), answer)
+        both = Checks(charter.compile_charter({'never_message': 'Jordan Example, "New York, New York"'})['settings']['checks'])
+        self.assertTrue(both.hard_red('send_message', {'target': 'jordan example'}))
+
+    def test_unmatched_or_empty_quotes_are_a_problem_not_a_rule(self):
+        for answer in ('"New York, New York', 'a, "b', '""', ['""'], '"  "'):
+            r = charter.compile_charter({'deny_words': answer})
+            self.assertEqual(len([p for p in r['problems'] if p['question'] == 'deny_words']), 1, answer)
+            self.assertFalse(r['settings'].get('checks'), answer)
+
     def test_inner_quotes_are_not_an_exact_text_marker(self):
         r = charter.compile_charter({'deny_words': ['"a" and "b" one two three four five']})
         self.assertTrue([p for p in r['problems'] if p['question'] == 'deny_words'])

@@ -411,7 +411,8 @@ understand it, so a rule written as a description of a situation never fires. As
 over 6 words in the never-message, red-card or never-undone answers makes no rule and is listed under
 "Open questions". This is a length check only: a shorter description (such as "spending I did not
 approve") still compiles into a rule that never fires, and it is the interviewer's job to catch it.
-Exact text longer than 6 words is accepted when you put it in double quotes. Once a sender list exists, any send that does not name one of
+Exact text longer than 6 words is accepted when you put it in double quotes. Quoted text may contain a
+comma (`"New York, New York"` stays one item); an unmatched or empty pair of quotes makes no rule. Once a sender list exists, any send that does not name one of
 those senders shows a red card, including a send that names no sender. Reads and searches are not
 scanned for your red-card words. Delete and move detection is the best-effort shell reading described
 above.
