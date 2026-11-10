@@ -22,6 +22,9 @@ from .policy import DEFAULTS, Policy
 CHARTER_FILE = 'CHARTER.md'
 SETTINGS_FILE = 'charter-settings.yaml'
 MAX_ITEMS, MAX_LEN = 20, 120
+# A trigger is matched as exact text inside a call. A sentence that describes a situation never
+# appears there, so it is refused as a problem instead of becoming a rule that cannot fire.
+MAX_WORDS, MAX_NAME_WORDS = 4, 6
 
 NOTHING_APPLIED = (
     'Nothing was applied. This tool changes no setting, no config.yaml and no profile; `files` lists '
@@ -97,16 +100,21 @@ QUESTIONS = [
      'maps_to': ['policy.add']},
     {'id': 'deny_words',
      'ask': 'Are there words, provider names or targets (a website, a server, an account) that must '
-            'always turn the card red when they appear in what the agent is about to do? List them, '
-            'or say "none".',
-     'shape': 'A list of words or names (up to 20), or "none".',
+            'always turn the card red when they appear in what the agent is about to do? The card '
+            'looks for these exact words in the action, so give short words or names, not a '
+            'description of a situation. List them, or say "none".',
+     'shape': 'A list of short words or names, at most 4 words each (up to 20), or "none". A '
+              'sentence makes no rule.',
      'example': ['receive_only', 'prod-database'],
      'maps_to': ['checks.deny']},
     {'id': 'never_undo',
      'ask': 'Is there anything that could never be undone if the agent got it wrong, such as closing '
-            'an account, transferring a domain or erasing a backup? List the words that would show '
-            'up in that action, or say "none".',
-     'shape': 'A list of words or names (up to 20), or "none".',
+            'an account, transferring a domain or erasing a backup? The card looks for exact words '
+            'in the action and cannot judge a situation (for example whether a backup exists or a '
+            'spend was approved). List the short words that would show up in that action, or say '
+            '"none".',
+     'shape': 'A list of short words or names, at most 4 words each (up to 20), or "none". A '
+              'sentence makes no rule.',
      'example': ['transfer-domain', 'close-account'],
      'maps_to': ['checks.non_reversible']},
 ]
@@ -256,12 +264,24 @@ def _list_question(answers, qid, state, parser=_items, **kw):
     return items
 
 
+def _triggers(value, max_words=MAX_WORDS):
+    """_items, but an item that reads like a sentence is a problem, not a rule that never fires."""
+    items, problem = _items(value)
+    if items:
+        long = [i for i in items if len(i.split()) > max_words]
+        if long:
+            return None, ('%s reads like a sentence, not words that would appear in the action. The card '
+                          'matches exact text and cannot judge a situation; give short words or names '
+                          '(at most %d words each), or say "none"' % (_join(long[:3]), max_words))
+    return items, problem
+
+
 def _reds(tools, items):
     return [{'tool': t, 'pattern': _pattern(items)} for t in tools]
 
 
-def _red_question(answers, state, qid, tools, bucket, text, none_text):
-    items = _list_question(answers, qid, state)
+def _red_question(answers, state, qid, tools, bucket, text, none_text, max_words=MAX_WORDS):
+    items = _list_question(answers, qid, state, _triggers, max_words=max_words)
     if items is None:
         return
     if items:
@@ -286,7 +306,7 @@ def _tool_question(answers, state, qid, category, words):
 def _compile_all(answers, state):
     _red_question(answers, state, 'never_message', MESSAGE_TOOLS, state.deny,
                   'a red card on any send, post or publish call that names %s.',
-                  'you named no one. Every send still shows a card.')
+                  'you named no one. Every send still shows a card.', max_words=MAX_NAME_WORDS)
     items = _list_question(answers, 'senders', state, _items, lower=True, allow_none=NO_LIMIT)
     if items is not None:
         bad = [i for i in items if re.search(r'\s', i)]

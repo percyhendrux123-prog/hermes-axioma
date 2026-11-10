@@ -1,6 +1,6 @@
 # hermes-axioma
 
-Inline signal color for Hermes Agent · MIT · v0.5.0
+Inline signal color for Hermes Agent · MIT · v0.5.1
 
 The agent writes its normal reply. Axioma colors only the few phrases inside it that deserve your
 attention before you act, and puts a word next to each one so the meaning never depends on color.
@@ -406,7 +406,10 @@ checks:
 ```
 
 Limits: words are matched as plain text in the call's arguments, ignoring capital letters, so a
-different spelling is not caught. Once a sender list exists, any send that does not name one of
+different spelling is not caught. Because of that, the red-card and never-undone questions take short
+words or names only (at most 4 words each; 6 for a person you must never message). A sentence that
+describes a situation, such as "anything deleted without a backup", makes no rule and is listed under
+"Open questions": the card cannot judge whether a backup exists or a spend was approved. Once a sender list exists, any send that does not name one of
 those senders shows a red card, including a send that names no sender. Reads and searches are not
 scanned for your red-card words. Delete and move detection is the best-effort shell reading described
 above.

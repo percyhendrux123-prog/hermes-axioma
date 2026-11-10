@@ -619,5 +619,39 @@ class ReviewFindingTests(unittest.TestCase):
         self.assertEqual(len(self.run_tool(action='compile', answers=full_answers())['files']), 2)
 
 
+
+class ProseAnswerTests(unittest.TestCase):
+    """A sentence can never match a call's text, so it must be a named problem, not a dead rule."""
+    PROSE = ("once a message is sent to a human, that can't be undone. anything deleted completely "
+             "without a backup, fallback or rollback. any spending that was not approved.")
+
+    def test_prose_makes_no_rule_and_is_a_problem(self):
+        for qid, key in (('never_undo', 'non_reversible'), ('deny_words', 'deny')):
+            r = charter.compile_charter({qid: self.PROSE})
+            self.assertFalse(r['complete'])
+            mine = [p for p in r['problems'] if p['question'] == qid]
+            self.assertEqual(len(mine), 1)
+            self.assertIn('reads like a sentence', mine[0]['problem'])
+            self.assertFalse(r['settings'].get('checks', {}).get(key))
+            self.assertIn('OPEN: no rule made', r['charter'])
+
+    def test_one_long_item_refuses_the_whole_answer(self):
+        r = charter.compile_charter({'never_undo': ['close-account', 'anything deleted without a backup']})
+        self.assertFalse(r['settings'].get('checks', {}).get('non_reversible'))
+
+    def test_short_triggers_still_make_rules(self):
+        r = charter.compile_charter({'never_undo': 'rm -rf, close-account, drop table',
+                                     'deny_words': ['prod database east 2']})
+        self.assertFalse([p for p in r['problems'] if p['question'] in ('never_undo', 'deny_words')])
+        self.assertTrue(r['settings']['checks']['non_reversible'])
+        self.assertTrue(r['settings']['checks']['deny'])
+
+    def test_names_allow_six_words_not_seven(self):
+        ok = charter.compile_charter({'never_message': ['Dr. Jordan A. Example Jr. Esq.']})
+        self.assertFalse([p for p in ok['problems'] if p['question'] == 'never_message'])
+        bad = charter.compile_charter({'never_message': 'anyone who has not agreed to hear from me first'})
+        self.assertTrue([p for p in bad['problems'] if p['question'] == 'never_message'])
+
+
 if __name__ == '__main__':
     unittest.main()
