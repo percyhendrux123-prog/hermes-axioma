@@ -206,6 +206,19 @@ class ProducerTests(unittest.TestCase):
             signal.transform('::axioma{LIGHT=" stop " SIGNAL="No test." QUESTION="Run it?"}', platform='desktop')
             self.assertEqual(audit.board_lights()['t_11111111']['light'], 'stop')
 
+    def test_inline_audit_uses_javascript_attribute_and_whitespace_grammar(self):
+        from axioma.audit import Audit
+        from axioma.signal import Signal
+        base = '::axioma{light="stop" signal="No test." question="Run it?"'
+        with tempfile.TemporaryDirectory() as tmp, patch.dict('os.environ', {'HERMES_KANBAN_TASK': 't_11111111'}):
+            audit = Audit(Path(tmp) / 'audit.sqlite3')
+            signal = Signal(audit)
+            for text in (base + ' a\u00b5="x"}', base + '\u0085}', '\u0085' + base + '}'):
+                signal.transform(text, platform='desktop')
+                self.assertEqual(audit.board_lights(), {}, text)
+            signal.transform(base + '\ufeff}', platform='desktop')
+            self.assertEqual(audit.board_lights()['t_11111111']['count'], 1)
+
     def test_card_and_inline_signals_reach_task_projection_without_bodies(self):
         import json
         from axioma.audit import Audit
