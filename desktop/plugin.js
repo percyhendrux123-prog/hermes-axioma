@@ -28,7 +28,7 @@
  */
 
 import {
-  host, atom, useValue, THEMES_AREA, PALETTE_AREA, STATUSBAR_AREAS, Button, Input, Switch
+  host, atom, useValue, useTheme, THEMES_AREA, PALETTE_AREA, STATUSBAR_AREAS, Button, Input, Switch
 } from '@hermes/plugin-sdk'
 import { useEffect, useRef, useState } from 'react'
 import { jsx, jsxs } from 'react/jsx-runtime'
@@ -199,7 +199,7 @@ const DONE = new Set(['completed', 'complete', 'done', 'failed', 'error', 'cance
 const VERIFIED_MS = 9000
 
 const $state = atom({ busy: false, waiting: false, verifiedAt: 0, failedAt: 0, subs: {}, lastProof: null })
-const $prefs = atom({ background: true, pane: true, chip: true, strength: 'soft', place: 'center' })
+const $prefs = atom({ background: true, pane: true, chip: true, inline: true, board: true, strength: 'soft', place: 'center' })
 const STRENGTH = { faint: 0.07, soft: 0.13, strong: 0.24 }
 
 function patch(next) { $state.set({ ...$state.get(), ...next }) }
@@ -568,6 +568,88 @@ function Chip() {
   })
 }
 
+// ---------------------------------------------------------------- inline advice
+const UNSAFE_TEXT = /[\p{Cc}\p{Cf}\p{Cs}\u2028\u2029]/gu
+function plainText(value, cap) {
+  return typeof value === 'string' ? [...value.replace(UNSAFE_TEXT, '').replace(/\s+/g, ' ').trim()].slice(0, cap).join('') : ''
+}
+
+function inlineAttrs(props) {
+  const attrs = props?.attrs
+  if (!attrs || typeof attrs !== 'object' || Array.isArray(attrs) || typeof props.source !== 'string') return null
+  // The host parser is deliberately lenient. Refuse leftover syntax and duplicate keys ourselves.
+  const body = /^::axioma\{([^{}\n]{0,2048})\}$/.exec(props.source)?.[1]
+  if (body === undefined) return null
+  const pair = /\s*([a-z][\w-]{0,63})=(?:"([^"{}\n]*)"|'([^'{}\n]*)')/giy
+  const seen = new Set()
+  let at = 0
+  while (at < body.length && body.slice(at).trim()) {
+    pair.lastIndex = at
+    const match = pair.exec(body)
+    if (!match || seen.has(match[1].toLowerCase())) return null
+    seen.add(match[1].toLowerCase())
+    at = pair.lastIndex
+  }
+  const out = {}
+  for (const [key, cap] of Object.entries({ light: 16, signal: 400, question: 400, affects: 240, green: 400 })) {
+    if (attrs[key] !== undefined && typeof attrs[key] !== 'string') return null
+    out[key] = plainText(attrs[key], cap)
+  }
+  return out.light && out.signal && out.question ? out : null
+}
+
+function InlineCard(props) {
+  const clicked = useRef(false)
+  const live = useRef(props)
+  live.current = props
+  const [note, setNote] = useState('')
+  const { resolvedMode } = useTheme()
+  const attrs = inlineAttrs(props)
+  if (!attrs) return jsx('span', { style: { whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }, children: typeof props?.source === 'string' ? props.source : '' })
+  const palette = resolvedMode === 'light' ? DAY_SIGNAL : NIGHT_SIGNAL
+  const light = Object.hasOwn(palette, attrs.light) ? attrs.light : null
+  const color = light ? palette[light] : 'var(--ui-text-secondary)'
+  // Never fall back to the active composer: on older hosts without sessionId, manual reply is safer.
+  const owner = props.sessionId !== undefined && typeof props.sessionId === 'string' && props.sessionId.trim() ? props.sessionId : null
+  const canReply = !!owner && (typeof host.composer?.submit === 'function' || typeof host.composer?.insertText === 'function')
+  const disabled = !!props.streaming || clicked.current || !canReply
+  const answer = async reply => {
+    if (clicked.current || live.current?.streaming || !canReply) return
+    clicked.current = true
+    setNote('Answering…')
+    try {
+      if (typeof host.composer?.submit === 'function') {
+        const ok = await host.composer.submit(owner, reply)
+        setNote(ok ? 'Replied in this chat.' : 'Hermes did not accept the reply. Nothing was sent; reply manually in this chat.')
+      } else {
+        const ok = await host.composer.insertText(owner, reply)
+        setNote(ok ? 'Inserted into this chat’s draft. Review it and press Send.' : 'No composer accepted the draft. Reply manually in this chat.')
+      }
+    } catch {
+      setNote('Hermes did not confirm the reply. Check this chat before replying manually.')
+    }
+  }
+  return jsxs('section', {
+    'aria-label': 'Axiōma advice',
+    className: 'my-3 flex min-w-0 flex-col gap-2 rounded-lg border bg-(--ui-bg-primary) p-4 text-(--ui-text-primary)',
+    style: { borderColor: color, overflowWrap: 'anywhere' },
+    children: [
+      jsx('strong', { style: { color, textDecoration: light === 'stop' || light === 'caution' ? 'underline' : undefined, fontStyle: light === 'go' ? 'italic' : undefined }, children: light ? light.toUpperCase() : 'ADVICE' }),
+      jsx('p', { children: attrs.signal }),
+      jsx('p', { className: 'text-sm text-(--ui-text-secondary)', children: `Affects: ${attrs.affects || 'Not specified'}` }),
+      light === 'stop' && attrs.green ? jsx('p', { className: 'text-sm', children: `What turns it green: ${attrs.green}` }) : null,
+      jsx('p', { className: 'font-medium', children: attrs.question }),
+      jsx('p', { className: 'text-xs text-(--ui-text-secondary)', children: 'Axiōma advises, the person decides.' }),
+      light === 'go' ? jsx('p', { className: 'text-xs', children: 'Model advice, not permission or a verified approval.' }) : null,
+      jsxs('div', { className: 'flex flex-wrap gap-2', children: [
+        jsx(Button, { type: 'button', variant: 'secondary', disabled, onClick: () => answer('Hold.'), children: 'Hold' }),
+        jsx(Button, { type: 'button', variant: 'outline', disabled, onClick: () => answer('Go ahead.'), children: 'Go ahead' })
+      ] }),
+      jsx('p', { role: 'status', className: 'text-xs text-(--ui-text-secondary)', children: note || (!canReply ? 'Reply manually in this chat; this host cannot target its composer.' : 'These buttons reply in this chat; they do not answer a Hermes approval prompt.') })
+    ]
+  })
+}
+
 function SettingsPage({ save }) {
   const prefs = useValue($prefs)
   const set = next => save({ ...prefs, ...next })
@@ -582,6 +664,7 @@ function SettingsPage({ save }) {
       line('Caduceus behind the window', jsx(Switch, { checked: prefs.background, onCheckedChange: v => set({ background: !!v }) })),
       line('Side pane (state and course changes)', jsx(Switch, { checked: prefs.pane, onCheckedChange: v => set({ pane: !!v }) })),
       line('Status-bar readout', jsx(Switch, { checked: prefs.chip, onCheckedChange: v => set({ chip: !!v }) })),
+      line('Inline cards', jsx(Switch, { checked: prefs.inline, onCheckedChange: v => set({ inline: !!v }) })),
       line('Strength', choice('strength', ['faint', 'soft', 'strong'])),
       line('Position', choice('place', ['center', 'right']))
     ]
@@ -637,7 +720,8 @@ export default {
     // The pane and the readout come and go with their switches.
     const optional = {
       pane: () => ctx.register({ id: 'pane', area: 'panes', title: 'axiōma', data: { placement: 'right', width: '320px' }, render: () => jsx(CaduceusPane, {}) }),
-      chip: () => ctx.register({ id: 'chip', area: STATUSBAR_AREAS.right, order: 140, render: () => jsx(Chip, {}) })
+      chip: () => ctx.register({ id: 'chip', area: STATUSBAR_AREAS.right, order: 140, render: () => jsx(Chip, {}) }),
+      inline: () => ctx.register({ id: 'inline', area: 'transcript.directives', data: { name: 'axioma', render: InlineCard } })
     }
     const mounted = {}
     const sync = () => {
