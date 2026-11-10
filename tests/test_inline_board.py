@@ -150,6 +150,47 @@ class ApiTests(unittest.TestCase):
                 self.assertFalse((Path(tmp) / 'missing').exists())
 
 
+class ProducerTests(unittest.TestCase):
+    def test_card_and_inline_signals_reach_task_projection_without_bodies(self):
+        import json
+        from axioma.audit import Audit
+        from axioma.advisor import Advisor
+        from axioma.signal import Signal
+        from test_card import CARD
+        with tempfile.TemporaryDirectory() as tmp, patch.dict('os.environ', {'HERMES_KANBAN_TASK': 't_11111111'}):
+            audit = Audit(Path(tmp) / 'audit.sqlite3')
+            advisor = Advisor({}, audit)
+            card = dict(CARD, signal='<b>Run tests.</b>\u202e')
+            args = {'platform': 'telegram', 'message': 'PRIVATE MESSAGE BODY'}
+            advisor.submit({'tool': 'send_message', 'arguments': args, 'card': card}, session_id='s')
+            shown = advisor.before('send_message', args, session_id='s', tool_call_id='c')
+            row = audit.board_lights()['t_11111111']
+            self.assertEqual(row['signal'], 'Run tests.')
+            from test_fingerprint import code_of
+            self.assertIn('OK so far:', advisor.command('verify ' + code_of(shown['message'])))
+            signal = Signal(audit)
+            signal.transform('[signal:caution]Check the audience.[/signal]', platform='cli')
+            self.assertEqual(audit.board_lights()['t_11111111']['signal'], 'Check the audience.')
+            directive = '::axioma{light="stop" signal="No eval yet." question="Run it?" affects="The team"}'
+            self.assertIsNone(signal.transform(directive, platform='desktop'))  # preserve source for host
+            self.assertEqual(audit.board_lights()['t_11111111']['signal'], 'No eval yet.')
+            count = audit.board_lights()['t_11111111']['count']
+            signal.transform('```text\n' + directive + '\n```', platform='desktop')
+            signal.transform(directive, platform='telegram')
+            signal.transform('::axioma{signal="broken"}', platform='desktop')
+            self.assertEqual(audit.board_lights()['t_11111111']['count'], count)
+            self.assertNotIn('PRIVATE MESSAGE BODY', json.dumps(audit.rows()))
+
+    def test_non_task_runs_keep_previous_no_text_audit(self):
+        import json
+        from axioma.audit import Audit
+        from axioma.signal import Signal
+        with tempfile.TemporaryDirectory() as tmp, patch.dict('os.environ', {'HERMES_KANBAN_TASK': ''}):
+            audit = Audit(Path(tmp) / 'audit.sqlite3')
+            Signal(audit).transform('[signal:stop]PRIVATE PHRASE[/signal]', platform='cli')
+            self.assertNotIn('PRIVATE PHRASE', json.dumps(audit.rows()))
+
+
 class GuidanceTests(unittest.TestCase):
     def test_inline_instruction_only_on_desktop_and_rechecked_each_turn(self):
         module, ctx = entrypoint(), Context()
