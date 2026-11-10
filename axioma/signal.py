@@ -56,6 +56,11 @@ MARKDOWN = {'telegram', 'discord', 'slack', 'matrix', 'mattermost', 'api_server'
             'hermes_browser', 'browser', 'acp', 'webui', 'feishu', 'dingtalk', 'wecom'}
 
 DEFAULT_BUDGET = {'max_spans': 3, 'max_whispers': 2, 'max_span_words': 16}
+# JavaScript's \s and ASCII \w, not Python's broader Unicode classes: the host parser owns syntax.
+JS_WHITESPACE = '\t\n\v\f\r \u00a0\u1680\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2007\u2008\u2009\u200a\u2028\u2029\u202f\u205f\u3000\ufeff'
+INLINE_DIRECTIVE = re.compile(r'(?<![^' + JS_WHITESPACE + r'])::axioma\{([^{}\n]*)\}')
+INLINE_PAIR = re.compile('[' + JS_WHITESPACE + r''']*([a-z][a-z0-9_-]{0,63})=(?:"([^"{}\n]*)"|'([^'{}\n]*)')''',
+                         re.IGNORECASE | re.ASCII)
 TOKEN = re.compile(r'^[A-Za-z0-9_.\-]{1,64}$')
 # A tag: an opening [kind:value...], or a closing [/kind]. A valueless opener ([signal],
 # [signal:]) is a tag only when a closer of the same kind follows on its line; otherwise it is a
@@ -582,8 +587,7 @@ class Signal:
         if not current_task() or '::axioma{' not in text:
             return
         in_code = self.in_code(text)
-        pair = re.compile(r'''\s*([a-z][\w-]{0,63})=(?:"([^"{}\n]*)"|'([^'{}\n]*)')''', re.IGNORECASE)
-        for m in re.finditer(r'(?<!\S)::axioma\{([^{}\n]{0,2048})\}', text):
+        for m in INLINE_DIRECTIVE.finditer(text):
             if in_code(m.start()):
                 continue
             attrs, pos = {}, 0
@@ -591,12 +595,12 @@ class Signal:
             if len(body.encode('utf-16-le', errors='surrogatepass')) > 4096:
                 continue  # the host's 2048 limit counts UTF-16 code units, not Python characters
             while pos < len(body):
-                p = pair.match(body, pos)
+                p = INLINE_PAIR.match(body, pos)
                 if p is None or p.group(1).lower() in attrs:
                     break
                 attrs[p.group(1).lower()] = p.group(2) if p.group(2) is not None else p.group(3)
                 pos = p.end()
-            if body[pos:].strip() or not {'light', 'signal', 'question'} <= attrs.keys():
+            if body[pos:].strip(JS_WHITESPACE) or not {'light', 'signal', 'question'} <= attrs.keys():
                 continue
             for key, cap in (('light', 16), ('signal', 400), ('question', 400)):
                 value = ''.join(c for c in attrs[key] if unicodedata.category(c) not in ('Cc', 'Cf', 'Cs', 'Zl', 'Zp'))
@@ -623,7 +627,7 @@ class Signal:
                 token = 'AXIOMADIRECTIVE' + uuid.uuid4().hex
                 protected[token] = match.group(0)
                 return token
-            masked = re.sub(r'(?<!\S)::axioma\{[^{}\n]*\}', hide, response_text)
+            masked = INLINE_DIRECTIVE.sub(hide, response_text)
         else:
             masked = response_text
         out = self._transform_spans(masked, session_id, platform, turn_id, protected=protected)
