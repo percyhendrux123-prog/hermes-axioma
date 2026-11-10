@@ -300,6 +300,21 @@ class FingerprintFlow(unittest.TestCase):
                                                            session_id='s', platform=surface)
                     self.assertTrue(out is None or line in out, out)
 
+    def test_task_worker_signal_cut_at_a_space_still_verifies(self):
+        """A342 review (A343): a signal cut at 160 chars that ends on a space was sealed with the
+        space, then stored without it, so verify reported a change that never happened."""
+        from axioma.audit import plain_signal
+        long_signal = 'x' * 159 + ' more words'
+        once = plain_signal(long_signal)
+        self.assertEqual(plain_signal(once), once, 'plain_signal must be idempotent')
+        self.assertFalse(once.endswith(' '))
+        with patch.dict('os.environ', {'HERMES_KANBAN_TASK': 't_synthetic'}):
+            a = self.advisor('telegram')
+            msg = self.shown(a, card={**CARD, 'signal': long_signal})
+            report = a.command('verify ' + code_of(msg))
+        self.assertNotIn('MISMATCH', report)
+        self.assertTrue(report.splitlines()[-1].startswith('OK:'), report)
+
     @patch.dict('os.environ', {'HERMES_KANBAN_TASK': ''})  # non-task no-text contract
     def test_log_round_trip_staged_shown_answered(self):
         a = self.advisor('telegram')

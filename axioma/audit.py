@@ -32,7 +32,9 @@ def plain_signal(value):
         return ''
     text = re.sub(r'<[^>]*>', '', value[:4096])
     text = ''.join(c for c in text if unicodedata.category(c) not in ('Cc', 'Cf', 'Cs', 'Zl', 'Zp'))
-    return ' '.join(text.split())[:160]
+    # Trim after the cut so the result is a fixed point: the advisor seals this value and
+    # Audit.record normalizes it again; both must store the same text or the seal breaks.
+    return ' '.join(text.split())[:160].rstrip()
 
 
 def _owner_only(path, mode):
