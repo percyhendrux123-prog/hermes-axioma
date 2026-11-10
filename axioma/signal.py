@@ -24,7 +24,8 @@ import json
 import re
 import threading
 import uuid
-from .audit import current_task, plain_signal
+import unicodedata
+from .audit import current_task
 
 LEVELS = ('stop', 'caution', 'go', 'intent')
 ALIASES = {'red': 'stop', 'yellow': 'caution', 'green': 'go', 'white': 'intent'}
@@ -581,23 +582,28 @@ class Signal:
         if not current_task() or '::axioma{' not in text:
             return
         in_code = self.in_code(text)
-        pair = re.compile(r'''\s*([a-z][\w-]{0,63})=(?:"([^"{}\n]*)"|'([^'{}\n]*)')''')
+        pair = re.compile(r'''\s*([a-z][\w-]{0,63})=(?:"([^"{}\n]*)"|'([^'{}\n]*)')''', re.IGNORECASE)
         for m in re.finditer(r'(?<!\S)::axioma\{([^{}\n]{0,2048})\}', text):
             if in_code(m.start()):
                 continue
             attrs, pos = {}, 0
             body = m.group(1)
+            if len(body.encode('utf-16-le', errors='surrogatepass')) > 4096:
+                continue  # the host's 2048 limit counts UTF-16 code units, not Python characters
             while pos < len(body):
                 p = pair.match(body, pos)
-                if p is None or p.group(1) in attrs:
+                if p is None or p.group(1).lower() in attrs:
                     break
-                attrs[p.group(1)] = p.group(2) if p.group(2) is not None else p.group(3)
+                attrs[p.group(1).lower()] = p.group(2) if p.group(2) is not None else p.group(3)
                 pos = p.end()
             if body[pos:].strip() or not {'light', 'signal', 'question'} <= attrs.keys():
                 continue
+            for key, cap in (('light', 16), ('signal', 400), ('question', 400)):
+                value = ''.join(c for c in attrs[key] if unicodedata.category(c) not in ('Cc', 'Cf', 'Cs', 'Zl', 'Zp'))
+                attrs[key] = ' '.join(value.split())[:cap]
             if attrs['light'] not in ('stop', 'caution', 'go', 'whisper'):
                 continue
-            if not plain_signal(attrs['signal']) or not plain_signal(attrs['question']):
+            if not attrs['signal'] or not attrs['question']:
                 continue
             try:
                 self.audit.record(event='signal', level=attrs['light'], shown=True, surface='desktop',
@@ -608,8 +614,26 @@ class Signal:
     def transform(self, response_text, session_id='', platform='', turn_id='', **kwargs):
         if not isinstance(response_text, str):
             return None
+        protected = {}
         if isinstance(platform, str) and platform.strip().lower() == 'desktop':
             self.log_inline(response_text)
+            # Directive attrs are data: legacy tags inside them must remain literal, not become
+            # KaTeX braces (which would destroy the host's directive) or extra audit observations.
+            def hide(match):
+                token = 'AXIOMADIRECTIVE' + uuid.uuid4().hex
+                protected[token] = match.group(0)
+                return token
+            masked = re.sub(r'(?<!\S)::axioma\{[^{}\n]*\}', hide, response_text)
+        else:
+            masked = response_text
+        out = self._transform_spans(masked, session_id, platform, turn_id, protected=protected)
+        if out is None:
+            return None
+        for token, source in protected.items():
+            out = out.replace(token, source)
+        return out if out != response_text else None
+
+    def _transform_spans(self, response_text, session_id='', platform='', turn_id='', protected=()):
         # Bring tags hidden by invisible characters into view, and drop a keyword cut off at the end.
         text = self.prepare(response_text)
         if not (self.prose_has_tags(text) or self.cut_off(response_text)
@@ -624,6 +648,10 @@ class Signal:
         else:
             skip_code = True
         spans = [p for p in pieces if isinstance(p, Span)]
+        for span in spans:
+            if any(token in span.text for token in protected):
+                span.drop, span.show = 'directive_data', False
+        spans = [s for s in spans if s.drop != 'directive_data']
         self.decide(spans, session_id, turn_id)
         scope = hashlib.sha256(str(session_id).encode()).hexdigest()
         try:
