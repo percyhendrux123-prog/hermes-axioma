@@ -631,26 +631,58 @@ class ProseAnswerTests(unittest.TestCase):
             self.assertFalse(r['complete'])
             mine = [p for p in r['problems'] if p['question'] == qid]
             self.assertEqual(len(mine), 1)
-            self.assertIn('reads like a sentence', mine[0]['problem'])
+            self.assertIn('reads like a description', mine[0]['problem'])
             self.assertFalse(r['settings'].get('checks', {}).get(key))
             self.assertIn('OPEN: no rule made', r['charter'])
 
     def test_one_long_item_refuses_the_whole_answer(self):
-        r = charter.compile_charter({'never_undo': ['close-account', 'anything deleted without a backup']})
+        r = charter.compile_charter({'never_undo': ['close-account', 'anything deleted completely without a backup or rollback']})
         self.assertFalse(r['settings'].get('checks', {}).get('non_reversible'))
 
     def test_short_triggers_still_make_rules(self):
         r = charter.compile_charter({'never_undo': 'rm -rf, close-account, drop table',
-                                     'deny_words': ['prod database east 2']})
+                                     'deny_words': ['Bank of New York Mellon']})
         self.assertFalse([p for p in r['problems'] if p['question'] in ('never_undo', 'deny_words')])
         self.assertTrue(r['settings']['checks']['non_reversible'])
-        self.assertTrue(r['settings']['checks']['deny'])
+        self.assertTrue(self.fires(r, 'deny', 'buy shares at bank of new york mellon'))
 
-    def test_names_allow_six_words_not_seven(self):
-        ok = charter.compile_charter({'never_message': ['Dr. Jordan A. Example Jr. Esq.']})
-        self.assertFalse([p for p in ok['problems'] if p['question'] == 'never_message'])
-        bad = charter.compile_charter({'never_message': 'anyone who has not agreed to hear from me first'})
-        self.assertTrue([p for p in bad['problems'] if p['question'] == 'never_message'])
+    @staticmethod
+    def fires(result, key, text):
+        import json as _json
+        import re as _re
+        rules = result['settings']['checks'][key]
+        return all(_re.search(rule['pattern'], _json.dumps({'note': text})) for rule in rules)
+
+    def test_six_words_pass_seven_are_refused(self):
+        for qid in ('never_message', 'deny_words', 'never_undo'):
+            ok = charter.compile_charter({qid: ['one two three four five six']})
+            self.assertFalse([p for p in ok['problems'] if p['question'] == qid], qid)
+            bad = charter.compile_charter({qid: ['one two three four five six seven']})
+            self.assertEqual(len([p for p in bad['problems'] if p['question'] == qid]), 1, qid)
+            self.assertFalse(bad['settings'].get('checks'), qid)
+
+    def test_quoted_exact_text_skips_the_guard_and_matches(self):
+        text = 'delete every backup older than seven days now'
+        r = charter.compile_charter({'never_undo': ['"%s"' % text]})
+        self.assertFalse(r['problems'] and [p for p in r['problems'] if p['question'] == 'never_undo'])
+        self.assertTrue(self.fires(r, 'non_reversible', 'run: ' + text.upper()))
+        self.assertNotIn('\\"', r['settings']['checks']['non_reversible'][0]['pattern'])
+        empty = charter.compile_charter({'never_undo': ['"  "']})
+        self.assertTrue([p for p in empty['problems'] if p['question'] == 'never_undo'])
+
+    def test_inner_quotes_are_not_an_exact_text_marker(self):
+        r = charter.compile_charter({'deny_words': ['"a" and "b" one two three four five']})
+        self.assertTrue([p for p in r['problems'] if p['question'] == 'deny_words'])
+
+    def test_short_description_still_compiles_and_the_page_says_so(self):
+        """Known limit, kept honest: the guard is length only."""
+        for answer in ('spending without my approval',
+                       'never send messages, never erase backups, never spend unapproved money'):
+            r = charter.compile_charter({'never_undo': answer})
+            self.assertFalse([p for p in r['problems'] if p['question'] == 'never_undo'])
+            self.assertIn('it does not understand it', r['charter'])
+            self.assertIn('shorter ones are not checked', r['charter'])
+        self.assertIn('ask again', charter.INTRO)
 
 
 if __name__ == '__main__':

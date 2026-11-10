@@ -22,9 +22,12 @@ from .policy import DEFAULTS, Policy
 CHARTER_FILE = 'CHARTER.md'
 SETTINGS_FILE = 'charter-settings.yaml'
 MAX_ITEMS, MAX_LEN = 20, 120
-# A trigger is matched as exact text inside a call. A sentence that describes a situation never
-# appears there, so it is refused as a problem instead of becoming a rule that cannot fire.
-MAX_WORDS, MAX_NAME_WORDS = 4, 6
+# A trigger is matched as exact text inside a call. A long description of a situation never appears
+# there, so an item over MAX_WORDS words is refused as a problem instead of becoming a rule that
+# cannot fire. This is a LENGTH guard, not prose detection: a short description still makes a rule
+# (the charter's Limits say so, and the interviewer is told to catch it). An item the owner wraps in
+# double quotes is exact text they vouch for and skips the guard.
+MAX_WORDS = 6
 
 NOTHING_APPLIED = (
     'Nothing was applied. This tool changes no setting, no config.yaml and no profile; `files` lists '
@@ -45,7 +48,11 @@ INTRO = ('Axiōma shows a card before the agent sends, spends, starts something 
          'blocks and never allows: there is no list of people the agent may message without a card. '
          'These questions only tell the card what to warn about. Ask them one at a time, in plain '
          'English, and use the owner\'s own words as the answer. If the owner has not answered, '
-         'leave that answer out; do not guess.')
+         'leave that answer out; do not guess. For the never-message, red-card and never-undone '
+         'questions the card only looks for the exact text given; it does not understand it. If an '
+         'answer describes a situation (such as "spending I did not approve") and is not text that '
+         'would appear in the action, say that it cannot be matched and ask again; the tool only '
+         'catches items over 6 words.')
 
 QUESTIONS = [
     {'id': 'never_message',
@@ -103,8 +110,8 @@ QUESTIONS = [
             'always turn the card red when they appear in what the agent is about to do? The card '
             'looks for these exact words in the action, so give short words or names, not a '
             'description of a situation. List them, or say "none".',
-     'shape': 'A list of short words or names, at most 4 words each (up to 20), or "none". A '
-              'sentence makes no rule.',
+     'shape': 'A list of short words or names (up to 20), or "none". An item over 6 words makes '
+              'no rule unless it is exact text in double quotes.',
      'example': ['receive_only', 'prod-database'],
      'maps_to': ['checks.deny']},
     {'id': 'never_undo',
@@ -113,8 +120,8 @@ QUESTIONS = [
             'in the action and cannot judge a situation (for example whether a backup exists or a '
             'spend was approved). List the short words that would show up in that action, or say '
             '"none".',
-     'shape': 'A list of short words or names, at most 4 words each (up to 20), or "none". A '
-              'sentence makes no rule.',
+     'shape': 'A list of short words or names (up to 20), or "none". An item over 6 words makes '
+              'no rule unless it is exact text in double quotes.',
      'example': ['transfer-domain', 'close-account'],
      'maps_to': ['checks.non_reversible']},
 ]
@@ -264,24 +271,35 @@ def _list_question(answers, qid, state, parser=_items, **kw):
     return items
 
 
-def _triggers(value, max_words=MAX_WORDS):
-    """_items, but an item that reads like a sentence is a problem, not a rule that never fires."""
+def _triggers(value):
+    """_items, but a long unquoted item is a problem, not a rule that never fires. Length guard only."""
     items, problem = _items(value)
-    if items:
-        long = [i for i in items if len(i.split()) > max_words]
-        if long:
-            return None, ('%s reads like a sentence, not words that would appear in the action. The card '
-                          'matches exact text and cannot judge a situation; give short words or names '
-                          '(at most %d words each), or say "none"' % (_join(long[:3]), max_words))
-    return items, problem
+    if not items:
+        return items, problem
+    out, long = [], []
+    for item in items:
+        quoted = len(item) > 2 and item[0] == item[-1] == '"' and '"' not in item[1:-1]
+        text = item[1:-1].strip() if quoted else item
+        if not text:
+            return None, 'an item is empty quotes'
+        if not quoted and len(text.split()) > MAX_WORDS:
+            long.append(text)
+        elif text not in out:
+            out.append(text)
+    if long:
+        return None, ('%s is longer than %d words, so it reads like a description, not text that would '
+                      'appear in the action. The card matches exact text and cannot judge a situation; '
+                      'give short words or names, put exact text in double quotes, or say "none"'
+                      % (_join(long[:3]), MAX_WORDS))
+    return out, None
 
 
 def _reds(tools, items):
     return [{'tool': t, 'pattern': _pattern(items)} for t in tools]
 
 
-def _red_question(answers, state, qid, tools, bucket, text, none_text, max_words=MAX_WORDS):
-    items = _list_question(answers, qid, state, _triggers, max_words=max_words)
+def _red_question(answers, state, qid, tools, bucket, text, none_text):
+    items = _list_question(answers, qid, state, _triggers)
     if items is None:
         return
     if items:
@@ -306,7 +324,7 @@ def _tool_question(answers, state, qid, category, words):
 def _compile_all(answers, state):
     _red_question(answers, state, 'never_message', MESSAGE_TOOLS, state.deny,
                   'a red card on any send, post or publish call that names %s.',
-                  'you named no one. Every send still shows a card.', max_words=MAX_NAME_WORDS)
+                  'you named no one. Every send still shows a card.')
     items = _list_question(answers, 'senders', state, _items, lower=True, allow_none=NO_LIMIT)
     if items is not None:
         bad = [i for i in items if re.search(r'\s', i)]
@@ -495,6 +513,9 @@ def render_charter(state, settings, fp):
     lines += ['', '## Limits',
               '- Words are matched as plain text in the call\'s arguments, ignoring capital letters. A different '
               'spelling is not caught.',
+              '- The card looks for the exact text of a rule; it does not understand it. A rule written as a '
+              'description of a situation (for example "spending I did not approve") never fires. Items over '
+              '%d words are refused for that reason; shorter ones are not checked.' % MAX_WORDS,
               '- Delete and move detection is best-effort shell reading. See the README.',
               '', '## To use this',
               'Copy the policy and checks blocks from charter-settings.yaml into the hermes-axioma settings by '

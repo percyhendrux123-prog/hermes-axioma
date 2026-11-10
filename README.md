@@ -406,10 +406,12 @@ checks:
 ```
 
 Limits: words are matched as plain text in the call's arguments, ignoring capital letters, so a
-different spelling is not caught. Because of that, the red-card and never-undone questions take short
-words or names only (at most 4 words each; 6 for a person you must never message). A sentence that
-describes a situation, such as "anything deleted without a backup", makes no rule and is listed under
-"Open questions": the card cannot judge whether a backup exists or a spend was approved. Once a sender list exists, any send that does not name one of
+different spelling is not caught. The card looks for the exact text of a rule and does not
+understand it, so a rule written as a description of a situation never fires. As a guard, an item
+over 6 words in the never-message, red-card or never-undone answers makes no rule and is listed under
+"Open questions". This is a length check only: a shorter description (such as "spending I did not
+approve") still compiles into a rule that never fires, and it is the interviewer's job to catch it.
+Exact text longer than 6 words is accepted when you put it in double quotes. Once a sender list exists, any send that does not name one of
 those senders shows a red card, including a send that names no sender. Reads and searches are not
 scanned for your red-card words. Delete and move detection is the best-effort shell reading described
 above.
