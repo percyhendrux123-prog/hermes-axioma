@@ -1,6 +1,6 @@
 # hermes-axioma
 
-Inline signal color for Hermes Agent · MIT · v0.5.2
+Inline signal color for Hermes Agent · MIT · v0.6.0
 
 The agent writes its normal reply. Axioma colors only the few phrases inside it that deserve your
 attention before you act, and puts a word next to each one so the meaning never depends on color.
@@ -13,7 +13,8 @@ Agent:  I can do that, but shipping without an eval or a test (stop) means the
 ```
 
 On a color surface, "without an eval or a test" is red, bold and underlined, and "merge into
-Hermes" is yellow and underlined. Nothing else in the reply changes. There are no cards in the chat.
+Hermes" is yellow and underlined. Ordinary signal spans still work this way. Desktop can also show
+an optional inline advice card (0.6.0), described below.
 
 ![Hermes Desktop showing inline signal spans](docs/evidence/desktop/desktop-night-inline-signal.png)
 
@@ -31,7 +32,7 @@ hermes plugins enable hermes-axioma
 ```
 
 The catalog installs a reviewed, exact commit, not this repository's latest branch tip. The 0.3.1
-fixes and the 0.4.x Desktop half reach catalog installs only after the catalog pin is updated. Restart Hermes after enabling.
+fixes and later Desktop additions reach catalog installs only after the catalog pin is updated. Restart Hermes after enabling.
 Read [Limits](#limits-read-before-installing) and [Disclosures](#disclosures) before installing;
 local-checkout validation commands are under [Verification](#verification).
 
@@ -61,7 +62,8 @@ Color is never the only cue. Every marked phrase carries three things where the 
 ## Axiōma Desktop (0.4.1)
 
 The same plugin carries an optional Desktop half, `desktop/plugin.js`. It draws the state of the
-run as a living caduceus, in code, with no images and no network calls.
+run as a living caduceus, in code, with no images. The drawing makes no network calls; the optional
+0.6.0 board lights read the plugin's own gateway API.
 
 | Part | What it shows |
 |---|---|
@@ -95,6 +97,72 @@ turn.
 running behind it. While the pane's tab is not the one showing, the drawing uses the whole window.
 
 ## How it renders, per surface
+### Desktop inline cards (0.6.0)
+
+The model may add one line for a stop or caution when Hermes reports the surface as `desktop`:
+
+```text
+::axioma{light="caution" signal="This will reach the whole team." question="Proceed with the post?" affects="The team"}
+```
+
+The card shows the light in words and the existing day/night colors, the signal, who is affected,
+the question, and **Hold** / **Go ahead**. A stop may add `green="What would resolve it"`. The card
+always says **Axiōma advises, the person decides.** A model-written `go` card is advice, not
+permission or a verified approval. These buttons do not answer a Hermes approval prompt or execute
+the proposed action: they submit only `Hold.` or `Go ahead.` as a normal reply to this card's chat,
+using `host.composer.submit(props.sessionId, text)`.
+
+Buttons are disabled during streaming and after one click, including if the host refuses the
+reply. On an older insert-only host they insert the short reply into this chat's draft and say to
+review it and press Send. If the host cannot identify the owning chat or has no composer API, they
+stay disabled rather than guessing the active chat. Click state lasts for this mounted card, not
+across a reload or a host remount.
+
+Only `light`, `signal`, `question`, `affects`, `green` are read. They render as text, never HTML or
+Markdown. Control/bidi characters are removed; signal/question/green are capped at 400 characters,
+affects at 240. Unknown lights are neutral advice. Missing required attributes, duplicate keys or
+broken syntax show the source text without action buttons. Source bodies follow the host's 2,048
+character limit. Put no quotes, braces or newlines inside attribute values.
+
+**Switch off:** Settings → Plugins → Axiōma Desktop → **Inline cards** (default on). The directive
+is then unregistered, so `::axioma{...}` stays text. The Python guidance is conditional on surface,
+not this renderer-local switch: switching off does not prevent a Desktop model from writing the
+line. Telegram, CLI, Discord and every non-Desktop surface receive no directive instruction.
+
+### Kanban board lights (0.6.0)
+
+Cards with Axiōma observations in the active profile's audit show one small chip: **STOP**, **CAUTION**
+or **GO**, with a count. Whisper-only work shows a neutral **WHISPER** chip. No record means no chip.
+The worst observed light wins (`stop > caution > go > whisper`), not the last light: later success
+does not erase a stop. The tooltip is the latest signal sentence or marked-phrase excerpt, plain
+text at most 160 characters. The count is displayed signal observations and cards handed to Hermes,
+not staged cards or duplicate approval-answer rows. It is not a count of approvals or of tasks.
+
+The audit adds a nullable `events.task_id` column, taken from `HERMES_KANBAN_TASK` at each write.
+Old rows remain intact and unassigned; old sealed metadata still verifies. Only task-worker rows
+also retain a bounded 160-character signal excerpt, including complete Desktop directives outside
+code. This is a change from the older hash-only signal log. Full messages, questions, affects,
+tool arguments and answer bodies are not retained for this feature. Do not put sensitive material
+in signal text: the excerpt itself is not a secret scrubber. Non-task runs keep the hash-only log.
+
+The hidden `dashboard/manifest.json` declares a read-only FastAPI route:
+`GET /api/plugins/hermes-axioma/board-lights`. It returns only
+`{task_id: {light, count, signal, at}}`, not audit metadata, arguments, full messages or file paths.
+The route opens the existing audit read-only; a missing or unmigrated DB gives an empty map.
+Hermes owns authentication, active-profile scope and enabled-plugin consent. The Python plugin
+must be enabled as well as its Desktop half. Desktop uses the documented, profile-aware `ctx.rest`
+door, caches the response in memory and starts at most one request every 30 seconds. `decorate`
+is a pure synchronous lookup. Profile/connection changes discard the cache; failures remove stale
+chips. Changes appear at the next poll, and no public or third-party service is contacted.
+
+**Switch off:** Settings → Plugins → Axiōma Desktop → **Board lights** (default on) removes the
+badge contribution and stops its reads. It does not delete audit history or stop the Python audit.
+Data is profile-local, not a cross-profile or cross-board rollup: rows without an assigned task id,
+and observations written to another profile's audit, cannot be shown here. A chip is recorded advice,
+not proof of what a screen displayed or permission to act. Replaying a final transform can add another
+observation; this is not an exactly-once event ledger.
+
+### Existing signal spans
 
 | Surface | What you see |
 |---|---|
@@ -432,8 +500,11 @@ above.
 whisper (including a repeat that was not shown again) and go tag is logged (an unclosed or malformed
 tag is removed and renders plain, with no row; if the audit write fails, a stop or caution is still shown,
 unlogged, while a whisper or go stays plain) with a random span ID, level, reason code, session-scope hash, surface, whether it
-was shown, and a salted hash of the phrase. No message bodies, tool arguments, card text, sender
-addresses or paths. `/signals` (and `/whispers`) lists them in plain words.
+was shown, and a salted hash of the phrase. No full message bodies, tool arguments, complete card
+text or answer bodies. In 0.6.0, task-worker rows additionally store the task id and a plain signal
+excerpt of at most 160 characters for board lights; other runs retain no signal text. An excerpt
+may contain sensitive words the model put in the signal; it is not a redaction guarantee.
+`/signals` (and `/whispers`) lists the metadata in plain words.
 
 Every card, missing-card notice and fallback notice also carries a **card code**
 (`card code 7Q4K-2MPD`) next to the question (spec 5.6, "Shown equals staged"): at the end of the
@@ -475,7 +546,13 @@ directional. It measured cards, not inline spans. Source:
 
 ## Verification
 
-Observed Hermes v0.22.5 at `bf0203a794a07aac3ff764972ab9087baa4e4f4e`. No third-party dependencies.
+The older agent-side path was observed on Hermes v0.22.5 at
+`bf0203a794a07aac3ff764972ab9087baa4e4f4e`. The 0.6.0 Desktop contracts
+(`transcript.directives`, `props.sessionId`, `composer.submit`, `kanban.card.badges`) are present in
+the provided **v0.23.0 reference sources**; their availability on v0.22.5 is unverified. The manifest
+keeps its existing agent-side floor rather than guessing when those Desktop APIs were introduced.
+The new API uses FastAPI already supplied by the host; agent-only use still has no extra dependency.
+For standalone route tests, use a test venv with `pip install --no-cache-dir fastapi httpx pyyaml`.
 
 ```sh
 python3 -m unittest discover -s tests -v
@@ -493,7 +570,8 @@ Runtime surfaces: `ctx.register_tool`, `register_hook`, `register_command`, `get
 `session_surface`; `plugins.plugin_storage.plugin_data_dir`; `agent.secret_scope.get_secret`
 (presence only, for the optional provider-conflict check). Hooks: `pre_tool_call`, `post_tool_call`,
 `post_approval_response`, `pre_llm_call`, `on_session_finalize`, `transform_llm_output`. No
-middleware, overrides, monkeypatches, private approval-state probes, subprocesses, network or model calls.
+middleware, overrides, monkeypatches, private approval-state probes, subprocesses or model calls.
+The 0.6.0 Desktop board reader makes authenticated GETs only to this plugin's own gateway route.
 Pasted-card verification has one best-effort compatibility boundary, `host_prompt_text()` in
 `axioma/advisor.py`, which imports undocumented `gateway.platforms.base_exec_approval` text helpers
 and `agent.i18n.t` to recognize localized host labels, headers, deadlines and buttons exactly. It
@@ -517,7 +595,14 @@ secret request/respond types; and the `passed` boolean of a `standing_proof` too
 no message text. On a button press it calls `session.steer`, `session.interrupt`, `subagent.steer`
 or `subagent.interrupt` with the text typed in the pane. It stores its switches in the plugin's own
 Desktop storage (`prefs`). It measures its own pane element to keep the background canvas clear of
-it; it does not query the app's markup. No network, no model calls, no files.
+it; it does not query the app's markup. The original drawing has no network or file reads.
+In 0.6.0 the Desktop half also registers `axioma` at `transcript.directives` and one data contribution
+at `kanban.card.badges`. The directive reads only its model-written attributes, source, streaming
+flag and owning session id; its buttons submit a short plain chat reply via `host.composer` (or insert
+a draft on older hosts). The board cache reads `/board-lights` using `ctx.rest` at most every 30 s;
+no credentials are read by the plugin. The backend reads only its own profile-scoped audit SQLite
+database. New task-worker observations retain a bounded signal excerpt plus nullable task-id column,
+not full message/task prose, tool arguments or file paths. Signal text is not a secret scrubber.
 Tests use private loader wiring and `unittest.mock`; none of it ships. The validator reports cautions only:
 `destructive_root_rm` and `destructive_home_rm` (destructive-command strings in classification tests
 and in captured test and review output under `docs/`) and `invisible_unicode` (zero-width and
