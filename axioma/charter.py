@@ -335,8 +335,8 @@ def _scrub_and_folders(answers, state):
             folders[qid] = path
     named = dict((k, v) for k, v in folders.items() if v)
     off = state.policy.get('remove') == ['scrub']
-    every = ('The delete and move warning is off by your earlier answer, so deletes and moves show no card.'
-             if off else 'Every delete and move still shows a card.')
+    OFF = 'The built-in delete and move warning is off by your earlier answer; other rules you set can still show a card.'
+    every = OFF if off else 'Every delete and move still shows a card.'
     for qid in folders:
         if not folders[qid]:
             state.none(qid, 'you named no folder. ' + every)
@@ -351,10 +351,10 @@ def _scrub_and_folders(answers, state):
         for qid, path in named.items():
             state.policy[qid] = path
             state.rule(qid, 'the folder is %s. %s' % (_q(path), (
-                'The delete and move warning is off by your earlier answer, so this folder changes nothing.'
+                OFF + ' This folder changes nothing.'
                 if off else 'Deletes and moves inside it skip the card; anything outside it still shows one.')))
         state.rule('skip_inside', 'you said yes: deletes and moves inside the named folder%s skip the warning card.%s'
-                   % ('s' if len(named) > 1 else '', ' (The warning is off everywhere by your earlier answer.)' if off else ''))
+                   % ('s' if len(named) > 1 else '', ' (' + OFF + ')' if off else ''))
     elif answer in NO:
         for qid, path in named.items():
             state.lines[qid] = 'NONE: you named %s but said no to skipping the card inside it, so no folder is set.' % _q(path)
@@ -524,31 +524,61 @@ def compile_charter(answers):
 
 
 # -- files and tool -----------------------------------------------------------------------------
-_NOFOLLOW = getattr(os, 'O_NOFOLLOW', 0)
-_DIRECTORY = getattr(os, 'O_DIRECTORY', 0)
+import stat as _stat
+
+
+def _require_safe_io():
+    """Fail closed, before anything is created, on a platform that cannot anchor file access on a
+    directory descriptor without following links."""
+    ok = (getattr(os, 'O_NOFOLLOW', 0) and getattr(os, 'O_DIRECTORY', 0)
+          and {os.open, os.mkdir, os.stat, os.unlink} <= os.supports_dir_fd
+          and os.stat in os.supports_follow_symlinks and hasattr(os, 'getuid'))
+    if not ok:
+        raise OSError('this platform cannot write the charter files safely; nothing was written')
+
+
+def _step(parent_fd, name, create, final):
+    """Open the directory `name` inside `parent_fd`, never through a link. The entry is looked at
+    first (lstat), then opened, then the open descriptor is checked to be that same directory, so
+    a link, a swap between the two steps, or a backend that follows links anyway is refused."""
+    made = False
+    try:
+        seen = os.stat(name, dir_fd=parent_fd, follow_symlinks=False)
+    except FileNotFoundError:
+        if not create:
+            raise
+        os.mkdir(name, 0o700, dir_fd=parent_fd)
+        made = True
+        seen = os.stat(name, dir_fd=parent_fd, follow_symlinks=False)
+    if not _stat.S_ISDIR(seen.st_mode) or seen.st_uid != os.getuid():
+        raise OSError('%s is not a folder owned by this user' % name)
+    if final and not made and seen.st_mode & 0o077:
+        raise OSError('the charter folder is open to other users; fix its permissions (owner only) first')
+    fd = os.open(name, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW, dir_fd=parent_fd)
+    opened = os.fstat(fd)
+    if (opened.st_dev, opened.st_ino) != (seen.st_dev, seen.st_ino) or not _stat.S_ISDIR(opened.st_mode):
+        os.close(fd)
+        raise OSError('%s changed while it was being opened' % name)
+    return fd
 
 
 def _open_dir(directory, create):
-    """A descriptor on the charter folder itself: never through a symlink, owned by this user,
-    owner-only. Every read and write below is anchored on this descriptor, not on a path."""
+    """A descriptor on the charter folder. Trust boundary: the folder two levels up (Hermes's own
+    plugin-data area) is resolved once and trusted, as Hermes itself trusts it for config; the
+    plugin's data folder and the charter folder below it must be real folders owned by this user,
+    never links. Nothing is chmod-ed: a charter folder open to other users is refused."""
+    _require_safe_io()
     directory = Path(directory)
-    if create:
-        directory.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
-        try:
-            os.mkdir(str(directory), 0o700)
-        except FileExistsError:
-            pass
-    fd = os.open(str(directory), os.O_RDONLY | _DIRECTORY | _NOFOLLOW)
+    data, base = directory.parent, directory.parent.parent
+    base_fd = os.open(os.path.realpath(str(base)), os.O_RDONLY | os.O_DIRECTORY)
     try:
-        info = os.fstat(fd)
-        if hasattr(os, 'getuid') and info.st_uid != os.getuid():
-            raise OSError('the charter folder belongs to another user')
-        if create and info.st_mode & 0o077:
-            os.fchmod(fd, 0o700)
-    except Exception:
-        os.close(fd)
-        raise
-    return fd
+        data_fd = _step(base_fd, data.name, create, final=False)
+    finally:
+        os.close(base_fd)
+    try:
+        return _step(data_fd, directory.name, create, final=True)
+    finally:
+        os.close(data_fd)
 
 
 def _write(dirfd, name, text):
@@ -556,7 +586,7 @@ def _write(dirfd, name, text):
     planted at the temporary or the final name is never written through: O_EXCL|O_NOFOLLOW refuses
     the first, and rename replaces the second instead of following it."""
     tmp = '.%s.%s.tmp' % (name, os.urandom(8).hex())
-    fd = os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_EXCL | _NOFOLLOW, 0o600, dir_fd=dirfd)
+    fd = os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600, dir_fd=dirfd)
     try:
         with os.fdopen(fd, 'w', encoding='utf-8') as handle:
             handle.write(text)
@@ -570,12 +600,16 @@ def _write(dirfd, name, text):
 
 
 def _read(dirfd, name):
-    fd = os.open(name, os.O_RDONLY | _NOFOLLOW, dir_fd=dirfd)
+    """A regular file only: a link is refused, and a pipe or device cannot make the open hang."""
+    seen = os.stat(name, dir_fd=dirfd, follow_symlinks=False)
+    if not _stat.S_ISREG(seen.st_mode):
+        raise OSError('not a regular file')
+    fd = os.open(name, os.O_RDONLY | os.O_NOFOLLOW | getattr(os, 'O_NONBLOCK', 0), dir_fd=dirfd)
     with os.fdopen(fd, 'r', encoding='utf-8') as handle:
-        import stat
-        if not stat.S_ISREG(os.fstat(handle.fileno()).st_mode):
+        opened = os.fstat(handle.fileno())
+        if not _stat.S_ISREG(opened.st_mode) or (opened.st_dev, opened.st_ino) != (seen.st_dev, seen.st_ino):
             raise OSError('not a regular file')
-        return handle.read(1_000_000)
+        return handle.read(1000000)
 
 
 def write_charter(result, directory):

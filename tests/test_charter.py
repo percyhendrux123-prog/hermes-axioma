@@ -7,6 +7,7 @@ from pathlib import Path
 import sys
 import tempfile
 import unittest
+import unittest.mock
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
@@ -407,6 +408,7 @@ class ReviewFindingTests(unittest.TestCase):
     # P1: symlinks are never written or read through.
     def test_planted_tmp_and_final_symlinks_do_not_reach_outside(self):
         self.dir.mkdir(parents=True)
+        os.chmod(str(self.dir), 0o700)
         for name in ('CHARTER.md.tmp', 'charter-settings.yaml.tmp', 'CHARTER.md', 'charter-settings.yaml'):
             os.symlink(str(self.outside), str(self.dir / name))
         out = self.run_tool(action='compile', answers=full_answers())
@@ -437,12 +439,59 @@ class ReviewFindingTests(unittest.TestCase):
         self.assertEqual(out['status'], 'none')
         self.assertNotIn('SECRET', json.dumps(out))
 
-    def test_loose_existing_dir_is_tightened_and_no_temporaries_are_left(self):
+    def test_loose_existing_dir_is_refused_not_chmodded_and_no_temporaries_are_left(self):
         self.dir.mkdir(parents=True)
         os.chmod(str(self.dir), 0o755)
+        out = self.run_tool(action='compile', answers=full_answers())
+        self.assertIn('error', out)
+        self.assertEqual(self.dir.stat().st_mode & 0o777, 0o755, 'an existing folder is never chmod-ed')
+        self.assertEqual(list(self.dir.iterdir()), [])
+        os.chmod(str(self.dir), 0o700)
         self.run_tool(action='compile', answers=full_answers())
-        self.assertEqual(self.dir.stat().st_mode & 0o777, 0o700)
         self.assertEqual(sorted(p.name for p in self.dir.iterdir()), ['CHARTER.md', 'charter-settings.yaml'])
+
+    def test_symlinked_parent_folder_is_refused_for_write_and_show(self):
+        real = self.home / 'outside'
+        real.mkdir()
+        os.symlink(str(real), str(self.home / 'plugin-data'))
+        out = self.run_tool(action='compile', answers=full_answers())
+        self.assertIn('error', out)
+        self.assertEqual(list(real.iterdir()), [], 'nothing was created through the link')
+        (real / 'charter').mkdir(mode=0o700)
+        for name in ('CHARTER.md', 'charter-settings.yaml'):
+            (real / 'charter' / name).write_text('SECRET', encoding='utf-8')
+        out = self.run_tool(action='show')
+        self.assertEqual(out['status'], 'none')
+        self.assertNotIn('SECRET', json.dumps(out))
+
+    def test_a_folder_swapped_between_look_and_open_is_refused(self):
+        other = self.home / 'other'
+        other.mkdir(mode=0o700)
+        self.dir.mkdir(parents=True, mode=0o700)
+        real_open = os.open
+
+        def swapping_open(path, flags, mode=0o777, *, dir_fd=None):
+            if path == 'charter' and dir_fd is not None:
+                os.rmdir(str(self.dir))
+                os.rename(str(other), str(self.dir))
+            return real_open(path, flags, mode, dir_fd=dir_fd)
+        with unittest.mock.patch.object(charter.os, 'open', swapping_open):
+            out = self.run_tool(action='compile', answers=full_answers())
+        self.assertIn('error', out)
+        self.assertEqual(list(self.dir.iterdir()), [])
+
+    def test_missing_no_follow_support_fails_before_anything_is_created(self):
+        with unittest.mock.patch.object(charter.os, 'O_NOFOLLOW', 0):
+            out = self.run_tool(action='compile', answers=full_answers())
+            self.assertIn('error', out)
+            self.assertFalse((self.home / 'plugin-data').exists())
+            self.assertEqual(self.run_tool(action='show')['status'], 'none')
+
+    def test_a_pipe_at_the_file_name_does_not_hang_show(self):
+        self.run_tool(action='compile', answers=full_answers())
+        (self.dir / 'CHARTER.md').unlink()
+        os.mkfifo(str(self.dir / 'CHARTER.md'))
+        self.assertEqual(self.run_tool(action='show')['status'], 'none')
 
     # P2: what the file says is what a YAML reader gets.
     UNICODE = [{'workspace': '/tmp/\U0001F600', 'skip_inside': 'yes'}, {'deny_words': ['\U0001F600']},
@@ -468,8 +517,19 @@ class ReviewFindingTests(unittest.TestCase):
 
     def test_emoji_word_still_matches_after_the_round_trip(self):
         result = charter.compile_charter({'deny_words': ['\U0001F600']})
-        self.assertTrue(result['settings']['checks']['deny'])
         self.assertIn('\U0001F600', result['settings_yaml'])
+        settings = result['settings']
+        try:
+            import yaml
+            settings = yaml.safe_load(result['settings_yaml'])['plugins']['entries']['hermes-axioma']['settings']
+        except ImportError:
+            pass
+        checks = Checks(settings['checks'])
+        self.assertTrue(checks.hard_red('send_message', {'text': 'ship \U0001F600 now'}))
+        self.assertFalse(checks.hard_red('send_message', {'text': 'ship now'}))
+        with tempfile.TemporaryDirectory() as tmp:
+            advisor = Advisor(settings['policy'], Audit(Path(tmp) / 'a.sqlite3'), settings['checks'])
+            self.assertFalse(advisor.config_error)
 
     def test_characters_yaml_cannot_hold_make_no_rule(self):
         for bad in ('\ud83d', 'a\u2028line', 'a\u0085b', '\ufeffbom'):
@@ -504,6 +564,8 @@ class ReviewFindingTests(unittest.TestCase):
             page = charter.compile_charter(dict({'scrub': 'turn off'}, **extra))['charter']
             self.assertNotIn('Every delete and move', page, extra)
             self.assertNotIn('still shows one', page, extra)
+            self.assertNotIn('show no card', page, extra)
+            self.assertIn('other rules you set can still show a card', page, extra)
         kept = charter.compile_charter({'scrub': 'keep', 'workspace': 'none', 'output_dir': 'none'})['charter']
         self.assertIn('Every delete and move still shows a card', kept)
 

@@ -327,6 +327,12 @@ the settings block and a list of problems) and `show` (the last charter). `/char
 charter, or says how to start. `compile` writes two files, `CHARTER.md` and `charter-settings.yaml`,
 to `<HERMES_HOME>/plugin-data/hermes-axioma/charter/`, nowhere else.
 
+File safety, and its limit: the plugin's data folder and the `charter` folder inside it must be real
+folders owned by you. A link at either, at a file name, or at a temporary name is refused, never
+followed; a `charter` folder that other users can open is refused, not repaired. Hermes's own
+`plugin-data` folder above them is trusted as given, the way Hermes trusts it for its config. On a
+platform that cannot open files without following links, `compile` writes nothing and says so.
+
 What it asks, and the setting each answer becomes:
 
 | Question, in short | Setting it becomes |
