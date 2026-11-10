@@ -360,7 +360,7 @@ class FingerprintFlow(unittest.TestCase):
         db = sqlite3.connect(str(self.db))
         with db:
             later = time.time() + 10
-            db.executemany('INSERT INTO events VALUES (?, ?, ?)', [
+            db.executemany('INSERT INTO events (id, at, metadata) VALUES (?, ?, ?)', [
                 (uuid.uuid4().hex, later + i, json.dumps({'event': 'card', 'card_id': 'f%d' % i}))
                 for i in range(5100)])
         db.close()
