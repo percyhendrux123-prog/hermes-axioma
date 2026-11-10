@@ -4,6 +4,7 @@ from pathlib import Path
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from test_card import CARD
@@ -115,6 +116,7 @@ class AdvisorTests(unittest.TestCase):
         rows = a.audit.rows()
         self.assertTrue(any(r['event'] == 'card' and r['valid'] is False for r in rows))
 
+    @patch.dict('os.environ', {'HERMES_KANBAN_TASK': ''})  # non-task no-text contract
     def test_answers_are_logged_as_metadata_and_never_authorize(self):
         a = self.advisor()
         self.stage(a)
