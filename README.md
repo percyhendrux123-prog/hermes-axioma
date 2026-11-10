@@ -328,8 +328,9 @@ charter, or says how to start. `compile` writes two files, `CHARTER.md` and `cha
 to `<HERMES_HOME>/plugin-data/hermes-axioma/charter/`, nowhere else.
 
 File safety, and its limit: the plugin's data folder and the `charter` folder inside it must be real
-folders owned by you. A link at either, at a file name, or at a temporary name is refused, never
-followed; a `charter` folder that other users can open is refused, not repaired. Hermes's own
+folders owned by you. A link at either folder is refused. A link at one of the two file names is
+never followed: `compile` replaces the link itself with the new file, and `show` and `/charter`
+refuse to read through it. A `charter` folder that other users can open is refused, not repaired. Hermes's own
 `plugin-data` folder above them is trusted as given, the way Hermes trusts it for its config. On a
 platform that cannot open files without following links, `compile` writes nothing and says so.
 

@@ -464,21 +464,60 @@ class ReviewFindingTests(unittest.TestCase):
         self.assertEqual(out['status'], 'none')
         self.assertNotIn('SECRET', json.dumps(out))
 
+    def swapped(self, swap):
+        """Run compile with `swap()` fired once, between the look at `charter` and its open."""
+        real_open, fired = os.open, []
+
+        def swapping_open(path, flags, mode=0o777, *, dir_fd=None):
+            if path == 'charter' and dir_fd is not None and not fired:
+                fired.append(1)
+                swap()
+            return real_open(path, flags, mode, dir_fd=dir_fd)
+        # The capability check looks os.open up in os.supports_dir_fd; a wrapper is not in that set,
+        # so the check is stood down here and tested on its own below.
+        with unittest.mock.patch.object(charter, '_require_safe_io', lambda: None), \
+                unittest.mock.patch.object(charter.os, 'open', swapping_open):
+            out = self.run_tool(action='compile', answers=full_answers())
+        self.assertEqual(fired, [1], 'the swap really ran inside the folder walk')
+        return out
+
     def test_a_folder_swapped_between_look_and_open_is_refused(self):
         other = self.home / 'other'
         other.mkdir(mode=0o700)
         self.dir.mkdir(parents=True, mode=0o700)
-        real_open = os.open
 
-        def swapping_open(path, flags, mode=0o777, *, dir_fd=None):
+        def swap():
+            os.rmdir(str(self.dir))
+            os.rename(str(other), str(self.dir))
+        out = self.swapped(swap)
+        self.assertIn('changed while it was being opened', out.get('error', ''), out)
+        self.assertEqual(list(self.dir.iterdir()), [])
+
+    def test_a_folder_loosened_between_look_and_open_is_refused(self):
+        self.dir.mkdir(parents=True, mode=0o700)
+        out = self.swapped(lambda: os.chmod(str(self.dir), 0o755))
+        self.assertIn('open to other users', out.get('error', ''), out)
+        self.assertEqual(list(self.dir.iterdir()), [])
+
+    def test_a_loose_folder_swapped_in_right_after_this_call_made_it_is_refused(self):
+        other = self.home / 'other'
+        other.mkdir()
+        os.chmod(str(other), 0o755)
+        real_mkdir, fired = os.mkdir, []
+
+        def swapping_mkdir(path, mode=0o777, *, dir_fd=None):
+            real_mkdir(path, mode, dir_fd=dir_fd)
             if path == 'charter' and dir_fd is not None:
+                fired.append(1)
                 os.rmdir(str(self.dir))
                 os.rename(str(other), str(self.dir))
-            return real_open(path, flags, mode, dir_fd=dir_fd)
-        with unittest.mock.patch.object(charter.os, 'open', swapping_open):
+        with unittest.mock.patch.object(charter, '_require_safe_io', lambda: None), \
+                unittest.mock.patch.object(charter.os, 'mkdir', swapping_mkdir):
             out = self.run_tool(action='compile', answers=full_answers())
-        self.assertIn('error', out)
+        self.assertEqual(fired, [1])
+        self.assertIn('open to other users', out.get('error', ''), out)
         self.assertEqual(list(self.dir.iterdir()), [])
+        self.assertEqual(self.dir.stat().st_mode & 0o777, 0o755, 'never chmod-ed')
 
     def test_missing_no_follow_support_fails_before_anything_is_created(self):
         with unittest.mock.patch.object(charter.os, 'O_NOFOLLOW', 0):

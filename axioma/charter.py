@@ -552,13 +552,21 @@ def _step(parent_fd, name, create, final):
         seen = os.stat(name, dir_fd=parent_fd, follow_symlinks=False)
     if not _stat.S_ISDIR(seen.st_mode) or seen.st_uid != os.getuid():
         raise OSError('%s is not a folder owned by this user' % name)
-    if final and not made and seen.st_mode & 0o077:
-        raise OSError('the charter folder is open to other users; fix its permissions (owner only) first')
+    loose = 'the charter folder is open to other users; fix its permissions (owner only) first'
+    if final and seen.st_mode & 0o077:     # also when this call made it: it may have been swapped
+        raise OSError(loose)
     fd = os.open(name, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW, dir_fd=parent_fd)
-    opened = os.fstat(fd)
+    opened = os.fstat(fd)                  # the descriptor is what gets used, so it is what is judged
+    problem = None
     if (opened.st_dev, opened.st_ino) != (seen.st_dev, seen.st_ino) or not _stat.S_ISDIR(opened.st_mode):
+        problem = '%s changed while it was being opened' % name
+    elif opened.st_uid != os.getuid():
+        problem = '%s is not a folder owned by this user' % name
+    elif final and opened.st_mode & 0o077:
+        problem = loose
+    if problem:
         os.close(fd)
-        raise OSError('%s changed while it was being opened' % name)
+        raise OSError(problem)
     return fd
 
 
