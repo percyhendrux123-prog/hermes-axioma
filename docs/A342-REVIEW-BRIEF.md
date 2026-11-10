@@ -91,3 +91,11 @@ Pass 2 must be read-only and final; do not delegate further reviewers. Review th
 any remaining acceptance-breaking defects, not style. Native validation, live Desktop and passing
 Standing proof still need the operator's host support.
 
+## Supplemental pass 2
+
+Final pass found one remaining Unicode grammar mismatch: Python accepted an attribute named aµ
+that JavaScript rejects, and rejected trailing U+FEFF whitespace that JavaScript accepts. Added a
+failing Python regression, then fixed the parser to use ASCII attribute names and the exact
+JavaScript whitespace set/boundary; Python retains the explicit host UTF-16 cap. Matching Desktop
+regressions cover U+0085, U+FEFF and the non-ASCII attribute. All concrete findings from both passes
+are fixed. No third pass was run. Final full-suite output is captured separately in evidence.
