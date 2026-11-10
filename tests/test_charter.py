@@ -186,7 +186,7 @@ class CompileTests(unittest.TestCase):
 
     def test_unknown_question_id_is_named_and_ignored(self):
         result = charter.compile_charter(dict(full_answers(), remove=['scrub'], invented='x'))
-        self.assertEqual(sorted(p['question'] for p in result['problems']), ['invented', 'remove'])
+        self.assertEqual(sorted(p['question'] for p in result['problems']), ['unknown key invented', 'unknown key remove'])
         self.assertNotIn('remove', result['settings']['policy'])
 
     def test_a_partly_bad_set_keeps_only_the_good_answers(self):
@@ -209,8 +209,9 @@ class CompileTests(unittest.TestCase):
 
     def test_no_answer_set_drops_a_default_rule_without_an_explicit_answer(self):
         junk = [None, '', 'maybe', 'no', 'yes', 'off', 'remove', 5, True, False, [], ['turn off'], 'turn offf',
+                'turn-off', 'turn_off', 'turnoff',
                 'keep', 'none', '/Users/example/projects/demo', ['a_tool'], 'x@example.invalid']
-        explicit_removal = ('turn off', 'turn-off', 'turn_off', 'turnoff')
+        explicit_removal = ('turn off',)
         for scrub, skip, folder in itertools.product(junk + ['turn off'], junk + ['yes'], junk):
             other = 'maybe'
             answers = {'scrub': scrub, 'skip_inside': skip, 'workspace': folder, 'output_dir': folder,
@@ -385,6 +386,136 @@ class ToolTests(unittest.TestCase):
         for needle in ('import socket', 'urllib', 'requests', 'http.client', 'subprocess', 'import yaml', 'get_config',
                        'expanduser', 'Path.home'):
             self.assertNotIn(needle, source)
+
+
+
+class ReviewFindingTests(unittest.TestCase):
+    """One regression per independent-review finding (A327)."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.home = Path(self.tmp.name)
+        self.dir = self.home / 'plugin-data' / 'charter'
+        self.outside = self.home / 'outside.txt'
+        self.outside.write_text('KEEP', encoding='utf-8')
+        self.call = charter.make_handler(lambda: self.dir)
+
+    def run_tool(self, **args):
+        return json.loads(self.call(args))
+
+    # P1: symlinks are never written or read through.
+    def test_planted_tmp_and_final_symlinks_do_not_reach_outside(self):
+        self.dir.mkdir(parents=True)
+        for name in ('CHARTER.md.tmp', 'charter-settings.yaml.tmp', 'CHARTER.md', 'charter-settings.yaml'):
+            os.symlink(str(self.outside), str(self.dir / name))
+        out = self.run_tool(action='compile', answers=full_answers())
+        self.assertEqual(out.get('status'), 'compiled', out)
+        self.assertEqual(self.outside.read_text(encoding='utf-8'), 'KEEP')
+        for name in ('CHARTER.md', 'charter-settings.yaml'):
+            self.assertFalse((self.dir / name).is_symlink(), name)
+            self.assertEqual((self.dir / name).stat().st_mode & 0o777, 0o600)
+
+    def test_symlinked_charter_dir_is_refused_for_write_and_show(self):
+        real = self.home / 'elsewhere'
+        real.mkdir()
+        self.dir.parent.mkdir(parents=True)
+        os.symlink(str(real), str(self.dir))
+        out = self.run_tool(action='compile', answers=full_answers())
+        self.assertIn('error', out)
+        self.assertEqual(list(real.iterdir()), [])
+        (real / 'CHARTER.md').write_text('SECRET', encoding='utf-8')
+        (real / 'charter-settings.yaml').write_text('SECRET', encoding='utf-8')
+        self.assertEqual(self.run_tool(action='show')['status'], 'none')
+
+    def test_show_does_not_follow_a_final_file_symlink(self):
+        self.run_tool(action='compile', answers=full_answers())
+        (self.dir / 'CHARTER.md').unlink()
+        self.outside.write_text('SECRET', encoding='utf-8')
+        os.symlink(str(self.outside), str(self.dir / 'CHARTER.md'))
+        out = self.run_tool(action='show')
+        self.assertEqual(out['status'], 'none')
+        self.assertNotIn('SECRET', json.dumps(out))
+
+    def test_loose_existing_dir_is_tightened_and_no_temporaries_are_left(self):
+        self.dir.mkdir(parents=True)
+        os.chmod(str(self.dir), 0o755)
+        self.run_tool(action='compile', answers=full_answers())
+        self.assertEqual(self.dir.stat().st_mode & 0o777, 0o700)
+        self.assertEqual(sorted(p.name for p in self.dir.iterdir()), ['CHARTER.md', 'charter-settings.yaml'])
+
+    # P2: what the file says is what a YAML reader gets.
+    UNICODE = [{'workspace': '/tmp/\U0001F600', 'skip_inside': 'yes'}, {'deny_words': ['\U0001F600']},
+               {'never_message': ['Zo\u00eb "Q" \\ back', 'na\u00efve: #x', "it's {a}, [b]"]},
+               {'senders': ['\u00fcser@example.invalid']}, {'never_undo': ['\u2028line']},
+               {'deny_words': ['\ud83d']}, {'deny_words': ['a\u0085b']}, {'deny_words': ['\ufeffbom']}]
+
+    def test_unicode_answers_survive_a_yaml_load_or_make_no_rule(self):
+        try:
+            import yaml
+        except ImportError:
+            yaml = None
+        for answers in self.UNICODE:
+            result = charter.compile_charter(answers)
+            text = result['settings_yaml']
+            text.encode('utf-8')   # a lone surrogate would raise here
+            self.assertNotRegex(text, r'\\u[dD][89abAB]', 'no JSON surrogate escapes in YAML')
+            if yaml is None:
+                continue
+            loaded = yaml.safe_load(text)['plugins']['entries']['hermes-axioma']['settings']
+            self.assertEqual(loaded, result['settings'], answers)
+            self.assertEqual(charter.validate(loaded), [], answers)
+
+    def test_emoji_word_still_matches_after_the_round_trip(self):
+        result = charter.compile_charter({'deny_words': ['\U0001F600']})
+        self.assertTrue(result['settings']['checks']['deny'])
+        self.assertIn('\U0001F600', result['settings_yaml'])
+
+    def test_characters_yaml_cannot_hold_make_no_rule(self):
+        for bad in ('\ud83d', 'a\u2028line', 'a\u0085b', '\ufeffbom'):
+            result = charter.compile_charter({'deny_words': [bad]})
+            self.assertEqual(result['settings'], EMPTY, repr(bad))
+            self.assertIn('validation', [p['question'] for p in result['problems']])
+
+    # P2: one phrase removes the default; aliases do not.
+    def test_only_the_exact_phrase_turns_the_delete_warning_off(self):
+        for alias in ('turn-off', 'turn_off', 'turnoff', 'off', 'disable', 'turn it off'):
+            policy = charter.compile_charter({'scrub': alias})['settings']['policy']
+            self.assertNotIn('remove', policy, alias)
+        self.assertEqual(charter.compile_charter({'scrub': 'Turn  Off'})['settings']['policy']['remove'], ['scrub'])
+
+    # P2: an unknown key cannot write markdown into the charter.
+    def test_unknown_key_cannot_inject_markdown(self):
+        key = 'x)\n\n# Injected charter heading\n```'
+        result = charter.compile_charter({key: 'v', '`': 'v', '': 'v'})
+        page = result['charter']
+        self.assertNotIn('Injected charter heading\n', page.replace('unknown key xInjectedcharterheading', ''))
+        self.assertNotIn('```', page)
+        self.assertEqual([l for l in page.splitlines() if l.startswith('#')],
+                         [l for l in charter.compile_charter({})['charter'].splitlines() if l.startswith('#')])
+        self.assertIn('## Limits', page)
+
+    # P2: the page never promises a card after the warning was turned off.
+    def test_page_does_not_promise_cards_after_the_warning_is_off(self):
+        for extra in ({'workspace': 'none', 'output_dir': 'none'},
+                      {'workspace': '/Users/example/projects/demo', 'output_dir': 'none', 'skip_inside': 'no'},
+                      {'workspace': '/Users/example/projects/demo', 'output_dir': 'none', 'skip_inside': 'yes'},
+                      {'workspace': '/Users/example/projects/demo', 'output_dir': 'none'}):
+            page = charter.compile_charter(dict({'scrub': 'turn off'}, **extra))['charter']
+            self.assertNotIn('Every delete and move', page, extra)
+            self.assertNotIn('still shows one', page, extra)
+        kept = charter.compile_charter({'scrub': 'keep', 'workspace': 'none', 'output_dir': 'none'})['charter']
+        self.assertIn('Every delete and move still shows a card', kept)
+
+    # P3: the note does not claim files were written when none were.
+    def test_note_never_claims_a_write_and_files_says_what_was_written(self):
+        for args in ({'action': 'questions'}, {'action': 'show'},
+                     {'action': 'compile', 'answers': full_answers(), 'preview': True}):
+            out = self.run_tool(**args)
+            self.assertEqual(out['files'], [], args)
+            self.assertNotIn('wrote two files', out['note'])
+        self.assertFalse(self.dir.exists())
+        self.assertEqual(len(self.run_tool(action='compile', answers=full_answers())['files']), 2)
 
 
 if __name__ == '__main__':

@@ -24,8 +24,9 @@ SETTINGS_FILE = 'charter-settings.yaml'
 MAX_ITEMS, MAX_LEN = 20, 120
 
 NOTHING_APPLIED = (
-    'Nothing was applied. This tool wrote two files in the charter folder and changed no setting, '
-    'no config.yaml and no profile. To use these rules, the owner opens %s, copies its policy and '
+    'Nothing was applied. This tool changes no setting, no config.yaml and no profile; `files` lists '
+    'what this call wrote (an empty list means it wrote nothing). To use a compiled charter, the '
+    'owner opens %s in the charter folder, copies its policy and '
     'checks blocks into the hermes-axioma settings in the Hermes config by hand (merging with any '
     'policy or checks block already there), and restarts Hermes. Axiōma then shows the cards '
     'described in %s; it still only advises.' % (SETTINGS_FILE, CHARTER_FILE))
@@ -114,7 +115,7 @@ IDS = [q['id'] for q in QUESTIONS]
 NONE_WORDS = {'none', 'nothing', 'nobody', 'no one', 'n/a', 'no'}
 NO_LIMIT = {'no limit', 'no limits', 'any', 'anyone', 'unlimited'}
 YES, NO = {'yes', 'y', 'true'}, {'no', 'n', 'false'}
-TURN_OFF = {'turn off', 'turn-off', 'turn_off', 'turnoff'}
+TURN_OFF = {'turn off'}   # the one phrase that removes a default rule; no aliases
 TOOL_NAME = re.compile(r'[A-Za-z0-9_.:*?-]{3,100}')
 
 
@@ -333,27 +334,31 @@ def _scrub_and_folders(answers, state):
         else:
             folders[qid] = path
     named = dict((k, v) for k, v in folders.items() if v)
+    off = state.policy.get('remove') == ['scrub']
+    every = ('The delete and move warning is off by your earlier answer, so deletes and moves show no card.'
+             if off else 'Every delete and move still shows a card.')
     for qid in folders:
         if not folders[qid]:
-            state.none(qid, 'you named no folder. Every delete and move shows a card.')
+            state.none(qid, 'you named no folder. ' + every)
     if not named:
         state.none('skip_inside', 'not needed: no folder was named.')
         return
     answer = _word(answers['skip_inside']) if 'skip_inside' in answers else None
     if 'skip_inside' not in answers:
-        state.problem('skip_inside', 'not answered, so the folder%s you named are not used. Every delete and '
-                                     'move still shows a card.' % ('s' if len(named) > 1 else ''))
+        state.problem('skip_inside', 'not answered, so the folder%s you named are not used. %s'
+                      % ('s' if len(named) > 1 else '', every))
     elif answer in YES:
         for qid, path in named.items():
             state.policy[qid] = path
-            state.rule(qid, 'the folder is %s. Deletes and moves inside it skip the card; anything outside it '
-                            'still shows one.' % _q(path))
-        state.rule('skip_inside', 'you said yes: deletes and moves inside the named folder%s skip the warning card.'
-                   % ('s' if len(named) > 1 else ''))
+            state.rule(qid, 'the folder is %s. %s' % (_q(path), (
+                'The delete and move warning is off by your earlier answer, so this folder changes nothing.'
+                if off else 'Deletes and moves inside it skip the card; anything outside it still shows one.')))
+        state.rule('skip_inside', 'you said yes: deletes and moves inside the named folder%s skip the warning card.%s'
+                   % ('s' if len(named) > 1 else '', ' (The warning is off everywhere by your earlier answer.)' if off else ''))
     elif answer in NO:
         for qid, path in named.items():
             state.lines[qid] = 'NONE: you named %s but said no to skipping the card inside it, so no folder is set.' % _q(path)
-        state.none('skip_inside', 'you said no. Every delete and move still shows a card.')
+        state.none('skip_inside', 'you said no. ' + every)
     else:
         state.problem('skip_inside', 'the answer must be "yes" or "no", so the folder%s you named are not used.'
                       % ('s' if len(named) > 1 else ''))
@@ -385,8 +390,31 @@ def validate(settings):
     return errors
 
 
+def _yaml_plain(ch):
+    """True when YAML 1.1/1.2 readers accept this character raw inside a double-quoted scalar."""
+    o = ord(ch)
+    return (0x20 <= o <= 0x7E or 0xA0 <= o <= 0xD7FF or 0xE000 <= o <= 0xFFFD
+            or 0x10000 <= o <= 0x10FFFF) and o not in (0x2028, 0x2029, 0xFEFF)
+
+
 def _scalar(value):
-    return json.dumps(value, ensure_ascii=True)
+    """A YAML double-quoted scalar. JSON's surrogate-pair escapes are NOT valid YAML (a loader reads
+    them as two lone surrogates), so text is written raw, with only the quote and the backslash
+    escaped. compile_charter refuses any character YAML will not take raw (see _unsafe)."""
+    if not isinstance(value, str):
+        return json.dumps(value)
+    return '"' + value.replace('\\', '\\\\').replace('"', '\\"') + '"'
+
+
+def _unsafe(value):
+    """True when any text in the block holds a character a YAML reader would reject or change."""
+    if isinstance(value, str):
+        return not all(_yaml_plain(c) for c in value)
+    if isinstance(value, dict):
+        return any(_unsafe(k) or _unsafe(v) for k, v in value.items())
+    if isinstance(value, (list, tuple)):
+        return any(_unsafe(v) for v in value)
+    return False
 
 
 def _flow(rule):
@@ -462,7 +490,8 @@ def compile_charter(answers):
         state.problems.append({'question': 'answers', 'problem': 'the answers must be an object keyed by question id.'})
         answers = {}
     for key in sorted(k for k in answers if k not in IDS):
-        state.problems.append({'question': str(key)[:40], 'problem': 'not a question id; ignored.'})
+        label = re.sub(r'[^A-Za-z0-9_-]', '', str(key))[:40] or 'unnamed'
+        state.problems.append({'question': 'unknown key ' + label, 'problem': 'Not a question id; ignored.'})
     _compile_all(answers, state)
     policy = {}
     for key in ('workspace', 'output_dir', 'remove'):
@@ -479,6 +508,8 @@ def compile_charter(answers):
         checks['senders'] = state.checks['senders']
     settings = {'policy': policy, 'checks': checks}
     errors = validate(settings)
+    if not errors and _unsafe(settings):
+        errors = ['an answer holds a character that cannot be written safely to the settings file']
     if errors:
         # Fail safe: an empty block is the plugin defaults, never a looser set.
         settings = {'policy': {}, 'checks': {}}
@@ -493,31 +524,84 @@ def compile_charter(answers):
 
 
 # -- files and tool -----------------------------------------------------------------------------
-def _write(path, text):
-    tmp = path.with_name(path.name + '.tmp')
-    fd = os.open(str(tmp), os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
-    with os.fdopen(fd, 'w', encoding='utf-8') as handle:
-        handle.write(text)
-    os.replace(str(tmp), str(path))
+_NOFOLLOW = getattr(os, 'O_NOFOLLOW', 0)
+_DIRECTORY = getattr(os, 'O_DIRECTORY', 0)
+
+
+def _open_dir(directory, create):
+    """A descriptor on the charter folder itself: never through a symlink, owned by this user,
+    owner-only. Every read and write below is anchored on this descriptor, not on a path."""
+    directory = Path(directory)
+    if create:
+        directory.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
+        try:
+            os.mkdir(str(directory), 0o700)
+        except FileExistsError:
+            pass
+    fd = os.open(str(directory), os.O_RDONLY | _DIRECTORY | _NOFOLLOW)
+    try:
+        info = os.fstat(fd)
+        if hasattr(os, 'getuid') and info.st_uid != os.getuid():
+            raise OSError('the charter folder belongs to another user')
+        if create and info.st_mode & 0o077:
+            os.fchmod(fd, 0o700)
+    except Exception:
+        os.close(fd)
+        raise
+    return fd
+
+
+def _write(dirfd, name, text):
+    """Exclusive, unpredictable 0600 temporary in the same folder, then an atomic rename. A symlink
+    planted at the temporary or the final name is never written through: O_EXCL|O_NOFOLLOW refuses
+    the first, and rename replaces the second instead of following it."""
+    tmp = '.%s.%s.tmp' % (name, os.urandom(8).hex())
+    fd = os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_EXCL | _NOFOLLOW, 0o600, dir_fd=dirfd)
+    try:
+        with os.fdopen(fd, 'w', encoding='utf-8') as handle:
+            handle.write(text)
+        os.replace(tmp, name, src_dir_fd=dirfd, dst_dir_fd=dirfd)
+    except Exception:
+        try:
+            os.unlink(tmp, dir_fd=dirfd)
+        except OSError:
+            pass
+        raise
+
+
+def _read(dirfd, name):
+    fd = os.open(name, os.O_RDONLY | _NOFOLLOW, dir_fd=dirfd)
+    with os.fdopen(fd, 'r', encoding='utf-8') as handle:
+        import stat
+        if not stat.S_ISREG(os.fstat(handle.fileno()).st_mode):
+            raise OSError('not a regular file')
+        return handle.read(1_000_000)
 
 
 def write_charter(result, directory):
     """Write CHARTER.md and charter-settings.yaml into `directory` (created owner-only). Nothing else."""
     directory = Path(directory)
-    directory.mkdir(mode=0o700, parents=True, exist_ok=True)
-    _write(directory / CHARTER_FILE, result['charter'])
-    _write(directory / SETTINGS_FILE, result['settings_yaml'])
+    dirfd = _open_dir(directory, create=True)
+    try:
+        _write(dirfd, CHARTER_FILE, result['charter'])
+        _write(dirfd, SETTINGS_FILE, result['settings_yaml'])
+    finally:
+        os.close(dirfd)
     return [str(directory / CHARTER_FILE), str(directory / SETTINGS_FILE)]
 
 
 def read_charter(directory):
     """(charter text, settings yaml) of the last compile, or None when there is none."""
     try:
-        directory = Path(directory)
-        return ((directory / CHARTER_FILE).read_text(encoding='utf-8'),
-                (directory / SETTINGS_FILE).read_text(encoding='utf-8'))
+        dirfd = _open_dir(directory, create=False)
     except OSError:
         return None
+    try:
+        return _read(dirfd, CHARTER_FILE), _read(dirfd, SETTINGS_FILE)
+    except (OSError, UnicodeError):
+        return None
+    finally:
+        os.close(dirfd)
 
 
 NO_CHARTER = ('No charter has been compiled yet. Ask the agent to run the Axiōma Charter interview: it asks '
@@ -555,7 +639,7 @@ def make_handler(directory_fn):
                 return reply(error='expected {action, answers?, preview?}')
             action = args.get('action')
             if action == 'questions':
-                return reply(status='questions', intro=INTRO, questions=questions())
+                return reply(status='questions', intro=INTRO, questions=questions(), files=[])
             if action == 'compile':
                 result = compile_charter(args.get('answers'))
                 fields = dict(status='compiled', fingerprint=result['fingerprint'], complete=result['complete'],
@@ -567,8 +651,8 @@ def make_handler(directory_fn):
             if action == 'show':
                 found = read_charter(directory_fn())
                 if found is None:
-                    return reply(status='none', message=NO_CHARTER)
-                return reply(status='shown', charter=found[0], settings_yaml=found[1],
+                    return reply(status='none', message=NO_CHARTER, files=[])
+                return reply(status='shown', files=[], charter=found[0], settings_yaml=found[1],
                              files_match=_fingerprints(found[0]) == _fingerprints(found[1]) != [])
             return reply(error='action must be questions, compile or show')
         except Exception as exc:
