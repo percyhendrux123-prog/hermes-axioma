@@ -567,7 +567,9 @@ Outputs: [docs/evidence/](docs/evidence/).
 ## Disclosures
 
 Runtime surfaces: `ctx.register_tool`, `register_hook`, `register_command`, `get_config`,
-`session_surface`; `plugins.plugin_storage.plugin_data_dir`; `agent.secret_scope.get_secret`
+`session_surface`; `plugins.plugin_storage.plugin_data_dir`; request-scoped
+`hermes_constants.get_hermes_home` (read-only audit-path resolution for the API);
+`agent.secret_scope.get_secret`
 (presence only, for the optional provider-conflict check). Hooks: `pre_tool_call`, `post_tool_call`,
 `post_approval_response`, `pre_llm_call`, `on_session_finalize`, `transform_llm_output`. No
 middleware, overrides, monkeypatches, private approval-state probes, subprocesses or model calls.
