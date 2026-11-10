@@ -14,6 +14,7 @@ import threading
 import time
 import uuid
 from .card import NOTICE_QUESTION, render_card, render_notice, validate_card
+from .audit import current_task, plain_signal
 from .policy import Policy
 from .checks import Checks
 from . import seal as card_seal
@@ -201,6 +202,8 @@ class Advisor:
                     card_id=card_id, light=light, categories=categories, fingerprint=code,
                     keyed=keyed, at=self.clock())
                 self.record(keyed=keyed, event='presented_to_host', card_id=card_id, light=light,
+                            **({'signal': plain_signal(card['signal'] if staged else adjusted['signal'])}
+                               if current_task() else {}),
                             categories=categories, reason=reason, surface=surface or 'unknown',
                             checks=[{'check': r['check'], 'pass': r['pass']} for r in results],
                             fingerprint=code, **{k: v for k, v in parts.items() if k != 'card_id'})
