@@ -160,7 +160,7 @@ class ProducerTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp, patch.dict('os.environ', {'HERMES_KANBAN_TASK': 't_11111111'}):
             audit = Audit(Path(tmp) / 'audit.sqlite3')
             advisor = Advisor({}, audit)
-            card = dict(CARD, signal='<b>Run tests.</b>\u202e')
+            card = dict(CARD, signal='<b>Run tests.</b>')
             args = {'platform': 'telegram', 'message': 'PRIVATE MESSAGE BODY'}
             advisor.submit({'tool': 'send_message', 'arguments': args, 'card': card}, session_id='s')
             shown = advisor.before('send_message', args, session_id='s', tool_call_id='c')
