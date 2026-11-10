@@ -189,7 +189,8 @@ class ProducerTests(unittest.TestCase):
             out = signal.transform(mixed, platform='desktop')
             self.assertIn(directive, out)
             self.assertEqual(audit.board_lights()['t_11111111']['count'], 3)
-            wrapped = '[signal:caution]' + directive + '[/signal]'
+            # The host recognizes a directive only at a word boundary (whitespace before ::).
+            wrapped = '[signal:caution] ' + directive + ' [/signal]'
             self.assertIn(directive, signal.transform(wrapped, platform='desktop') or wrapped)
 
     def test_inline_audit_matches_frontend_normalization_and_host_utf16_cap(self):
