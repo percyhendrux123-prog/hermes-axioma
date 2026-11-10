@@ -112,6 +112,31 @@ class AuditBoardTests(unittest.TestCase):
 
 
 class ApiTests(unittest.TestCase):
+    def test_missing_database_get_resolves_profile_without_creating_storage(self):
+        import types
+        from fastapi import FastAPI
+        from fastapi.testclient import TestClient
+        spec = importlib.util.spec_from_file_location('axioma_readonly_api', ROOT / 'dashboard' / 'plugin_api.py')
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        app = FastAPI()
+        app.include_router(module.router)
+        with tempfile.TemporaryDirectory() as tmp:
+            home = Path(tmp)
+            constants = types.ModuleType('hermes_constants')
+            constants.get_hermes_home = lambda: home
+            storage = types.ModuleType('plugins.plugin_storage')
+            # Public host contract: plugin_data_dir creates; a read-only route must not use it.
+            def plugin_data_dir(name):
+                root = home / 'plugin-data' / name
+                root.mkdir(parents=True, exist_ok=True)
+                return root
+            storage.plugin_data_dir = plugin_data_dir
+            with patch.dict(sys.modules, {'hermes_constants': constants, 'plugins': types.ModuleType('plugins'),
+                                          'plugins.plugin_storage': storage}), TestClient(app) as client:
+                self.assertEqual(client.get('/board-lights').json(), {})
+                self.assertFalse((home / 'plugin-data').exists(), 'GET created storage directories')
+
     def test_real_router_loads_like_host_and_returns_only_projection(self):
         import json
         from fastapi import FastAPI
@@ -151,6 +176,35 @@ class ApiTests(unittest.TestCase):
 
 
 class ProducerTests(unittest.TestCase):
+    def test_directive_attributes_are_opaque_to_legacy_signal_transform(self):
+        from axioma.audit import Audit
+        from axioma.signal import Signal
+        directive = '::axioma{light="stop" signal="[signal:caution]No test[/signal]" question="Run it?"}'
+        with tempfile.TemporaryDirectory() as tmp, patch.dict('os.environ', {'HERMES_KANBAN_TASK': 't_11111111'}):
+            audit = Audit(Path(tmp) / 'audit.sqlite3')
+            signal = Signal(audit)
+            self.assertIsNone(signal.transform(directive, platform='desktop'))
+            self.assertEqual(audit.board_lights()['t_11111111']['count'], 1)
+            mixed = '[signal:caution]Check the audience[/signal]\n' + directive
+            out = signal.transform(mixed, platform='desktop')
+            self.assertIn(directive, out)
+            self.assertEqual(audit.board_lights()['t_11111111']['count'], 3)
+            wrapped = '[signal:caution]' + directive + '[/signal]'
+            self.assertIn(directive, signal.transform(wrapped, platform='desktop') or wrapped)
+
+    def test_inline_audit_matches_frontend_normalization_and_host_utf16_cap(self):
+        from axioma.audit import Audit
+        from axioma.signal import Signal
+        with tempfile.TemporaryDirectory() as tmp, patch.dict('os.environ', {'HERMES_KANBAN_TASK': 't_11111111'}):
+            audit = Audit(Path(tmp) / 'audit.sqlite3')
+            signal = Signal(audit)
+            for bad in ('::axioma{light="stop" liGht="go" signal="No test." question="Run it?"}',
+                        '::axioma{light="stop" signal="' + '\U0001f642' * 1024 + '" question="Run it?"}'):
+                signal.transform(bad, platform='desktop')
+                self.assertEqual(audit.board_lights(), {})
+            signal.transform('::axioma{LIGHT=" stop " SIGNAL="No test." QUESTION="Run it?"}', platform='desktop')
+            self.assertEqual(audit.board_lights()['t_11111111']['light'], 'stop')
+
     def test_card_and_inline_signals_reach_task_projection_without_bodies(self):
         import json
         from axioma.audit import Audit
