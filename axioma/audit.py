@@ -1,18 +1,33 @@
-"""Local transactional metadata only. No card, command, argument or answer bodies."""
+"""Local metadata plus a bounded signal excerpt for board lights. No full bodies or arguments."""
 from contextlib import contextmanager
 import json
 import os
+import re
 import sqlite3
 import stat
 import time
 import uuid
+import unicodedata
 
-FIELDS = {'event', 'card_id', 'categories', 'light', 'valid', 'answer', 'choice',
+FIELDS = {'event', 'card_id', 'categories', 'light', 'valid', 'answer', 'choice', 'signal',
           'answered_with_question', 'reason', 'span_hash', 'scope_hash', 'checks',
           'span_id', 'level', 'surface', 'shown', 'check_ok',
           # Card code (spec 5.6): the code, keyed digests of what it covers, a seal, and a mark
           # when the code was made with a throwaway key (the key file could not be read).
           'fingerprint', 'text_digest', 'tool_digest', 'args_digest', 'line_digests', 'prefix_tags', 'seal', 'key'}
+
+TASK_ID = re.compile(r't_[a-zA-Z0-9_-]{1,64}\Z')
+RANK = {'whisper': 0, 'go': 1, 'caution': 2, 'stop': 3}
+LIGHTS = {'red': 'stop', 'yellow': 'caution', 'green': 'go'}
+
+
+def plain_signal(value):
+    """A short plain-text tooltip, never a message body or rendered markup."""
+    if not isinstance(value, str):
+        return ''
+    text = re.sub(r'<[^>]*>', '', value[:4096])
+    text = ''.join(c for c in text if unicodedata.category(c) not in ('Cc', 'Cf', 'Cs', 'Zl', 'Zp'))
+    return ' '.join(text.split())[:160]
 
 
 def _owner_only(path, mode):
@@ -37,7 +52,11 @@ class Audit:
         db = sqlite3.connect(str(self.path), timeout=2)
         try:
             with db:
+                # Serialize schema inspection + ALTER across workers upgrading the same old DB.
+                db.execute('BEGIN IMMEDIATE')
                 db.execute('CREATE TABLE IF NOT EXISTS events (id TEXT PRIMARY KEY, at REAL, metadata TEXT)')
+                if 'task_id' not in {r[1] for r in db.execute('PRAGMA table_info(events)')}:
+                    db.execute('ALTER TABLE events ADD COLUMN task_id TEXT')
                 db.execute('CREATE TABLE IF NOT EXISTS whispers (scope TEXT, span TEXT, reason TEXT, PRIMARY KEY(scope, span))')
                 db.execute('CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value BLOB)')
             _owner_only(self.path, 0o600)
@@ -61,10 +80,53 @@ class Audit:
     def record(self, at=None, **metadata):
         if set(metadata) - FIELDS:
             raise ValueError('unexpected audit field')
+        if 'signal' in metadata:
+            metadata['signal'] = plain_signal(metadata['signal'])
+        task = os.environ.get('HERMES_KANBAN_TASK', '')
+        task = task if TASK_ID.fullmatch(task) else None
         with self.connect() as db:
-            db.execute('INSERT INTO events VALUES (?, ?, ?)',
+            db.execute('INSERT INTO events (id, at, metadata, task_id) VALUES (?, ?, ?, ?)',
                        (uuid.uuid4().hex, time.time() if at is None else float(at),
-                        json.dumps(metadata, sort_keys=True)))
+                        json.dumps(metadata, sort_keys=True), task))
+
+    def board_lights(self):
+        """Read-only projection; count observations, not staged cards or repeated answer rows.
+
+        Does not create/migrate a DB on GET. Old unassigned rows cannot be attributed retroactively.
+        """
+        if not self.path.is_file():
+            return {}
+        db = sqlite3.connect(self.path.resolve().as_uri() + '?mode=ro', uri=True, timeout=2)
+        try:
+            if 'task_id' not in {r[1] for r in db.execute('PRAGMA table_info(events)')}:
+                return {}
+            rows = db.execute('SELECT task_id, at, metadata FROM events WHERE task_id IS NOT NULL '
+                              'ORDER BY at, rowid')
+            out = {}
+            for task, at, raw in rows:
+                if not TASK_ID.fullmatch(task):
+                    continue
+                try:
+                    item = json.loads(raw)
+                except (ValueError, TypeError):
+                    continue
+                if not isinstance(item, dict):
+                    continue
+                if item.get('event') == 'presented_to_host':
+                    light = LIGHTS.get(item.get('light'))
+                elif item.get('event') == 'signal' and item.get('shown') is True:
+                    light = item.get('level')
+                else:
+                    continue
+                if not isinstance(light, str) or light not in RANK:
+                    continue
+                prev = out.get(task)
+                worst = light if prev is None or RANK[light] > RANK[prev['light']] else prev['light']
+                out[task] = {'light': worst, 'count': (prev['count'] if prev else 0) + 1,
+                             'signal': plain_signal(item.get('signal')), 'at': at}
+            return out
+        finally:
+            db.close()
 
     def whisper_seen(self, scope_hash, span_hash):
         with self.connect() as db:
