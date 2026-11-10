@@ -111,6 +111,45 @@ class AuditBoardTests(unittest.TestCase):
 
 
 
+class ApiTests(unittest.TestCase):
+    def test_real_router_loads_like_host_and_returns_only_projection(self):
+        import json
+        from fastapi import FastAPI
+        from fastapi.testclient import TestClient
+        from axioma.audit import Audit
+        manifest = json.loads((ROOT / 'dashboard' / 'manifest.json').read_text())
+        self.assertEqual(manifest['name'], 'hermes-axioma')
+        self.assertTrue(manifest['tab']['hidden'])
+        # Same standalone file loading contract as _mount_one_plugin_api, not a package import.
+        spec = importlib.util.spec_from_file_location('hermes_dashboard_plugin_hermes-axioma',
+                                                      ROOT / 'dashboard' / manifest['api'])
+        module = importlib.util.module_from_spec(spec)
+        sys.modules[spec.name] = module
+        spec.loader.exec_module(module)
+        app = FastAPI()
+        app.include_router(module.router, prefix='/api/plugins/hermes-axioma')
+        with tempfile.TemporaryDirectory() as tmp:
+            audit = Audit(Path(tmp) / 'audit.sqlite3')
+            with patch.dict('os.environ', {'HERMES_KANBAN_TASK': 't_11111111'}):
+                audit.record(at=10, event='presented_to_host', light='yellow',
+                             signal='Check the audience.', scope_hash='NO-SCOPE-HASH',
+                             args_digest='NO-ARGUMENTS', fingerprint='NO-FINGERPRINT')
+            before = audit.path.read_bytes()
+            with patch.object(module, 'data_root', return_value=Path(tmp)), TestClient(app) as client:
+                response = client.get('/api/plugins/hermes-axioma/board-lights')
+                self.assertEqual(response.status_code, 200)
+                self.assertEqual(response.json(), {'t_11111111': {
+                    'light': 'caution', 'count': 1, 'signal': 'Check the audience.', 'at': 10.0}})
+                self.assertEqual(response.headers['cache-control'], 'no-store')
+                for forbidden in ('NO-', tmp, 'metadata', 'arguments', 'scope_hash', 'fingerprint'):
+                    self.assertNotIn(forbidden, response.text)
+                self.assertEqual(client.post('/api/plugins/hermes-axioma/board-lights', json={}).status_code, 405)
+            self.assertEqual(audit.path.read_bytes(), before, 'GET must not mutate the audit DB')
+            with patch.object(module, 'data_root', return_value=Path(tmp) / 'missing'), TestClient(app) as client:
+                self.assertEqual(client.get('/api/plugins/hermes-axioma/board-lights').json(), {})
+                self.assertFalse((Path(tmp) / 'missing').exists())
+
+
 class GuidanceTests(unittest.TestCase):
     def test_inline_instruction_only_on_desktop_and_rechecked_each_turn(self):
         module, ctx = entrypoint(), Context()
