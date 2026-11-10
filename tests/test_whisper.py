@@ -2,6 +2,7 @@ from pathlib import Path
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
@@ -23,6 +24,7 @@ class WhisperTests(unittest.TestCase):
         self.assertIsNone(w.transform(text, session_id='s', platform='cli'), 'untagged: host keeps original')
         self.assertEqual(w.audit.rows(), [])
 
+    @patch.dict('os.environ', {'HERMES_KANBAN_TASK': ''})  # non-task no-text contract
     def test_strip_log_once_and_no_text_bodies(self):
         w = self.whisper()
         text = 'A [whisper:unverified_figure]123 synthetic[/whisper] claim.'
