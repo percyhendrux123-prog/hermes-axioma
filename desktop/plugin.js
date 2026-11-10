@@ -650,6 +650,56 @@ function InlineCard(props) {
   })
 }
 
+// ---------------------------------------------------------------- board lights
+function boardLights(ctx) {
+  let enabled = false, alive = true, dispose = null, pending = false, generation = 0
+  let lastFetch = -Infinity
+  const scope = () => `${host.state.connectionId?.get() || ''}:${host.state.profile?.get() || ''}`
+  const publish = map => {
+    if (!alive || !enabled) return
+    dispose?.()
+    // A fresh contribution makes the host invalidate its memoized badge rows. No I/O in decorate.
+    dispose = ctx.register({ id: 'board', area: 'kanban.card.badges', data: { decorate: card => map.get(card.id) || null } })
+  }
+  const refresh = async () => {
+    if (!alive || !enabled || pending || typeof ctx.rest !== 'function' || Date.now() - lastFetch < 30000) return
+    lastFetch = Date.now()
+    pending = true
+    const version = generation, owner = scope()
+    try {
+      // ctx.rest supplies the active profile, authenticated transport and our plugin namespace.
+      const raw = await ctx.rest('/board-lights', { method: 'GET', timeoutMs: 10000 })
+      const map = new Map()
+      if (raw && typeof raw === 'object' && !Array.isArray(raw)) {
+        for (const [id, row] of Object.entries(raw)) {
+          if (!/^t_[a-zA-Z0-9_-]{1,64}$/.test(id) || !row || typeof row !== 'object') continue
+          if (!['stop', 'caution', 'go', 'whisper'].includes(row.light) || !Number.isSafeInteger(row.count) || row.count < 1 || !Number.isFinite(row.at)) continue
+          map.set(id, Object.freeze({
+            label: plainText(`${row.light.toUpperCase()} ${row.count}`, 24),
+            tone: { stop: 'red', caution: 'yellow', go: 'green', whisper: 'neutral' }[row.light],
+            tooltip: plainText(row.signal, 160)
+          }))
+        }
+      }
+      if (generation === version && scope() === owner) publish(map)
+    } catch {
+      if (generation === version && scope() === owner) publish(new Map()) // never leave stale GO on failure
+    } finally { pending = false }
+  }
+  const reset = () => { generation++; publish(new Map()); void refresh() }
+  for (const key of ['profile', 'connectionId']) {
+    if (typeof host.state[key]?.listen === 'function') ctx.onDispose(host.state[key].listen(reset))
+  }
+  ctx.setInterval(refresh, 30000)
+  ctx.onDispose(() => { alive = false; enabled = false; generation++; dispose?.(); dispose = null })
+  return () => {
+    enabled = true
+    publish(new Map())
+    void refresh()
+    return () => { enabled = false; generation++; dispose?.(); dispose = null }
+  }
+}
+
 function SettingsPage({ save }) {
   const prefs = useValue($prefs)
   const set = next => save({ ...prefs, ...next })
@@ -665,6 +715,7 @@ function SettingsPage({ save }) {
       line('Side pane (state and course changes)', jsx(Switch, { checked: prefs.pane, onCheckedChange: v => set({ pane: !!v }) })),
       line('Status-bar readout', jsx(Switch, { checked: prefs.chip, onCheckedChange: v => set({ chip: !!v }) })),
       line('Inline cards', jsx(Switch, { checked: prefs.inline, onCheckedChange: v => set({ inline: !!v }) })),
+      line('Board lights', jsx(Switch, { checked: prefs.board, onCheckedChange: v => set({ board: !!v }) })),
       line('Strength', choice('strength', ['faint', 'soft', 'strong'])),
       line('Position', choice('place', ['center', 'right']))
     ]
@@ -721,7 +772,8 @@ export default {
     const optional = {
       pane: () => ctx.register({ id: 'pane', area: 'panes', title: 'axiōma', data: { placement: 'right', width: '320px' }, render: () => jsx(CaduceusPane, {}) }),
       chip: () => ctx.register({ id: 'chip', area: STATUSBAR_AREAS.right, order: 140, render: () => jsx(Chip, {}) }),
-      inline: () => ctx.register({ id: 'inline', area: 'transcript.directives', data: { name: 'axioma', render: InlineCard } })
+      inline: () => ctx.register({ id: 'inline', area: 'transcript.directives', data: { name: 'axioma', render: InlineCard } }),
+      board: boardLights(ctx)
     }
     const mounted = {}
     const sync = () => {
@@ -732,6 +784,7 @@ export default {
       }
     }
     const save = next => { $prefs.set(next); ctx.storage.set('prefs', next); sync() }
+    ctx.onDispose(() => { for (const stop of Object.values(mounted)) stop?.() })
 
     patch({ busy: !!host.state.busy.get() })
     ctx.onDispose(host.state.busy.listen(busy => patch({ busy: !!busy })))
