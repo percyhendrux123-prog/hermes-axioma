@@ -17,8 +17,9 @@ router = APIRouter()
 
 
 def data_root():
-    from plugins.plugin_storage import plugin_data_dir
-    return plugin_data_dir('hermes-axioma')
+    # plugin_data_dir() also mkdirs. GET must resolve the same profile path without writes.
+    from hermes_constants import get_hermes_home
+    return get_hermes_home() / 'plugin-data' / 'hermes-axioma'
 
 
 @router.get('/board-lights')
