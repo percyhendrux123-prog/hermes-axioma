@@ -21,6 +21,11 @@ RANK = {'whisper': 0, 'go': 1, 'caution': 2, 'stop': 3}
 LIGHTS = {'red': 'stop', 'yellow': 'caution', 'green': 'go'}
 
 
+def current_task():
+    value = os.environ.get('HERMES_KANBAN_TASK', '')
+    return value if TASK_ID.fullmatch(value) else None
+
+
 def plain_signal(value):
     """A short plain-text tooltip, never a message body or rendered markup."""
     if not isinstance(value, str):
@@ -80,10 +85,12 @@ class Audit:
     def record(self, at=None, **metadata):
         if set(metadata) - FIELDS:
             raise ValueError('unexpected audit field')
+        task = current_task()
         if 'signal' in metadata:
-            metadata['signal'] = plain_signal(metadata['signal'])
-        task = os.environ.get('HERMES_KANBAN_TASK', '')
-        task = task if TASK_ID.fullmatch(task) else None
+            if task:
+                metadata['signal'] = plain_signal(metadata['signal'])
+            else:
+                metadata.pop('signal')
         with self.connect() as db:
             db.execute('INSERT INTO events (id, at, metadata, task_id) VALUES (?, ?, ?, ?)',
                        (uuid.uuid4().hex, time.time() if at is None else float(at),
