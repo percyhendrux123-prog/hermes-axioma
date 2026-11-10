@@ -24,6 +24,7 @@ import json
 import re
 import threading
 import uuid
+from .audit import current_task, plain_signal
 
 LEVELS = ('stop', 'caution', 'go', 'intent')
 ALIASES = {'red': 'stop', 'yellow': 'caution', 'green': 'go', 'white': 'intent'}
@@ -470,6 +471,7 @@ class Signal:
         if span.level == 'intent' and span.show:
             return  # intent is not a risk signal; nothing to audit
         self.audit.record(event='signal', span_id=uuid.uuid4().hex, level=span.level, reason=reason,
+                          signal=span.text,
                           scope_hash=scope, surface=surface, shown=span.show, span_hash=span_hash,
                           check_ok=(span.show if span.level == 'go' else None))
 
@@ -570,9 +572,44 @@ class Signal:
                 and all(katex_char_ok(c) for c in text))
 
     # -- hook ---------------------------------------------------------------------------------
+    def log_inline(self, text):
+        """Observe complete Desktop directives without changing their source or reading history.
+
+        Only task workers retain the short signal. Code examples and malformed attributes do not count.
+        The frontend still validates its own untrusted props; this is not permission or screen proof.
+        """
+        if not current_task() or '::axioma{' not in text:
+            return
+        in_code = self.in_code(text)
+        pair = re.compile(r'''\s*([a-z][\w-]{0,63})=(?:"([^"{}\n]*)"|'([^'{}\n]*)')''')
+        for m in re.finditer(r'(?<!\S)::axioma\{([^{}\n]{0,2048})\}', text):
+            if in_code(m.start()):
+                continue
+            attrs, pos = {}, 0
+            body = m.group(1)
+            while pos < len(body):
+                p = pair.match(body, pos)
+                if p is None or p.group(1) in attrs:
+                    break
+                attrs[p.group(1)] = p.group(2) if p.group(2) is not None else p.group(3)
+                pos = p.end()
+            if body[pos:].strip() or not {'light', 'signal', 'question'} <= attrs.keys():
+                continue
+            if attrs['light'] not in ('stop', 'caution', 'go', 'whisper'):
+                continue
+            if not plain_signal(attrs['signal']) or not plain_signal(attrs['question']):
+                continue
+            try:
+                self.audit.record(event='signal', level=attrs['light'], shown=True, surface='desktop',
+                                  signal=attrs['signal'], reason='inline_card')
+            except Exception:
+                pass  # advice rendering must not depend on an available audit DB
+
     def transform(self, response_text, session_id='', platform='', turn_id='', **kwargs):
         if not isinstance(response_text, str):
             return None
+        if isinstance(platform, str) and platform.strip().lower() == 'desktop':
+            self.log_inline(response_text)
         # Bring tags hidden by invisible characters into view, and drop a keyword cut off at the end.
         text = self.prepare(response_text)
         if not (self.prose_has_tags(text) or self.cut_off(response_text)
