@@ -22,7 +22,7 @@ let hooks = [], cursor = 0
 const useRef = value => { const i = cursor++; return hooks[i] ??= { current: value } }
 const useState = value => { const i = cursor++; if (!(i in hooks)) hooks[i] = value; return [hooks[i], v => { hooks[i] = typeof v === 'function' ? v(hooks[i]) : v }] }
 const host = {
-  state: { busy: atom(false), focusedSessionId: atom('sess-1') },
+  state: { busy: atom(false), focusedSessionId: atom('sess-1'), profile: atom('default'), connectionId: atom('local') },
   request: (method, params) => { requests.push([method, params]); return Promise.resolve({ status: 'ok' }) },
   composer: { submit: (id, text) => { composerCalls.push([id, text]); return true } },
   notify: () => {}, notifyError: () => {}
@@ -142,11 +142,20 @@ api.$light.set(false)
 // register: parts are separately removable
 const regs = [], disposed = [], contributions = new Map(), cleanups = [], intervals = []
 const storage = new Map()
+const restCalls = []
+let boardPayload = {
+  t_red: { light: 'stop', count: 5, signal: 'Latest signal.\u202e' + 'x'.repeat(200), at: 1 },
+  t_yellow: { light: 'caution', count: 2, signal: 'Check it.', at: 2 },
+  t_green: { light: 'go', count: 1, signal: 'Test passed.', at: 3 },
+  t_whisper: { light: 'whisper', count: 1, signal: 'Second look.', at: 4 }
+}
+let restResponse = () => Promise.resolve(boardPayload)
 const ctx = {
   storage: { get: (k, d) => (storage.has(k) ? storage.get(k) : d), set: (k, v) => storage.set(k, v) },
   register: r => { regs.push(r.id); contributions.set(r.id, r); let live = true; return () => { if (!live) return; live = false; disposed.push(r.id); regs.splice(regs.indexOf(r.id), 1); if (contributions.get(r.id) === r) contributions.delete(r.id) } },
   registerMany: list => list.forEach(r => regs.push(r.id)),
   registerSettingsPage: r => { ctx.settings = r },
+  rest: (path, opts) => { restCalls.push([path, opts]); return restResponse() },
   onDispose: fn => cleanups.push(fn), onEvent: (pat, fn) => { ctx.handler = fn }, setInterval: (fn, ms) => { intervals.push([fn, ms]); return noop }, setTimeout: fn => fn(), addEventListener: () => {}
 }
 const canvasStub = { setAttribute() {}, style: {}, getContext: () => ({ fillRect() {}, clearRect() {} }), remove() {} }
@@ -226,6 +235,51 @@ if (directive()) {
   hooks = []; tree = render(props(attrs)); await buttons(tree)[0].props.onClick(); tree = render(props(attrs))
   check('inline: older insert-only host targets owner and explains draft', composerCalls.at(-1).join() === 'owner-session,Hold.' && text(tree).includes('Inserted'))
   host.composer.submit = submit
+}
+
+// Board cache: only the poll performs I/O; decorate is a synchronous immutable snapshot.
+await Promise.resolve(); await Promise.resolve()
+const board = () => contributions.get('board')
+const decorate = id => board()?.data.decorate(Object.freeze({ id, status: 'running', assignee: 'worker', tenant: null }), Object.freeze({ tenants: [] }))
+check('board: default-on contribution and documented GET channel', board()?.area === 'kanban.card.badges' && restCalls[0]?.[0] === '/board-lights' && restCalls[0]?.[1]?.method === 'GET')
+if (board()) {
+  check('board: unknown id contributes null', decorate('unknown') === null)
+  for (const [id, tone, label] of [['t_red', 'red', 'STOP 5'], ['t_yellow', 'yellow', 'CAUTION 2'], ['t_green', 'green', 'GO 1'], ['t_whisper', 'neutral', 'WHISPER 1']]) {
+    const badge = decorate(id)
+    check(`board: ${id} has correct tone/count and bounded plain text`, badge?.tone === tone && badge?.label === label && [...badge.label].length <= 24 && [...badge.tooltip].length <= 160 && !badge.tooltip.includes('\u202e'))
+  }
+  const calls = restCalls.length
+  for (let i = 0; i < 50; i++) decorate('t_red')
+  check('board: decorate performs no I/O or promises', restCalls.length === calls && !decorate('t_red')?.then)
+  const tick = intervals.find(([, ms]) => ms === 30000)?.[0]
+  check('board: refresh interval is at least 30 seconds', !!tick)
+  const realNow = Date.now
+  let now = realNow()
+  Date.now = () => now
+  await tick()
+  check('board: repeated refresh within 30 seconds is throttled', restCalls.length === calls)
+  save({ ...api.$prefs.get(), board: false })
+  check('board: switch unregisters and disables polling', !board())
+  now += 30001; await tick()
+  check('board: off switch causes no REST call', restCalls.length === calls)
+  boardPayload = { t_green: { light: 'go', count: Number.MAX_SAFE_INTEGER, signal: 'new', at: 4 }, t_bad: { light: 'stop', count: 'wrong' } }
+  save({ ...api.$prefs.get(), board: true }); await Promise.resolve(); await Promise.resolve()
+  check('board: refresh invalidates host contribution, old ids gone', decorate('t_red') === null && decorate('t_green')?.tooltip === 'new')
+  check('board: huge count label stays within SDK cap; malformed row ignored', decorate('t_green')?.label.length <= 24 && decorate('t_bad') === null)
+  restResponse = () => Promise.reject(new Error('synthetic HTTP failure'))
+  now += 30001; await tick()
+  check('board: failed poll clears stale green', decorate('t_green') === null)
+  let finish
+  restResponse = () => new Promise(resolve => { finish = resolve })
+  now += 30001
+  const pending = tick()
+  host.state.profile.set('another-profile')
+  finish({ t_red: { light: 'stop', count: 1, signal: 'Wrong profile', at: 5 } }); await pending
+  check('board: profile switch clears cache and rejects old in-flight response', decorate('t_red') === null)
+  const beforeToggle = restCalls.length
+  save({ ...api.$prefs.get(), board: false }); save({ ...api.$prefs.get(), board: true }); await tick()
+  check('board: rapid switches cannot bypass 30 second request cap', restCalls.length === beforeToggle)
+  Date.now = realNow
 }
 
 // overlay box: stays clear of the plugin's own pane
