@@ -215,7 +215,7 @@ if (directive()) {
   tree = render(props({ ...attrs, light: 'stop' }))
   check('inline: day palette independent of background switch', nodes(tree).some(n => n.props.style?.color === '#d70015'))
   themeMode = 'dark'
-  for (const light of ['caution', 'go', 'whisper', 'unknown']) {
+  for (const light of ['caution', 'go', 'whisper', 'unknown', '__proto__']) {
     hooks = []; tree = render(props({ ...attrs, light }))
     check(`inline: ${light} renders without throwing and never grants permission`, text(tree).includes('Axiōma advises, the person decides.') && (light !== 'unknown' || text(tree).includes('ADVICE')))
   }
@@ -223,7 +223,9 @@ if (directive()) {
   tree = render(props({ ...attrs, signal: '<img src=x onerror=alert(1)>**text**\u202e\x00' + 'x'.repeat(600), onclick: 'IGNORE ME' }))
   check('inline: HTML/markdown are text, controls removed, unknown keys ignored', !nodes(tree).some(n => n.type === 'img' || n.props.dangerouslySetInnerHTML) && !text(tree).includes('\u202e') && !text(tree).includes('\x00') && !text(tree).includes('IGNORE ME'))
   check('inline: overlong signal capped', !text(tree).includes('x'.repeat(401)))
-  for (const p of [props({ light: 'stop' }), { attrs: null, source: '<b>bad</b>' }, { ...props(attrs), source: '::axioma{signal="x" garbage question="?"}' }, { ...props(attrs), attrs: { ...attrs, question: {} } }]) {
+  for (const p of [props({ light: 'stop' }), { attrs: null, source: '<b>bad</b>' }, { ...props(attrs), source: '::axioma{signal="x" garbage question="?"}' }, { ...props(attrs), attrs: { ...attrs, question: {} } },
+    { ...props(attrs), source: '::axioma{light="stop" liGht="go" signal="x" question="?"}' },
+    props({ ...attrs, signal: '\u{1f642}'.repeat(1024) })]) {
     hooks = []; tree = render(p)
     check('inline: malformed/missing attrs render source plainly without actions', text(tree).includes(p.source) && buttons(tree).length === 0)
   }
@@ -235,6 +237,16 @@ if (directive()) {
   hooks = []; tree = render(props(attrs)); await buttons(tree)[0].props.onClick(); tree = render(props(attrs))
   check('inline: older insert-only host targets owner and explains draft', composerCalls.at(-1).join() === 'owner-session,Hold.' && text(tree).includes('Inserted'))
   host.composer.submit = submit
+  hooks = []; tree = render(props(attrs)); const settledButtons = buttons(tree)
+  render({ ...props(attrs), streaming: true }); const beforeStaleClick = composerCalls.length
+  await settledButtons[0].props.onClick()
+  check('inline: an old settled handler cannot reply after streaming resumes', composerCalls.length === beforeStaleClick)
+  host.composer.submit = () => false
+  hooks = []; tree = render(props(attrs)); await buttons(tree)[0].props.onClick(); tree = render(props(attrs))
+  check('inline: host refusal is explicit and still disables both buttons', text(tree).includes('Nothing was sent') && buttons(tree).every(n => n.props.disabled))
+  host.composer.submit = submit
+  hooks = []; tree = render({ ...props(attrs), sessionId: undefined })
+  check('inline: pre-sessionId hosts fail closed, never use active chat', buttons(tree).every(n => n.props.disabled))
 }
 
 // Board cache: only the poll performs I/O; decorate is a synchronous immutable snapshot.
@@ -281,6 +293,9 @@ if (board()) {
   check('board: rapid switches cannot bypass 30 second request cap', restCalls.length === beforeToggle)
   Date.now = realNow
 }
+
+for (const dispose of cleanups) dispose()
+check('unload: directive and board contribution removed', !directive() && !board())
 
 // overlay box: stays clear of the plugin's own pane
 const ob = api.overlayBox
