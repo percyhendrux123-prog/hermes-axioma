@@ -7,6 +7,7 @@ import re
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
@@ -213,6 +214,7 @@ class IntegrityTests(Base):
         s.finalize(session_id='s')
         self.assertEqual(go('call_ok'), 'passed')
 
+    @patch.dict('os.environ', {'HERMES_KANBAN_TASK': ''})  # non-task no-text contract
     def test_every_flag_logged_without_bodies(self):
         s = self.signal()
         s.transform(PERCY + ' [whisper:assumption]secret figure 99[/whisper]', session_id='s', platform='desktop')
