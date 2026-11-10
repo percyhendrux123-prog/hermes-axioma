@@ -300,6 +300,7 @@ class FingerprintFlow(unittest.TestCase):
                                                            session_id='s', platform=surface)
                     self.assertTrue(out is None or line in out, out)
 
+    @patch.dict('os.environ', {'HERMES_KANBAN_TASK': ''})  # non-task no-text contract
     def test_log_round_trip_staged_shown_answered(self):
         a = self.advisor('telegram')
         msg = self.shown(a)
