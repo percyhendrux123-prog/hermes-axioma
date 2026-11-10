@@ -1,5 +1,5 @@
 name: hermes-axioma
-version: "0.5.1"
+version: "0.5.2"
 description: "Inline signal color in the agent's normal reply (color + style + word, never color alone), plus an advisory card before send/spend/spin/scrub, and a plain-English charter interview that compiles to a settings block. Advisor, not a gate."
 author: hermes-axioma contributors
 license: MIT

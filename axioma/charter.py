@@ -32,10 +32,12 @@ MAX_WORDS = 6
 NOTHING_APPLIED = (
     'Nothing was applied. This tool changes no setting, no config.yaml and no profile; `files` lists '
     'what this call wrote (an empty list means it wrote nothing). To use a compiled charter, the '
-    'owner opens %s in the charter folder, copies its policy and '
-    'checks blocks into the hermes-axioma settings in the Hermes config by hand (merging with any '
-    'policy or checks block already there), and restarts Hermes. Axiōma then shows the cards '
-    'described in %s; it still only advises.' % (SETTINGS_FILE, CHARTER_FILE))
+    'owner opens %s in the charter folder and adds the rules in it to the '
+    'hermes-axioma settings in the Hermes config by hand, keeping every rule already there (a block '
+    'pasted over an existing policy or checks block replaces it and erases its rules), then '
+    'restarts Hermes. Read the "To use this" section of the charter back to the owner: it says '
+    'what to add and what to watch for. Axiōma then shows the cards described in %s; it still '
+    'only advises.' % (SETTINGS_FILE, CHARTER_FILE))
 
 # Tool-name globs a "red card" word is looked for in: sending, posting, paying, starting jobs or
 # agents, and terminal commands. Reads and searches are left out on purpose. Every non-terminal
@@ -467,13 +469,19 @@ def _flow(rule):
 def settings_yaml(settings, fp):
     """The settings block as YAML, in the nesting the README's Operator settings shows."""
     out = ['# Axiōma Charter settings, fingerprint %s' % fp,
-           '# Nothing has applied this file. Copy it by hand into the hermes-axioma settings.',
-           'plugins:', '  entries:', '    hermes-axioma:', '      settings:']
+           '# Nothing has applied this file. Add these rules by hand to the hermes-axioma settings.',
+           '# ADD, do not replace: a block pasted over a policy or checks block you already have',
+           '# erases the rules in it. Keep a copy of your config before you edit it.']
     base = '        '
+    if not any(settings[block] for block in ('policy', 'checks')):
+        return '\n'.join(out + ['# This charter makes no rule. There is nothing to copy.']) + '\n'
+    out += ['plugins:', '  entries:', '    hermes-axioma:', '      settings:']
     for block in ('policy', 'checks'):
         body = settings[block]
         if not body:
-            out.append('%s%s: {}' % (base, block))
+            # Never written as an empty mapping: pasted in, "policy: {}" would erase a live policy.
+            out.append('%s# %s: this charter makes no %s rule. Leave any %s block you have as it is.'
+                       % (base, block, block, block))
             continue
         out.append('%s%s:' % (base, block))
         for key, value in body.items():
@@ -499,6 +507,33 @@ def _defaults_line(removed):
     return text + ' (listed in axioma/policy.py), and the delete and move warning.'
 
 
+def _terminal_rule(settings):
+    return any(isinstance(rule, dict) and rule.get('tool') == 'terminal'
+               for key in ('deny', 'non_reversible') for rule in settings['checks'].get(key, []))
+
+
+def _use_lines(settings):
+    """The "To use this" section. Names only the blocks this charter filled, says add-not-replace,
+    and warns when a red-card word also covers terminal commands."""
+    blocks = [block for block in ('policy', 'checks') if settings[block]]
+    if not blocks:
+        return ['This charter makes no rule, so there is nothing to copy. Your settings stay as they are. '
+                'The Axiōma Charter tool does not edit any config.']
+    names = ' and '.join('`%s`' % block for block in blocks)
+    lines = ['- Keep a copy of your Hermes config first.',
+             '- Add the rules under %s in charter-settings.yaml to the hermes-axioma settings by hand, then '
+             'restart Hermes. The Axiōma Charter tool does not edit any config.' % names,
+             '- Add, do not replace. If you already have a `policy` or `checks` block, put the new lines '
+             'inside it. A block pasted over one you already have erases the rules in it.']
+    if _terminal_rule(settings):
+        lines.append('- Your red-card words also cover terminal commands (the lines with `tool: "terminal"`). '
+                     'A terminal command that only mentions a word, such as a search or a commit message, '
+                     'turns the card red too, and Hermes may stop to ask you. That includes scheduled jobs '
+                     'and worker agents running with no one watching. Leave those lines out if you do not '
+                     'want that.')
+    return lines
+
+
 def render_charter(state, settings, fp):
     removed = 'scrub' in settings['policy'].get('remove', [])
     lines = ['# Axiōma Charter', '',
@@ -522,9 +557,7 @@ def render_charter(state, settings, fp):
               'description of a situation (for example "spending I did not approve") never fires. Items over '
               '%d words are refused for that reason; shorter ones are not checked.' % MAX_WORDS,
               '- Delete and move detection is best-effort shell reading. See the README.',
-              '', '## To use this',
-              'Copy the policy and checks blocks from charter-settings.yaml into the hermes-axioma settings by '
-              'hand and restart Hermes. The Axiōma Charter tool does not edit any config.']
+              '', '## To use this'] + _use_lines(settings)
     return '\n'.join(lines) + '\n'
 
 
@@ -707,8 +740,8 @@ SCHEMA = {
                    'answers; leave an unanswered question out rather than guessing. Before compile, read '
                    'all answers back in plain words and get the owner\'s yes (use preview: true to read '
                    'the charter itself back without writing a file), then read the compiled charter and '
-                   'every problem back. Tell the owner nothing was applied and that they apply the '
-                   'settings by hand.',
+                   'every problem back, including its "To use this" section. Tell the owner nothing was '
+                   'applied and that they add the settings by hand, keeping the rules they already have.',
     'parameters': {'type': 'object', 'required': ['action'], 'additionalProperties': False, 'properties': {
         'action': {'type': 'string', 'enum': ['questions', 'compile', 'show']},
         'answers': {'type': 'object', 'description': 'Question id -> the owner\'s answer (compile only).'},

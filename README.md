@@ -1,6 +1,6 @@
 # hermes-axioma
 
-Inline signal color for Hermes Agent · MIT · v0.5.1
+Inline signal color for Hermes Agent · MIT · v0.5.2
 
 The agent writes its normal reply. Axioma colors only the few phrases inside it that deserve your
 attention before you act, and puts a word next to each one so the meaning never depends on color.
@@ -319,7 +319,16 @@ and compiles them into two things: a one-page charter you can read, and the matc
 
 The charter lists **the rules the card warns on**. Axiōma still only advises. Nothing in the Charter
 blocks, approves or runs anything, and the tool applies nothing: it does not edit `config.yaml` or
-any profile. You copy the settings block in by hand, then restart Hermes.
+any profile. You add the rules to your settings by hand, then restart Hermes.
+
+Applying it: add, do not replace. The settings file holds only the blocks your answers filled. A
+block your answers left empty is written as a comment, never as `policy: {}`, because an empty block
+pasted over one you already have erases the rules in it. If you already have a `policy` or `checks`
+block, put the new lines inside it, and keep a copy of your config first. When a red-card word also
+covers terminal commands, the charter says so: a command that only mentions the word (a search, a
+commit message) turns the card red too, including in scheduled jobs and worker agents running with
+no one watching, and you can leave the `tool: "terminal"` lines out. The Charter does not read your
+current settings, so it cannot show you the merged result.
 
 How to run it: ask the agent to run the Axiōma Charter interview. It uses the `axioma_charter`
 tool with three actions: `questions` (the interview), `compile` (your answers to the charter,

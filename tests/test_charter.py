@@ -4,6 +4,7 @@ import itertools
 import json
 import os
 from pathlib import Path
+import re
 import sys
 import tempfile
 import unittest
@@ -51,6 +52,15 @@ CALLS = [
     ('terminal', {'command': 'rm /Users/example/projects/demo/old.txt'}),
     ('read_file', {}), ('terminal', {'command': 'ls'}),
 ]
+
+
+
+def loaded_settings(yaml, text):
+    """The settings a YAML reader gets from the file. An empty block is left out of the file on
+    purpose (a pasted `policy: {}` would erase a live policy), so it is filled in here."""
+    loaded = yaml.safe_load(text) or {}
+    found = loaded.get('plugins', {}).get('entries', {}).get('hermes-axioma', {}).get('settings', {})
+    return dict({'policy': {}, 'checks': {}}, **found)
 
 
 class QuestionTests(unittest.TestCase):
@@ -271,8 +281,7 @@ class CompileTests(unittest.TestCase):
             self.skipTest('PyYAML not installed')
         for answers in (full_answers(), full_answers(scrub='turn off', deny_words=['ü "q"', 'a: b']), {}):
             result = charter.compile_charter(answers)
-            loaded = yaml.safe_load(result['settings_yaml'])
-            self.assertEqual(loaded['plugins']['entries']['hermes-axioma']['settings'], result['settings'])
+            self.assertEqual(loaded_settings(yaml, result['settings_yaml']), result['settings'])
 
 
 class ToolTests(unittest.TestCase):
@@ -550,7 +559,7 @@ class ReviewFindingTests(unittest.TestCase):
             self.assertNotRegex(text, r'\\u[dD][89abAB]', 'no JSON surrogate escapes in YAML')
             if yaml is None:
                 continue
-            loaded = yaml.safe_load(text)['plugins']['entries']['hermes-axioma']['settings']
+            loaded = loaded_settings(yaml, text)
             self.assertEqual(loaded, result['settings'], answers)
             self.assertEqual(charter.validate(loaded), [], answers)
 
@@ -560,7 +569,7 @@ class ReviewFindingTests(unittest.TestCase):
         settings = result['settings']
         try:
             import yaml
-            settings = yaml.safe_load(result['settings_yaml'])['plugins']['entries']['hermes-axioma']['settings']
+            settings = loaded_settings(yaml, result['settings_yaml'])
         except ImportError:
             pass
         checks = Checks(settings['checks'])
@@ -701,6 +710,75 @@ class ProseAnswerTests(unittest.TestCase):
             self.assertIn('shorter ones are not checked', r['charter'])
         self.assertIn('ask again', charter.INTRO)
 
+
+
+
+class ApplyWordingTests(unittest.TestCase):
+    """The compiled files must never tell an owner to paste an empty block over live settings."""
+    KEY = re.compile(r'^\s*(policy|checks):', re.M)
+
+    def keys(self, text):
+        return self.KEY.findall(text)
+
+    def test_a_charter_with_no_rule_gives_nothing_to_copy(self):
+        result = charter.compile_charter({})
+        self.assertEqual(result['settings'], {'policy': {}, 'checks': {}})
+        self.assertEqual(self.keys(result['settings_yaml']), [])
+        self.assertNotIn('{}', result['settings_yaml'])
+        self.assertNotIn('plugins:', result['settings_yaml'])
+        self.assertIn('nothing to copy', result['settings_yaml'])
+        use = result['charter'].split('## To use this')[1]
+        self.assertIn('nothing to copy', use)
+        self.assertNotIn('Add the rules', use)
+
+    def test_an_empty_block_is_never_written_as_a_mapping(self):
+        result = charter.compile_charter({'never_undo': ['wipe-prod']})
+        self.assertEqual(result['settings']['policy'], {})
+        self.assertTrue(result['settings']['checks'])
+        self.assertEqual(self.keys(result['settings_yaml']), ['checks'])
+        self.assertNotIn('{}', result['settings_yaml'].replace('{tool', ''))
+        self.assertNotIn('policy: {}', result['settings_yaml'])
+        use = result['charter'].split('## To use this')[1]
+        self.assertIn('under `checks` in', use)
+        self.assertNotIn('`policy` and', use)
+        only_policy = charter.compile_charter({'spend_tools': ['buy_widgets']})
+        self.assertEqual(self.keys(only_policy['settings_yaml']), ['policy'])
+        self.assertIn('under `policy` in', only_policy['charter'])
+
+    def test_use_section_says_add_not_replace_and_back_up(self):
+        for answers in (full_answers(), {'never_undo': ['wipe-prod']}, {'spend_tools': ['buy_widgets']}):
+            result = charter.compile_charter(answers)
+            use = result['charter'].split('## To use this')[1]
+            for needle in ('Keep a copy of your Hermes config', 'Add, do not replace', 'erases the rules in it',
+                           'does not edit any config'):
+                self.assertIn(needle, use, answers)
+            self.assertIn('ADD, do not replace', result['settings_yaml'])
+        self.assertIn('pasted over an existing policy or checks block replaces it', charter.NOTHING_APPLIED)
+
+    def test_terminal_warning_only_when_a_rule_covers_terminal(self):
+        needle = 'no one watching'
+        for answers in ({'never_undo': ['wipe-prod']}, {'deny_words': ['receive_only']}):
+            result = charter.compile_charter(answers)
+            self.assertIn('tool: "terminal"', result['settings_yaml'])
+            self.assertIn(needle, result['charter'], answers)
+        for answers in ({'never_message': ['nobody@example.invalid']}, {'spend_tools': ['buy_widgets']}, {}):
+            result = charter.compile_charter(answers)
+            self.assertNotIn('tool: "terminal"', result['settings_yaml'])
+            self.assertNotIn(needle, result['charter'], answers)
+
+    def test_a_merge_of_the_file_into_live_settings_keeps_a_live_policy(self):
+        try:
+            import yaml
+        except ImportError:
+            self.skipTest('PyYAML not installed')
+        live = {'policy': {'remove': ['scrub'], 'workspace': '/Users/example/work'}, 'checks': {}}
+        for answers in ({'never_undo': ['wipe-prod']}, {}):
+            text = charter.compile_charter(answers)['settings_yaml']
+            found = ((yaml.safe_load(text) or {}).get('plugins', {}).get('entries', {})
+                     .get('hermes-axioma', {}).get('settings', {}))
+            self.assertNotIn('policy', found)
+            merged = dict(live, **found)   # the worst case: each block in the file replaces the live one
+            self.assertEqual(merged['policy'], live['policy'], answers)
 
 if __name__ == '__main__':
     unittest.main()
