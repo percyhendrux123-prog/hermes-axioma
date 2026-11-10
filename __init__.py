@@ -72,7 +72,17 @@ def register(ctx):
     ctx.register_hook('pre_tool_call', advisor.before)
     ctx.register_hook('post_tool_call', signal.observe)
     ctx.register_hook('post_approval_response', advisor.respond)
-    ctx.register_hook('pre_llm_call', lambda **kw: {'context': GUIDANCE})
+    def guidance(**kwargs):
+        extra = ''
+        if advisor.safe_surface() == 'desktop':
+            extra = ('\nDesktop only: for a stop or caution you MAY add one standalone line '
+                     '::axioma{light="caution" signal="One sentence why." question="Proceed?" '
+                     'affects="Who is affected"} (use light="stop" and green="What turns it green" '
+                     'for stop). Plain text attributes, no quotes or braces inside values. '
+                     'Advice only, never permission; do not duplicate the same signal in tags.')
+        return {'context': GUIDANCE + extra}
+
+    ctx.register_hook('pre_llm_call', guidance)
     ctx.register_hook('on_session_finalize', finalize)
     ctx.register_hook('transform_llm_output', signal.transform)
 
