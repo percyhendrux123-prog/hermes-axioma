@@ -1,0 +1,6 @@
+{
+  "name": "hermes-axioma",
+  "label": "Axiōma board lights",
+  "api": "plugin_api.py",
+  "tab": { "hidden": true }
+}
