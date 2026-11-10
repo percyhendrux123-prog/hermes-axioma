@@ -41,6 +41,76 @@ class Context:
         pass
 
 
+class AuditBoardTests(unittest.TestCase):
+    def setUp(self):
+        from axioma.audit import Audit
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.audit = Audit(Path(self.tmp.name) / 'audit.sqlite3')
+
+    def test_task_id_read_at_each_record_without_changing_sealed_metadata(self):
+        import json
+        with patch.dict('os.environ', {'HERMES_KANBAN_TASK': 't_11111111'}):
+            self.audit.record(at=1, event='card', seal='synthetic')
+        with patch.dict('os.environ', {'HERMES_KANBAN_TASK': 't_22222222'}):
+            self.audit.record(at=2, event='signal', level='stop', shown=True)
+        with self.audit.connect() as db:
+            rows = db.execute('SELECT task_id, metadata FROM events ORDER BY at').fetchall()
+        self.assertEqual([r[0] for r in rows], ['t_11111111', 't_22222222'])
+        self.assertEqual(json.loads(rows[0][1]), {'event': 'card', 'seal': 'synthetic'})
+        self.assertNotIn('task_id', self.audit.rows()[0], 'old seals must keep verifying')
+
+    def test_upgrade_old_database_additive_idempotent_and_preserves_old_rows(self):
+        import sqlite3
+        db = sqlite3.connect(self.audit.path)
+        try:
+            db.execute('CREATE TABLE events (id TEXT PRIMARY KEY, at REAL, metadata TEXT)')
+            db.execute('INSERT INTO events VALUES (?, ?, ?)', ('old', 1, '{"event":"card","seal":"old"}'))
+            db.commit()
+        finally:
+            db.close()
+        for _ in range(2):
+            with self.audit.connect() as db:
+                self.assertIn('task_id', [r[1] for r in db.execute('PRAGMA table_info(events)')])
+                self.assertEqual(db.execute('SELECT * FROM events').fetchone(),
+                                 ('old', 1.0, '{"event":"card","seal":"old"}', None))
+        self.assertEqual(self.audit.board_lights(), {})
+
+    def test_worst_light_count_and_latest_sentence_are_independent(self):
+        with patch.dict('os.environ', {'HERMES_KANBAN_TASK': 't_11111111'}):
+            self.audit.record(at=1, event='presented_to_host', light='red', signal='Run tests first.')
+            self.audit.record(at=2, event='answer', light='red')  # not another signal
+            self.audit.record(at=3, event='card', light='green', valid=True)  # not shown yet
+            self.audit.record(at=4, event='signal', level='go', shown=True, signal='The test passed.')
+            self.audit.record(at=5, event='signal', level='stop', shown=False, signal='Not displayed.')
+        with patch.dict('os.environ', {'HERMES_KANBAN_TASK': 't_22222222'}):
+            self.audit.record(at=6, event='signal', level='caution', shown=True, signal='Check the audience.')
+        self.assertEqual(self.audit.board_lights(), {
+            't_11111111': {'light': 'stop', 'count': 2, 'signal': 'The test passed.', 'at': 4.0},
+            't_22222222': {'light': 'caution', 'count': 1, 'signal': 'Check the audience.', 'at': 6.0}})
+
+    def test_bad_task_ids_and_unsupported_lights_are_not_exposed(self):
+        for task in ('', '../secret', 't_123\n', '/private/path'):
+            with patch.dict('os.environ', {'HERMES_KANBAN_TASK': task}):
+                self.audit.record(event='signal', level='stop', shown=True)
+        with patch.dict('os.environ', {'HERMES_KANBAN_TASK': 't_11111111'}):
+            self.audit.record(event='signal', level='intent', shown=True)
+            self.audit.record(event='signal', level='garbage', shown=True)
+        self.assertEqual(self.audit.board_lights(), {})
+
+    def test_only_bounded_plain_signal_is_stored_for_board_tooltips(self):
+        import json
+        with patch.dict('os.environ', {'HERMES_KANBAN_TASK': 't_11111111'}):
+            self.audit.record(event='signal', level='caution', shown=True,
+                              signal='<b>Check</b>\u202e\x00 ' + 'x' * 300)
+        row = self.audit.board_lights()['t_11111111']
+        self.assertLessEqual(len(row['signal']), 160)
+        for bad in ('<b>', '\u202e', '\x00'):
+            self.assertNotIn(bad, json.dumps(row, ensure_ascii=False))
+        self.assertEqual(set(row), {'light', 'count', 'signal', 'at'})
+
+
+
 class GuidanceTests(unittest.TestCase):
     def test_inline_instruction_only_on_desktop_and_rechecked_each_turn(self):
         module, ctx = entrypoint(), Context()
