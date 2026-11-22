@@ -1,5 +1,7 @@
 # hermes-axioma
 
+> **Part of the seat**, a collection of Hermes plugins that work together: watch, decide, act, prove, hand off. This one covers **decide**: it marks what deserves a second look. [See the whole collection](https://github.com/percyhendrux123-prog#the-seat-a-collection-of-hermes-plugins).
+
 Inline signal color for Hermes Agent · MIT · v0.6.0
 
 The agent writes its normal reply. Axioma colors only the few phrases inside it that deserve your
