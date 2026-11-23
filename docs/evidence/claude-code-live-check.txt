@@ -1,0 +1,91 @@
+Live check of the Claude Code port (axiom-axioma 0.1.0), 2026-11-23.
+
+Setup: Claude Code 2.1.330, throwaway CLAUDE_CONFIG_DIR (deleted afterwards), marketplace added from the
+local repo path, plugin installed with `claude plugin install axiom-axioma@deploy-axiom-axioma`, a
+throwaway empty git folder as the working directory. Interactive runs were driven in tmux; the text
+below is copied from `tmux capture-pane`, with the working-directory line left out.
+
+--- 1. claude -p (mods run, nothing draws): the tag grammar reached Claude, and the card tool exists ---
+
+prompt: mark 'without a test' as a stop signal and 'the main branch' as a caution, using the Axioma tags;
+        list the tools whose names contain 'axioma'
+reply:  Pushing changes [signal:stop;why=untested]without a test[/signal] is a no-go, and merging into
+        [signal:caution]the main branch[/signal] affects everyone who pulls from it. ... The only tool I
+        have with "axioma" in its name is `mcp__axiom-axioma__axioma_card`.
+
+--- 2. claude -p, send-shaped stand-in `echo git push demo` with a card staged, nobody to ask ---
+
+TOOL_USE mcp__axiom-axioma__axioma_card {"call": {"tool": "Bash", "arguments": {"command": "echo git push demo"}}, "card": {...}}
+RESULT   {"status":"staged","card_id":"3040fed61a00","note":"Advice only. The person is asked to Hold or Go ahead; ..."}
+TOOL_USE Bash {"command": "echo git push demo", ...}
+RESULT   git push demo            (is_error: false: the call went on to Claude Code's own permission check)
+
+--- 3. Interactive terminal: the marks, drawn by the mod (ANSI as captured, escape bytes shown with ^[) ---
+
+plain text as seen:
+  ⏺ Merging without a test (stop) is risky, especially into the main branch (caution), where everyone
+    who pulls from it is affected.
+
+with escapes (tmux downsamples 24-bit color to the 256-color table):
+  ⏺ Merging ^[[1;4m^[[38;5;203mwithout a test^[[0m (stop) is risky, especially into ^[[4m^[[38;5;220mthe main branch^[[0m (caution), ...
+
+  stop = bold + underline + red, caution = underline + yellow, word after each. The stored message still
+  holds the tags; the bullet and the two-column margin are kept.
+
+whisper, same session type:
+  ... plus ^[[38;5;224mabout 4,200 users^[[39m (second look) if it ships.
+
+options reach the mod (palette cvd, theme light set with `claude plugin configure --values-stdin`, then restart):
+  ... ^[[1;4m^[[38;5;161mwithout a test^[[0m (stop) ...        (was 203 with the defaults)
+
+--- 4. Interactive terminal: the card holds the call in Claude Code's own question dialog ---
+
+ ☐ Axioma card
+│ CAUTION · proceed: yes / no
+│ call: Bash: echo git push demo
+│ intent: Print a demo line
+│ signal: It only prints text.
+│ kind: send
+│ (advice only; you decide here, and Claude Code’s own permission check still applies)
+│ Print it?
+❯ 1. Hold
+  2. Go ahead
+  3. Type something.
+  4. Chat about this
+
+Go ahead chosen:
+  Ran 1 shell command
+  ⏺ axiom-axioma: Axioma card (CAUTION, send): you chose Go ahead. Advice only; Claude Code's own permission check follows.
+  ⏺ Done.
+
+--- 5. No card staged, Hold chosen ---
+
+ ☐ Axioma card
+│ NO CARD · proceed: yes / no
+│ call: Bash: echo git push demo2
+│ signal: Unreviewed send via Bash.
+│ kind: send
+│ intent: not stated (the agent supplied no card for this exact call)
+│ (advice only; you decide here, and Claude Code’s own permission check still applies)
+│ What do you need to know before this runs?
+❯ 1. Hold ...
+
+after Hold:
+  Did not run 1 call
+  ⎿  Not run · permission denied
+     │ Reason: The person saw the Axioma card for this call and did not pick Go ahead, so it did not run. Do not retry the same call; ask them what they want instead.
+  ⏺ axiom-axioma: Axioma card (NO CARD, send): you chose Hold. The call did not run.
+  ⏺ The command didn't run. ... I won't retry it. Do you want me to run echo git push demo2 anyway, or skip it?
+
+--- 6. /signals (metadata only, this session) ---
+
+  axiom-axioma: 15:30:05 stop shown (no_test)
+  15:30:05 caution shown
+  15:30:30 card staged (yellow) id 7357a58bee50
+  15:30:57 card CAUTION for send: go ahead
+  15:31:34 card NO CARD for send: hold
+  (this session only; no text bodies)
+
+Not exercised live: the Desktop app, the VS Code extension, a reply that streams a tag across chunks,
+a RED card in the dialog (covered by unit tests only).
+Cleanup: plugin uninstalled, marketplace removed, throwaway config and folder deleted.

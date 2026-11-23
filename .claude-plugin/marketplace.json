@@ -1,0 +1,16 @@
+{
+  "name": "deploy-axiom-axioma",
+  "owner": {
+    "name": "Deploy Axiom"
+  },
+  "metadata": {
+    "description": "Axioma for Claude Code, from Deploy Axiom."
+  },
+  "plugins": [
+    {
+      "name": "axiom-axioma",
+      "source": "./claude-plugin/axioma",
+      "description": "Colors the few phrases in Claude's reply that deserve a second look, and shows an advisory card before a send, spend, spin or scrub call. Advice only, never consent."
+    }
+  ]
+}
