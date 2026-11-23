@@ -626,6 +626,15 @@ them). None is ever executed; the full list is in `docs/evidence/validate-v0.2-i
 - Everyone who reads an agent's words before acting on them, and especially those who cannot see
   the color.
 
+## Also for Claude Code
+
+The same idea ships as a Claude Code plugin in [`claude-plugin/axioma`](claude-plugin/axioma), built as a mod. It redraws Claude's reply in Claude Code's own transcript with the signal marks in color, and before a send, spend, spin or scrub call it shows an advisory card in Claude Code's question dialog and waits for Hold or Go ahead. Go ahead only continues to Claude Code's own permission check; a card is advice, never consent. Terminal is proven live; the Desktop app was not run. What it leaves out of the Hermes plugin (the Charter, standing rules, card codes, the audit, board lights, the Desktop pane) is listed in the plugin README. It is separate from the Hermes plugin above and needs neither Hermes nor the catalog.
+
+```sh
+claude plugin marketplace add percyhendrux123-prog/hermes-axioma
+claude plugin install axiom-axioma@deploy-axiom-axioma
+```
+
 ## Works with
 
 Axioma is one part of an operator layer for Hermes Agent, built by Deploy Axiom. Each plugin installs on its own and none requires another. Together they cover a working agent from first reply to finished task:

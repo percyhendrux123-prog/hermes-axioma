@@ -1,0 +1,49 @@
+{
+  "name": "axiom-axioma",
+  "displayName": "Axioma",
+  "version": "0.1.0",
+  "description": "Colors the few phrases in Claude's reply that deserve a second look, and shows an advisory card before a send, spend, spin or scrub call. Advice only, never consent.",
+  "author": {
+    "name": "Deploy Axiom"
+  },
+  "homepage": "https://github.com/percyhendrux123-prog/hermes-axioma",
+  "repository": "https://github.com/percyhendrux123-prog/hermes-axioma",
+  "license": "MIT",
+  "keywords": [
+    "advisory",
+    "signals",
+    "mods",
+    "transcript",
+    "cards",
+    "accessibility"
+  ],
+  "icon": "./.claude-plugin/icon.png",
+  "userConfig": {
+    "theme": {
+      "type": "string",
+      "title": "Signal theme",
+      "description": "dark for a dark terminal, light for a light one. The plugin cannot see your theme.",
+      "options": ["dark", "light"],
+      "default": "dark"
+    },
+    "palette": {
+      "type": "string",
+      "title": "Signal palette",
+      "description": "default (traffic colors), cvd (color-vision-safe) or none (style and words only).",
+      "options": ["default", "cvd", "none"],
+      "default": "default"
+    },
+    "words": {
+      "type": "string",
+      "title": "Words beside marks",
+      "description": "always: the word (stop, caution, go, second look) follows every marked phrase. plain_only: only where color is switched off.",
+      "options": ["always", "plain_only"],
+      "default": "always"
+    },
+    "workspace": {
+      "type": "directory",
+      "title": "Workspace folder (optional)",
+      "description": "Absolute path. A remove or move that stays inside this folder skips the scrub card. Leave empty and every remove or move gets a card."
+    }
+  }
+}
